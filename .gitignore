@@ -1,0 +1,8 @@
+*.d
+*.o
+*.m
+__pycache__
+build/HybridLearner
+results/
+*~
+\#*
