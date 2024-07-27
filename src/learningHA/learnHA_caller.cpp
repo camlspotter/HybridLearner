@@ -24,7 +24,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
 
 //	std::cout<<"\n***** Now running Python to execute HA Learning Algorithm ******"<<std::endl;
 
-	cmd_str = "cd ../src/learnHA && python3 run.py ";	//For OS Ubuntu 20.04 LTS I have modified the command to python3 instead of python
+	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";	//For OS Ubuntu 20.04 LTS I have modified the command to python3 instead of python
 	//std::cout<<("Check the output!!")<<std::endl;
 
 	cmd_str.append("--input-filename ");
