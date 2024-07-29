@@ -14,11 +14,10 @@ using namespace std;
 //Constructor to populate the current working directory's  name and path
 linux_utilities::linux_utilities() {
 	std::string str = "";
-	char tmp[256];
-	getcwd(tmp, 256);
-	/*if (getcwd(tmp, 256)) == NULL) {
-		cout << "Error executing command getcwd()" << endl;
-	}*/
+	char tmp[4096];
+	if ( !getcwd(tmp, 4096)) {
+        throw std::runtime_error("cwd is too long");
+	}
 
 	currentWorkingDirectoryWithPath = tmp;
 

@@ -206,22 +206,14 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	if (vm.count("guard")) {
 		userInputs->setGuard((vm["guard"].as<int>()));
-		if (userInputs->getGuard() < 0 && userInputs->getGuard() > 1) { //for 0 or negative sampling-time
-			std::cout << "Invalid option specified for guard. A zero or a 1 value expected.\n";
-			throw(new exception());
-		}
 	}
 	if (vm.count("invariant")) {
 		userInputs->setInvariant((vm["invariant"].as<int>()));
-		if (userInputs->getInvariant() < 0 && userInputs->getInvariant() > 2) { //for 0 or negative sampling-time
-			std::cout << "Invalid option specified for Invariant. Expected values are either 0, 1 or 2.\n";
-			throw(new exception());
-		}
 	}
 
 	if (vm.count("sampling-time")) {
 		userInputs->setSampleTime((vm["sampling-time"].as<double>()));
-		if (userInputs->getSampleTime() <= 0) { //for 0 or negative sampling-time
+		if (userInputs->getSampleTime() <= 0.0) { //for 0 or negative sampling-time
 			std::cout
 					<< "Invalid sampling-time option specified. A positive non-zero value expected.\n";
 			throw(new exception());
@@ -231,13 +223,11 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	//This Option should appear before --model
 	if (vm.count("max-value")) {
 		userInputs->setMaxValue((vm["max-value"].as<double>()));
-		if (userInputs->getMaxValue() <= 0) { //for 0 or negative sampling-time
+		if (userInputs->getMaxValue() <= 0.0) { //for 0 or negative sampling-time
 			std::cout << "Invalid max-value option specified. A positive non-zero Maximum possible value expected.\n";
 			throw(new exception());
 		}
 	}
-
-
 
 	if (vm.count("ode-solver")) { // ODE Solver only for the Learned model to be used for simulation or model (.slx) creation
 		userInputs->setOdeSolver(vm["ode-solver"].as<std::string>());

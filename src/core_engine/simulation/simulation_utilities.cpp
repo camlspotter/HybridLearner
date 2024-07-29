@@ -49,7 +49,6 @@ void simu_model_file(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, 
 
 			std::vector<double> cppTime = (*it_values).time_values;
 			//std::cout <<"Last time of the input variable (cp_pedal_angle) = " << cppTime[cppTime.size()-1] <<endl;
-			double time_horizon_dReach_CE = cppTime[cppTime.size()-1];
 			assert(y == cppTime.size());
 			matlab::data::ArrayFactory factory1;
 			auto inputArray1 = factory1.createArray({ x, y }, cppTime.cbegin(), cppTime.cend());
@@ -191,7 +190,6 @@ void simulate_learned_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep
 
 			std::vector<double> cppTime = (*it_values).time_values;
 			//std::cout <<"Last time of the input variable (cp_pedal_angle) = " << cppTime[cppTime.size()-1] <<endl;
-			double time_horizon_dReach_CE = cppTime[cppTime.size()-1];
 			assert(y == cppTime.size());
 			matlab::data::ArrayFactory factory1;
 			auto inputArray1 = factory1.createArray({ x, y }, cppTime.cbegin(), cppTime.cend());
@@ -305,7 +303,6 @@ void simulate_original_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &e
 
 			std::vector<double> cppTime = (*it_values).time_values;
 			//std::cout <<"Last time of the input variable (cp_pedal_angle) = " << cppTime[cppTime.size()-1] <<endl;
-			double time_horizon_dReach_CE = cppTime[cppTime.size()-1];
 			assert(y == cppTime.size());
 			matlab::data::ArrayFactory factory1;
 			auto inputArray1 = factory1.createArray({ x, y }, cppTime.cbegin(), cppTime.cend());

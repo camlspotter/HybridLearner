@@ -17,7 +17,9 @@
 #include "../../utilities/linux_utilities.h"
 #include "../../utilities/intermediateResult.h"
 #include "../../simulinkModelling/simulinkModelConstructor.h"
-#include "MatlabEngine.hpp"
+
+#include "../../utilities/matlab.h"
+
 #include "../simulation/simulation_utilities.h"
 #include "../../io_functions/data_structs.h"
 #include "../../learningHA/learnHA_caller.h"
@@ -38,7 +40,10 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
 
 void initial_setup_for_learning(parameters::ptr params);
 
-void updateTraceFile(unsigned int iteration, std::vector<double> CE, list<struct timeseries_input> CE_trace, parameters::ptr params);
+void updateTraceFile(// unsigned int iteration, (unused)
+                     // std::vector<double> CE, (unused)
+                     // list<struct timeseries_input> CE_trace, (unused)
+                     parameters::ptr params);
 
 void call_LearnHA(parameters::ptr params, summary::ptr &report);
 

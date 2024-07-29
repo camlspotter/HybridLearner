@@ -8,11 +8,7 @@
 #ifndef BENCHMARK_AFC_RUNAFC_H_
 #define BENCHMARK_AFC_RUNAFC_H_
 
-
-
-//#include "MatlabDataArray.hpp"
-#include "MatlabEngine.hpp"
-
+#include "../../utilities/matlab.h"
 
 #include <stdlib.h>
 #include <stdio.h>

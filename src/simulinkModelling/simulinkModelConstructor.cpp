@@ -65,10 +65,9 @@ void simulinkModelConstructor::printSimulinkModelFile() {
 		std::string createCommand = "";
 		createCommand.append("mkdir ");
 		createCommand.append(outfile);
-		struct stat sb; int flag=0;
-		if (stat(outfile.c_str(), &sb) ==0 && S_ISDIR(sb.st_mode)){
-			flag=1;
-		} else {
+		struct stat sb;
+
+		if (! (stat(outfile.c_str(), &sb) ==0 && S_ISDIR(sb.st_mode)) ){
 			int x = system(createCommand.c_str());
 			if (x == -1) {
 				std::cout <<"Error executing cmd: " << createCommand << std::endl;
@@ -77,10 +76,7 @@ void simulinkModelConstructor::printSimulinkModelFile() {
 //			else {
 //	            cout << "Folder created!" << endl;
 //	        }
-
 		}
-
-
 	} else {	//executed for engine="bbc"
 		outfile = intermediate->getOutputfilenameWithoutExtension();
 			//Folder already created during verification Process for dReach model, so dump simulink model in this folder
@@ -370,7 +366,7 @@ void simulinkModelConstructor::addTransitions(ofstream &outfile) {
 
 
 			if (sourceLoc == (*it_trans)->getDestinationLocationId()) { //this means it's a Loop Transition
-				addLoopTransitions(outfile, sourceLoc, number_of_loop_trans, exec_order, pos_x, next_height, inequality_guard, reset_statement);
+				addLoopTransitions(outfile, sourceLoc, number_of_loop_trans, /* exec_order, */ pos_x, next_height, inequality_guard, reset_statement);
 				number_of_loop_trans++;
 			} else {  //not a loop transition
 
@@ -764,8 +760,10 @@ void simulinkModelConstructor::addOutputComponents(ofstream &outfile) {
 	;
 }*/
 
-void simulinkModelConstructor::addLoopTransitions(ofstream &outfile, unsigned int sourceLoc, unsigned int number_loop_trans, unsigned int exec_order, unsigned int pos_x,
-		unsigned int next_height, std::string condition_str, std::string reset_str) {
+void simulinkModelConstructor::addLoopTransitions(ofstream &outfile, unsigned int sourceLoc, unsigned int number_loop_trans,
+                                                  // unsigned int exec_order, (not used)
+                                                  unsigned int pos_x,
+                                                  unsigned int next_height, std::string condition_str, std::string reset_str) {
 	outfile <<"%% Transition to represent Invariants: Current fix is using Junction Connection to avoid inner Transitions \n";
 	pos_x += 10;
 	next_height += 10;
@@ -1130,8 +1128,7 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
 
 		location::ptr loc = ha->getLocation(1);	//since our location starts from 1
 		list<flow_equation> derivatives = loc->getDerivatives();
-		unsigned int val = 0, dim=ha->map_size(); //size of the variable mapping
-
+		unsigned int dim = ha->map_size(); //size of the variable mapping
 
 		//use output variables to match only output variables and get the value. Assumed order is maintained even in the initial polytope creation
 		assert(initial_output_values.size() == ha->map_size());	//double check
@@ -1564,7 +1561,6 @@ void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simu
 
 		// ---------------------------------
 		//Todo: first write the input variables and then the output variables
-		unsigned int input_size = user->getListInputVariables().size();
 		unsigned int output_size = user->getListOutputVariables().size();
 
 		//Writing first the input variables, which is all followed by the output ports
@@ -1796,9 +1792,9 @@ void simulinkModelConstructor::create_runScript_for_learn_ha_loop_engine(std::st
 
 		// ---------------------------------
 		//Todo: first write the input variables and then the output variables
-		unsigned int input_size = user->getListInputVariables().size();
 		unsigned int output_size = user->getListOutputVariables().size();
 
+        // XXX Seems duped.
 		//Writing first the input variables, which is all followed by the output ports
 		for (unsigned int i=output_size; i < dim; i++) {
 			output_str.append("y( : , ");

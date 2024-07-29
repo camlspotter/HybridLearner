@@ -16,7 +16,9 @@
 #include <list>
 #include "../../commandLineParser/parameters.h"
 #include "../../io_functions/summary.h"
-#include "MatlabEngine.hpp"
+
+#include "../../utilities/matlab.h"
+
 #include "../simulation/simulation_utilities.h"
 #include "equivalence_test_utils.h"
 

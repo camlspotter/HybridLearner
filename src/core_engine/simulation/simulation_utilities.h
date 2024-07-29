@@ -8,7 +8,9 @@
 #include <list>
 #include <vector>
 #include <string>
-#include "MatlabEngine.hpp"
+
+#include "../../utilities/matlab.h"
+
 #include "../../commandLineParser/user_inputs.h"
 #include "../../utilities/intermediateResult.h"
 #include "../../hybridautomata/hybridAutomata.h"

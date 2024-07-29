@@ -18,7 +18,6 @@ void modelConstructor::printModelFile(hybridAutomata::ptr &H, ofstream &outfile,
 
 void modelConstructor::print_header(hybridAutomata::ptr &H, ofstream &outfile, user_inputs::ptr &user) {
 	string variable_name = "";
-	double max_value = user->getMaxValue();	//Now every variable has its own min and max values
 	double minValue = 0.0, maxValue = 0.0;
 
 

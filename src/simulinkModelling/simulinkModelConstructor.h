@@ -9,10 +9,7 @@
 #define SIMULINKMODELLING_SIMULINKMODELCONSTRUCTOR_H_
 
 
-//#include "MatlabDataArray.hpp"
-#include "MatlabEngine.hpp"
-
-//#include "engine.h"
+#include "../utilities/matlab.h"
 
 #include <iomanip>
 #include <sstream>
@@ -94,8 +91,10 @@ public:
 
 // ** Auxiliary functions **
 	//void addMainTransitions(ofstream &outfile);
-	void addLoopTransitions(ofstream &outfile, unsigned int sourceLoc, unsigned int number_loop_trans, unsigned int exec_order, unsigned int pos_x,
-			unsigned int next_height, std::string condition_str, std::string reset_str);
+	void addLoopTransitions(ofstream &outfile, unsigned int sourceLoc, unsigned int number_loop_trans,
+                            // unsigned int exec_order,
+                            unsigned int pos_x,
+                            unsigned int next_height, std::string condition_str, std::string reset_str);
 //	void createConnectiveJunction(ofstream &outfile);
 //	void completeLoopTransitions(ofstream &outfile);
 

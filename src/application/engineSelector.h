@@ -9,7 +9,7 @@
 #include <list>
 #include <string>
 #include <vector>
-#include <MatlabEngine.hpp>	//"MatlabEngine.hpp"
+#include "../utilities/matlab.h"
 #include "../simulation/simulation.h"
 #include "../commandLineParser/parameters.h"
 #include "../commandLineParser/user_inputs.h"

@@ -8,9 +8,7 @@
 #ifndef BENCHMARK_AT_RUNAT_H_
 #define BENCHMARK_AT_RUNAT_H_
 
-
-#include "MatlabEngine.hpp"
-
+#include "../../utilities/matlab.h"
 
 #include <stdlib.h>
 #include <stdio.h>

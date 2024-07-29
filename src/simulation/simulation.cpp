@@ -469,7 +469,7 @@ bool safetyCheck(user_inputs::ptr &user, double &violation_TimeHorizon) {
  */
 bool variableBoundCheck(string varName, double varValue, std::list<struct variable_bounds> list_VarBounds) {
 	bool flag=false, varNotFound = true;
-	double epsilon = 1e-7, diffValue=0.0; // 0.0000001;
+	double epsilon = 1e-7; // 0.0000001;
 	double diffValueLow = 0.0, diffValueHigh=0.0;
 	for (std::list<struct variable_bounds>::iterator it = list_VarBounds.begin(); it != list_VarBounds.end(); it++) {
 		if ((*it).variable_name == varName) { //for this variable
@@ -478,7 +478,6 @@ bool variableBoundCheck(string varName, double varValue, std::list<struct variab
 			double low = (*it).min_value,  high = (*it).max_value;
 			diffValueLow = abs(low - varValue);
 			diffValueHigh = abs(high - varValue);
-			diffValue = abs(low - varValue);
 			//if (varValue > low || cond2) && (cond3 || cond4) {
 			if (((varValue > low) || (diffValueLow < epsilon)) && ((varValue < high) || (diffValueHigh < epsilon))) {
 //			if ((varValue >= (*it).min_value) && (varValue <= (*it).max_value)) { //checking the bounds
@@ -811,7 +810,7 @@ void fixed_step_signal(double th, std::vector<double> cps, std::vector<double> &
 void linear_signal(double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector) {
 	// **** This code is only for a single variable *********
 	//double th=50;
-	int nos_cp= cps.size();
+	unsigned int nos_cp= cps.size();
 	double hold_time_dur=0.0;
 	if (nos_cp > 1) {
 		hold_time_dur = th/(nos_cp-1);
@@ -826,8 +825,7 @@ void linear_signal(double th, std::vector<double> cps, std::vector<double> &time
 	std::vector<double> timeVector(nos_cp);
 	std::vector<double> dataVector(nos_cp);
 
-	unsigned int index=0;
-	for(int i=0; i< nos_cp; i++) {
+	for(unsigned int i=0; i< nos_cp; i++) {
 		timeVector[i] = i * hold_time_dur;
 		dataVector[i] = cps[i];
 	}
@@ -842,7 +840,8 @@ void linear_signal(double th, std::vector<double> cps, std::vector<double> &time
 void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector) {
 	// **** This code is only for a single variable *********
 	//double th=50;
-	int nos_cp= cps.size();
+    // XXX Possibly duped
+	unsigned int nos_cp= cps.size();
 	double hold_time_dur=0.0;
 	if (nos_cp > 1) {
 		hold_time_dur = th/(nos_cp-1);
@@ -932,8 +931,6 @@ void sine_wave_signal(double timeHorizon, double amplitude, double zero_offset, 
 
 	float rads = M_PI/180;  //angle in radian, where M_PI is the pi value
 	double step_size = 360 / timeHorizon; //for one full cycle
-
-	int nos_cp= number_of_samples + 1;
 
 	std::vector<double> timeVector(number_of_samples + 1);
 	std::vector<double> dataVector(number_of_samples + 1);

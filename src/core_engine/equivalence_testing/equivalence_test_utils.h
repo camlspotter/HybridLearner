@@ -19,9 +19,12 @@
 
 bool compute_trace_equivalence(std::string file_one, std::string file_two, double &max_distance, parameters::ptr params);
 
+#ifdef PAPER
+
 double call_python_compute_cost(std::string file_one, std::string file_two);
 
 double call_python_compute_DTW_cost(std::string file_one, std::string file_two);
 
+#endif
 
 #endif /* CORE_ENGINE_EQUIVALENCE_TESTING_EQUIVALENCE_TEST_UTILS_H_ */

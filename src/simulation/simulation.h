@@ -8,8 +8,7 @@
 #ifndef SIMULATION_SIMULATION_H_
 #define SIMULATION_SIMULATION_H_
 
-//#include "MatlabDataArray.hpp"
-#include "MatlabEngine.hpp"
+#include "../utilities/matlab.h"
 
 #include <vector>
 #include "../commandLineParser/user_inputs.h"

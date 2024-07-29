@@ -20,8 +20,7 @@ bool compute_trace_equivalence(std::string file_one, std::string file_two, doubl
 	user_inputs::ptr userInputs = params->getUserInputs();
 
 
-	unsigned int paper = 0;
-	if (paper) {
+#ifdef PAPER
 		//this True-block is called to only print the output printed from the function call_python_compute_cost() and not to iterate in the LOOP
 
 		//computes and print average of absolute distance between two output signals (learned and original) given by Equation (4) in paper
@@ -33,8 +32,7 @@ bool compute_trace_equivalence(std::string file_one, std::string file_two, doubl
 		//max_distance = call_python_compute_DTW_cost(file_one, file_two);
 		cout <<"Not computing cost here" << endl;
 
-	} else {
-
+#else
 
 		double maxDist=0.0, dist = 0.0, epsilon = userInputs->getPrecisionEquivalence();
 		unsigned int dim = userInputs->getSysDimension();
@@ -96,17 +94,13 @@ bool compute_trace_equivalence(std::string file_one, std::string file_two, doubl
 		//modelfile.close();
 
 		max_distance = maxDist;
-	}
-
+#endif
 
 	return true;
 
 }
 
-
-
-
-
+#ifdef PAPER
 double call_python_compute_cost(std::string file_one, std::string file_two) {
 	double max_distance=0.0;
 /*	currently the function is not in use
@@ -200,3 +194,4 @@ double call_python_compute_DTW_cost(std::string file_one, std::string file_two) 
 	cout << endl;*/
 	return max_distance;
 }
+#endif

@@ -935,14 +935,10 @@ void ha_model_parser(hybridAutomata::ptr &H, user_inputs::ptr &user, intermediat
 		//Reading All Transition-Guard:
 		//std::vector<transition::ptr> forward(2);	//for mode m==3, we have 3 transitions, K = m * (m - 1)/2
 		std::list<transition::ptr> all_transitions;
-		unsigned int new_transition_Id = 1;
-
 
 		for (unsigned int i = 1; i <= tot_transitions; i++) {	//Modes starts from 1
 
 			string label, label_symbol, label_extra;
-			int transition_id;
-
 
 			transition::ptr trans = transition::ptr(new transition());
 			string label_trans;
@@ -1099,7 +1095,6 @@ std::list<std::string> correctGuard(std::string line1){
 	typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 	boost::char_separator<char> sep("&");
 	tokenizer tokens(line1, sep);
-	int index = 0;
 	list<string> each_guard;
 	for (tokenizer::iterator tok_iter = tokens.begin();	tok_iter != tokens.end(); ++tok_iter) {
 		string ss = (std::string)(*tok_iter);
@@ -1422,7 +1417,6 @@ std::list<std::string> string2list(std::string input_str) {
 	typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 		boost::char_separator<char> sep("&");
 		tokenizer tokens(input_str, sep);
-		int index = 0;
 		for (tokenizer::iterator tok_iter = tokens.begin();
 				tok_iter != tokens.end(); ++tok_iter) {
 			//std::cout << (*tok_iter) << endl;

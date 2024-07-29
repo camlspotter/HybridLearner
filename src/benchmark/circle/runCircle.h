@@ -8,8 +8,7 @@
 #ifndef BENCHMARK_CIRCLE_RUNCIRCLE_H_
 #define BENCHMARK_CIRCLE_RUNCIRCLE_H_
 
-//#include "MatlabDataArray.hpp"
-#include "MatlabEngine.hpp"
+#include "../../utilities/matlab.h"
 
 #include <stdlib.h>
 #include <stdio.h>

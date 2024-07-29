@@ -11,7 +11,9 @@
 
 # include <string>
 # include "../../utilities/polytope/polytope.h"
-#include "MatlabEngine.hpp"
+
+#include "../../utilities/matlab.h"
+
 #include "../../utilities/intermediateResult.h"
 
 using namespace matlab::engine;

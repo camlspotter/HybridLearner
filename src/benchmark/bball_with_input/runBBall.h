@@ -8,7 +8,7 @@
 #ifndef BENCHMARK_BBALL_WITH_INPUT_RUNBBALL_H_
 #define BENCHMARK_BBALL_WITH_INPUT_RUNBBALL_H_
 
-#include "MatlabEngine.hpp"
+#include "../../utilities/matlab.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -6,7 +6,7 @@
  */
 
 #include "learn_ha_loop.h"
-
+#include "../../utilities/system.h"
 
 /*
  * Learns an Automaton HA, given a simulink model M, by simulating M and learning M' in a refinement loop based on equivalence testing of M' and M.
@@ -59,7 +59,7 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
 		//Efficient Learning Loop
 		if (tot_count != 0) { //skip on the initial iteration
-			updateTraceFile(tot_count, CE_output_var, CE_input_var, params);	//adds new time-serise data to the initial trace-file
+			updateTraceFile(/* tot_count, CE_output_var, CE_input_var, */ params);	//adds new time-serise data to the initial trace-file
 		}
 
 		call_LearnHA(params, report);
@@ -288,7 +288,10 @@ void initial_setup_for_learning(parameters::ptr params) {
 
 
 //Generate trace from Original Model is appended
-void updateTraceFile(unsigned int iteration, std::vector<double> CE, list<struct timeseries_input> CE_trace, parameters::ptr params) {
+void updateTraceFile(//unsigned int iteration, (unused)
+                     // std::vector<double> CE, (unused)
+                     // list<struct timeseries_input> CE_trace, (unused)
+                     parameters::ptr params) {
 
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
@@ -344,7 +347,7 @@ void updateTraceFile(unsigned int iteration, std::vector<double> CE, list<struct
 	cmd.append(" > ");
 	cmd.append(tmpSimuFile);
 	//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-	system(cmd.c_str());
+	system_must_succeed(cmd);
 
 
 	cmd="cp ";
@@ -352,8 +355,7 @@ void updateTraceFile(unsigned int iteration, std::vector<double> CE, list<struct
 	cmd.append(" ");
 	cmd.append(previous_SimulationTraceFile);
 	cout << "  Cmd: " << cmd <<endl;
-	system(cmd.c_str());
-
+	system_must_succeed(cmd);
 
 	//Now copy the simulation-Trace file in the Learning Algorithm's folder
 	string commandStr ="cp ";
@@ -366,7 +368,8 @@ void updateTraceFile(unsigned int iteration, std::vector<double> CE, list<struct
 	//commandStr.append(" ../src/pwa/naijun"); //relative path from the folder Release
 	//cout <<"Naijun's Inputfile path: "<< intermediate->getLearnAlgoDefaultInputfilePath() << endl;
 	//system("cp finalFile.txt ../src/pwa/naijun"); //This is temporary fix as the Learning algorithm required
-	system(commandStr.c_str());
+
+	system_must_succeed(commandStr);
 
 }
 
