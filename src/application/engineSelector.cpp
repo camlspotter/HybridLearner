@@ -99,40 +99,21 @@ void engineSelector::selectLearn_HA() {
 	 * To call learning algorithm implemented in Python have to copy the input file(simulation-trace)
 	 * inside the folder "src/learnHA/data" since at the moment Python project is reading file only within its location (current folder)
 	 */
+	boost::timer::cpu_timer timer;
+	timer.start();
+
 	initial_setting(params);	//copy the file from user supplied or current folder to "src/pwa/naijun/filename" this being the working directory for the learning algorithm.
-
-	boost::timer::cpu_timer naijun_runtime;
-	naijun_runtime.start();
 	learnHA_caller(userInputs);	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
-	//system("pwd"); //although supplied cd ../src/pwa but still in the current Release location
-	naijun_runtime.stop();
 
-
-
+	timer.stop();
 	double wall_clock;
-	wall_clock = naijun_runtime.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
-
+	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
 	//std::cout << "\n\n*******Learning Nonlinear Switched Dynamical Systems (specific Hybrid Automata)****\n \t Running Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
 //	std::cout << "\nRunning Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
-
 	report->setRuntimeLearningAlgo(running_time);
 
 //	std::cout << "\nModel Learning Phase completed ........"<<std::endl;
-
-	// ********* Now copy/move the learned model file from "/src/pwa" to current folder *********
-	string copycommand ="";
-	//system("pwd");
-	copycommand.append("cp ");
-	copycommand.append("../src/learnHA/");
-
-	copycommand.append(userInputs->getOutputFilename());
-	copycommand.append(" .");	//to the current working directory, i.e. in the Release directory
-	int x = system(copycommand.c_str());
-	if (x == -1) {
-		cout << "Error executing cmd: " << copycommand << endl;
-	}
-
 }
 
 
