@@ -28,27 +28,12 @@ void equivalence_testing::generate_run_script_file(std::string model_filename, p
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
 
-
 	simulinkModelConstructor::ptr model = simulinkModelConstructor::ptr(new simulinkModelConstructor(H, userInputs, intermediate));
 	// ---------- Create run_script from .slx model
-	std::string script_filename = "run_script_", script_extension=".m", output_filename="result_", result_extension=".txt";
-	//Note: this hard-coded filenames if required to be changed, also change in the function below engineSelector::selectEquiTest().
-	std::string filename_without_extension;
-	size_t found = model_filename.find(".");	//extract .slx from the model file
-	if (found != string::npos){
-		filename_without_extension = model_filename.substr(0, found);
-	}
-	script_filename.append(filename_without_extension);	//user supplied simulink-model filename without extension
-	script_filename.append(script_extension);	//.m extension appended
-
-	output_filename.append(filename_without_extension);
-	output_filename.append(result_extension);
-
+    std::string script_filename = userInputs->getFilenameUnderOutputDirectory("equivalance_test.m"); // XXX constant
+    std::string output_filename = userInputs->getFilenameUnderOutputDirectory("equivalence_test_result.txt"); // XXX constant
 	model->create_runScript_for_simu_engine(model_filename, script_filename, output_filename);
-
 	// ------------------------------------------------------------------------
-
-
 }
 
 /*

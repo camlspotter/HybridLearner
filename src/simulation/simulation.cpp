@@ -46,7 +46,8 @@ void simulate_model(std::unique_ptr<MATLABEngine> &ep,
 		std::vector<double> output_variable_init_values,
 		intermediateResult::ptr &inter) {
 
-//Here we execute only simulink Model with separate Input and Output variables
+    // XXX I have no idea why the case 1..4 are commented out
+    //Here we execute only simulink Model with separate Input and Output variables
 	//unsigned int dim
 	/*if (userInput->getModel() == 1) {
 		runCircle(ep, userInput, initial_CE_values, inter);
@@ -62,189 +63,116 @@ void simulate_model(std::unique_ptr<MATLABEngine> &ep,
 		runAT(ep, userInput, initial_CE_values, inter);
 	} else if (userInput->getModel() == 7) {
 		runBBall_with_input(ep, userInput, initial_CE_values, output_variable_init_values, inter);
-	}
-
-	//std::cout <<"Back in the simulate Function" << std::endl;
-
+	} else {
+        throw std::runtime_error("simulate_model: unsupported model: " + to_string(userInput->getModel()));
+    }
 }
 
+// XXX Dupe (see learn_HA_loop.cpp)
 //simulate with multiple initial points and dump the output into another file. Now also test for safety violation break and return CE_dataStruct if violation Found.
 void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		std::list<std::vector<double> > list_initial_points,
 		intermediateResult::ptr &intermediate) {
 
-//	 std::cout <<"Inside simulate List function Engine ep = "<< ep << std::endl;
-//	 std::cout <<"Inside simulate List function Engine &ep = "<< &ep << std::endl;
-
-	/*https://stackoverflow.com/questions/19564450/concatenate-two-huge-files-in-c/19567371*/
-	//std::ifstream file_a ("a.txt", std::ios_base::binary);
-	//std::ifstream file_b("b.txt", std::ios_base::binary);
-
-	std::string simuFileName = "simulation_", tmpSimuFile = "tmp_simulation_";
-	simuFileName.append(user->getOutputFilename());
-	//user->setInputFilename(simuFileName);
-	tmpSimuFile.append(user->getOutputFilename());
-
+	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
 	user->setSimulationFilename(simuFileName);
-	std::string deleteCommand = "rm ";
-	deleteCommand.append(simuFileName);
-	int x = system(deleteCommand.c_str());
-	if (x == -1) {
-		std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-	}
+
+    std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
+
+    // rm $simuFileName
+    {
+        std::string deleteCommand = "rm ";
+        deleteCommand.append(simuFileName);
+        int x = system(deleteCommand.c_str());
+        if (x == -1) {
+            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
+        }
+    }
 	// *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
 
-	/*
-	//std::ofstream finalFile("finalFile.txt",  std::ios_base::binary | std::ios_base::app);
-	std::ofstream finalFile(simuFileName,  std::ios_base::binary | std::ios_base::app);
-
-	 for(std::list < std::vector<double> >::iterator it=list_initial_points.begin(); it !=list_initial_points.end(); it++) {
-		std::vector<double> init_point = (*it);
-
-
-		simulate(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
-
-		matlab_execution_count++;
-		user->setNumberMatlabSimulationExecuted(matlab_execution_count);
-
-		std::string resultFileName = getSimulationOutputFileName(user, intermediate);
-
-		std::ifstream file_a (resultFileName, std::ios_base::binary);
-
-		finalFile.seekp(0, std::ios_base::end);	//seek the record point to end_of_file
-		finalFile << file_a.rdbuf();	//append the file_a in the previous file
-
-	}*/
-	/*
-	 * The above approach gave error while running in our Google Cloud setup but did not show any issues in my Personal Desktop
-	 *
-	 * So, trying to use simple system command to concate two files into a third file. This will avoid the use of stream operation of C++
-	 * ************ cat /home/amit/3dplot.plt /home/amit/amit.java > /home/amit/raj.txt	 ************************
-	 */
-
-	std::string cmd="cat ";
-
 	for(std::list < std::vector<double> >::iterator it=list_initial_points.begin(); it !=list_initial_points.end(); it++) {
-			std::vector<double> init_point = (*it);
+        std::vector<double> init_point = (*it);
 
-			simulate_model(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
+        simulate_model(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
 
-			std::string resultFileName = getSimulationOutputFileName(user->getModel(), intermediate->getToolRootPath());
-			//cout << "Absolute path of the simulation generated output file: " << resultFileName << endl;
-			/*
-			 * cat resultFile > tmpSimuFile //on the 1st iteration
-			 *
-			 * cat  simuFileName  resultFile  >  tmpSimuFile   //from 2nd iteration onwards
-			 *
-			 * cp tmpSimuFile  simuFileName
-			 *
-			 */
+        std::string resultFileName = getSimulationOutputFileName(user->getModel(), intermediate->getToolRootPath());
 
-			if (matlab_execution_count==0) {	//1st iteration
-				cmd="cat ";
-				cmd.append(resultFileName);
-				cmd.append(" > ");
-				cmd.append(tmpSimuFile);
-				//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-				x = system(cmd.c_str());
-				if (x == -1) {
-					std::cout <<"Error executing cmd: " << cmd <<std::endl;
-				}
-			} else {	//2nd iterations onwards
-				cmd="cat ";
-				cmd.append(simuFileName);
-				cmd.append(" ");
-				cmd.append(resultFileName);
-				cmd.append(" > ");
-				cmd.append(tmpSimuFile);
-				//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-				x = system(cmd.c_str());
-				if (x == -1) {
-					std::cout <<"Error executing cmd: " << cmd <<std::endl;
-				}
-			}
+        if (matlab_execution_count==0) {	//1st iteration
+            // cat $resultFileName > $tmpSimuFile
+            std::string cmd = "cat ";
+            cmd.append(resultFileName);
+            cmd.append(" > ");
+            cmd.append(tmpSimuFile);
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
+        } else {	//2nd iterations onwards
+            // cat $simuFileName $resultFileName > $tmpSimuFile
+            std::string cmd = "cat ";
+            cmd.append(simuFileName);
+            cmd.append(" ");
+            cmd.append(resultFileName);
+            cmd.append(" > ");
+            cmd.append(tmpSimuFile);
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
+        }
 
-			cmd="cp ";
-			cmd.append(tmpSimuFile);
-			cmd.append(" ");
-			cmd.append(simuFileName);
-			//cout << "  Cmd: " << cmd <<endl;
-			x = system(cmd.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << cmd <<std::endl;
-			}
-			matlab_execution_count++;
-			user->setNumberMatlabSimulationExecuted(matlab_execution_count);
-		}
+        // cp $tmpSimuFile $simuFileName
+        {
+            std::string cmd = "cp ";
+            cmd.append(tmpSimuFile);
+            cmd.append(" ");
+            cmd.append(simuFileName);
+            //cout << "  Cmd: " << cmd <<endl;
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
+        }
+        matlab_execution_count++;
+        user->setNumberMatlabSimulationExecuted(matlab_execution_count);
+    }
 
 }
 
-
+// XXX Dupe
 ////simulate with multiple initial points and dump the output into another file. Now also test for safety violation break and return CE_dataStruct if violation Found.
 void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		std::list<struct timeseries_all_var> input_for_simulation, std::list<std::vector<double>> output_for_simulation,
 		intermediateResult::ptr &intermediate, struct simu_dataStruct &violation_result) {
 
-	/*https://stackoverflow.com/questions/19564450/concatenate-two-huge-files-in-c/19567371*/
-	//std::ifstream file_a ("a.txt", std::ios_base::binary);
-	//std::ifstream file_b("b.txt", std::ios_base::binary);
-
-	std::string simuFileName = "simulation_", tmpSimuFile = "tmp_simulation_";
-	simuFileName.append(user->getOutputFilename());
-	//user->setInputFilename(simuFileName);
-	tmpSimuFile.append(user->getOutputFilename());
-
+	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
 	user->setSimulationFilename(simuFileName);
-	std::string deleteCommand = "rm ";
-	deleteCommand.append(simuFileName);
-	deleteCommand.append(" ");
-	deleteCommand.append(tmpSimuFile);
-	int x = system(deleteCommand.c_str());	//Deleting simulation_modelFile.txt and tmp_simulation_modelFile.txt
-	if (x == -1) {
-		std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-	}
-	// *************** mergedFile deleted if exists ***************
+    std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
+
+    // rm $simuFileName $tmpSimuFile
+    {
+        std::string deleteCommand = "rm ";
+        deleteCommand.append(simuFileName);
+        deleteCommand.append(" ");
+        deleteCommand.append(tmpSimuFile);
+        int x = system(deleteCommand.c_str());
+        if (x == -1) {
+            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
+        }
+    }
+    // *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
 
-	/*
-	//std::ofstream finalFile("finalFile.txt",  std::ios_base::binary | std::ios_base::app);
-	std::ofstream finalFile(simuFileName,  std::ios_base::binary | std::ios_base::app);
-
-	 for(std::list < std::vector<double> >::iterator it=list_initial_points.begin(); it !=list_initial_points.end(); it++) {
-		std::vector<double> init_point = (*it);
-
-
-		simulate(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
-
-		matlab_execution_count++;
-		user->setNumberMatlabSimulationExecuted(matlab_execution_count);
-
-		std::string resultFileName = getSimulationOutputFileName(user, intermediate);
-
-		std::ifstream file_a (resultFileName, std::ios_base::binary);
-
-		finalFile.seekp(0, std::ios_base::end);	//seek the record point to end_of_file
-		finalFile << file_a.rdbuf();	//append the file_a in the previous file
-
-	}*/
-	/*
-	 * The above approach gave error while running in our Google Cloud setup but did not show any issues in my Personal Desktop
-	 *
-	 * So, trying to use simple system command to concate two files into a third file. This will avoid the use of stream operation of C++
-	 * ************ cat /home/amit/3dplot.plt /home/amit/amit.java > /home/amit/raj.txt	 ************************
-	 */
-
 	simulation_trace_testing::ptr simu_test = simulation_trace_testing::ptr(new simulation_trace_testing());;
 
-	std::string cmd="cat ";
 	unsigned int counting=1;
 
 	std::list<std::vector<double> >::iterator it_out_val = output_for_simulation.begin(); //iterator for the output variables
 	for (std::list<struct timeseries_all_var>::iterator it =
-			input_for_simulation.begin(); it != input_for_simulation.end(); it++, it_out_val++) {
+             input_for_simulation.begin(); it != input_for_simulation.end(); it++, it_out_val++) {
 
 		cout <<"counting = " << counting <<endl;
 
@@ -254,47 +182,43 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		simulate_model(ep, user, init_point, output_variable_init_values, intermediate); //this will generate the file "result.tsv" for this init_point
 
 		std::string resultFileName = getSimulationOutputFileName(user->getModel(), intermediate->getToolRootPath());
-		//cout << "Absolute path of the simulation generated output file: " << resultFileName << endl;
-		/*
-		 * cat resultFile > tmpSimuFile //on the 1st iteration
-		 * cat  simuFileName  resultFile  >  tmpSimuFile   //from 2nd iteration onwards
-		 * cp tmpSimuFile  simuFileName
-		 *
-		 */
 
 		if (matlab_execution_count==0){	//1st iteration
-			cmd="cat ";
-			cmd.append(resultFileName);
-			cmd.append(" > ");
-			cmd.append(tmpSimuFile);
-			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			x = system(cmd.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << cmd <<std::endl;
-			}
+            // cat $resultFileName > $tmpSimuFile
+            std::string cmd="cat ";
+            cmd.append(resultFileName);
+            cmd.append(" > ");
+            cmd.append(tmpSimuFile);
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
 		} else {	//2nd iterations onwards
-			cmd="cat ";
+            // cat $simuFileName $resultFileName > $tmpSimuFile
+            std::string cmd="cat ";
 			cmd.append(simuFileName);
 			cmd.append(" ");
 			cmd.append(resultFileName);
 			cmd.append(" > ");
 			cmd.append(tmpSimuFile);
-			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			x = system(cmd.c_str());
+			int x = system(cmd.c_str());
 			if (x == -1) {
 				std::cout <<"Error executing cmd: " << cmd <<std::endl;
 			}
 		}
 
-		cmd="cp ";
-		cmd.append(tmpSimuFile);
-		cmd.append(" ");
-		cmd.append(simuFileName);
-		//cout << "  Cmd: " << cmd <<endl;
-		x = system(cmd.c_str());
-		if (x == -1) {
-			std::cout <<"Error executing cmd: " << cmd <<std::endl;
-		}
+        {
+            // cp $tmpSimuFile $simuFileName
+            std::string cmd="cp ";
+            cmd.append(tmpSimuFile);
+            cmd.append(" ");
+            cmd.append(simuFileName);
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
+        }
+
 		matlab_execution_count++;
 		user->setNumberMatlabSimulationExecuted(matlab_execution_count);
 
@@ -312,32 +236,16 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 //Now the function returns the Absolute path
 const std::string getSimulationOutputFileName(unsigned int model, const std::string &toolRootPath) {
 
-	//std::string resultfile= intermediate->getToolRootPath();
 	std::string resultfile = "";
 	resultfile.append(toolRootPath);
 
-	/*if (user->getModel() == 1) {
-		//resultfile = "../src/benchmark/circle/result.tsv";
-		resultfile.append("/src/benchmark/circle/result.txt");
-	} else if (user->getModel() == 2) {
-		//resultfile = "../src/benchmark/oscillator/result.tsv";
-		resultfile.append("/src/benchmark/oscillator/result.txt");
-	} else if (user->getModel() == 3){
-		//resultfile = "../src/benchmark/shared_gas_burner/result.tsv";
-		resultfile.append("/src/benchmark/shared_gas_burner/result.txt");
-	}*/
-
 	if (model == 1) {
-		//resultfile = "../src/benchmark/circle/result.tsv";
 		resultfile.append("/src/benchmark/circle/result.txt");
 	} else if (model == 2) {
-		//resultfile = "../src/benchmark/oscillator/result.tsv";
 		resultfile.append("/src/benchmark/oscillator/result.txt");
 	} else if (model == 3){
-		//resultfile = "../src/benchmark/shared_gas_burner/result.tsv";
 		resultfile.append("/src/benchmark/shared_gas_burner/result.txt");
 	} else if (model == 4){
-		//resultfile = "../src/benchmark/nav_inst1/result.tsv";
 		resultfile.append("/src/benchmark/nav_inst1/result.txt");
 	} else if (model == 5){
 		resultfile.append("/src/benchmark/AFC/result.txt");
@@ -359,15 +267,12 @@ bool safetyCheck(user_inputs::ptr &user, double &violation_TimeHorizon) {
 	unsigned int dim = user->getSysDimension();
 
 	const char* resultfile;
-//TODO: we can use the intermediate class to get the absolute path
+    // XXX DUPE!
 	if (user->getModel() == 1) {
-		//resultfile = "../src/benchmark/circle/result.tsv";
 		resultfile = "../src/benchmark/circle/result.txt";
 	} else if (user->getModel() == 2) {
-		//resultfile = "../src/benchmark/oscillator/result.tsv";
 		resultfile = "../src/benchmark/oscillator/result.txt";
 	} else if (user->getModel() == 3){
-		//resultfile = "../src/benchmark/shared_gas_burner/result.tsv";
 		resultfile = "../src/benchmark/shared_gas_burner/result.txt";
 	} else if (user->getModel() == 4){
 		resultfile = "../src/benchmark/nav_inst1/result.txt";

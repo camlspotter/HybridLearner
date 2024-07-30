@@ -7,6 +7,7 @@
 
 #include "commandLineParser.h"
 #include <fstream>
+#include <limits.h>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -137,6 +138,7 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	//("simu-init-point", po::value<std::string>(), "Select the initial-point for simulation. Multiple points can be supplied separated by & symbol \n"
 	//		" syntax: 'x0=7,x1=8 & x0=10,x1=15' where x0 and x1 are system-learned variables.")	//todo: to be removed
 
+	("output-directory", po::value<std::string>(), "output directory")
 	("output-file,o", po::value<std::string>(), "output file name for redirecting the outputs");
 
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -563,9 +565,20 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 		userInputs->setOutputFilename(fileName); //default file is set to out.txt
 	}
 
-
-
-
+	if (vm.count("output-directory")) {
+        // It must be absolute, since some sub-programs are executed with different cwd.
+        char tmp[PATH_MAX];
+        if ( !getcwd(tmp, PATH_MAX)) {
+            throw std::runtime_error("cwd is too long");
+        }
+        std::string cwd(tmp);
+        // XXX if the given value is absolute, do not concate nate with pwd
+        std::string dir = cwd + "/" + vm["output-directory"].as<std::string>(); // XXX use proper separator
+		userInputs->setOutputDirectory(dir);
+	} else {
+		std::cout << "Missing --output-directory. \n";
+		throw(new exception());
+	}
 }
 
 //This is for the Learned model: variable name-mapping

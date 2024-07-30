@@ -33,13 +33,16 @@ using namespace matlab::engine;
 
 class simulinkModelConstructor {
 	hybridAutomata::ptr ha;
-	//ofstream outfile;
 	user_inputs::ptr user;
 	intermediateResult::ptr intermediate;
 	unsigned int iteration; //Keeps track of the number of iterations (when the .slx file created)
 
+    // "simulink_model0", "simulink_model1", etc
 	std::string simulinkModelName; //without the extension For eg.,   circle0 for 1st iteration, circle1 for 2nd iteration
-	std::string script_for_simulinkModelName; //without the extension For eg.,   getModel_circle0 for 1st iteration, getModel_circle1 for 2nd iteration
+
+	// script file that generates the simulink model
+    // "$OUTDIR/generateSimulinkModel0.m", "$OUTDIR/generateSimulinkModel1.m", etc
+    std::string script_for_simulinkModelName;
 
 	//Printing an identity mapping for reset equations
 	std::string resetPrinter();

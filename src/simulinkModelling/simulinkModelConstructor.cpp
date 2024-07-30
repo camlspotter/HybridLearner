@@ -10,14 +10,14 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
-
+#include "../utilities/system.h"
 
 void simulinkModelConstructor::printSimulinkModelFile() {
 
 //		extern  unsigned int log_set;
 //		std::ofstream log_file("bbc4cps_log_file.txt",  std::ios_base::binary | std::ios_base::app);
 
-	std::string outfile="";
+	std::string name="";
 
 	if (user->getEngine() == "txt2slx") {
 		/* if the modelfile supplied by user have absolute or sub path like ../src/testcases/engine/txt2slx/raj.txt
@@ -40,124 +40,67 @@ void simulinkModelConstructor::printSimulinkModelFile() {
 			}
 		}
 
-		outfile = outfilename;
-		//cout <<"Outputfile name =" << outfile << endl;
-		intermediate->setOutputfilenameWithoutExtension(outfile);
-		//Create a folder by the file name and put the .slx model file inside it
-		std::string createCommand = "";
-		createCommand.append("mkdir ");
-		createCommand.append(outfile);
-		int x = system(createCommand.c_str());
-		if (x == -1) {
-			std::cout <<"Error executing cmd: " << createCommand << std::endl;
-		}
-
+		name = outfilename;
+		intermediate->setOutputfilenameWithoutExtension(name);
 	} else if ((user->getEngine() == "learn-ha") || (user->getEngine() == "learn-ha-loop")) {
+        // outfileName = xxx.ext
+        // name = xxx
 		std::string outfileName = user->getOutputFilename();	//created learned model
 		size_t pos = outfileName.rfind(".");	//extract file-name from extension
 		if (pos != string::npos) {
-			outfile= outfileName.substr (0,pos);
+			name = outfileName.substr (0,pos);
 		}
 
-		//cout <<"Outputfile name =" << outfile << endl;
-		intermediate->setOutputfilenameWithoutExtension(outfile);
-		//Create a folder by the file name and put the .slx model file inside it
-		std::string createCommand = "";
-		createCommand.append("mkdir ");
-		createCommand.append(outfile);
-		struct stat sb;
-
-		if (! (stat(outfile.c_str(), &sb) ==0 && S_ISDIR(sb.st_mode)) ){
-			int x = system(createCommand.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << createCommand << std::endl;
-				exit(EXIT_FAILURE);
-			}
-//			else {
-//	            cout << "Folder created!" << endl;
-//	        }
-		}
+        // OutputfilenameWithoutExtension = xxx
+		intermediate->setOutputfilenameWithoutExtension(name);
 	} else {	//executed for engine="bbc"
-		outfile = intermediate->getOutputfilenameWithoutExtension();
-			//Folder already created during verification Process for dReach model, so dump simulink model in this folder
-		std::string command = "";
-		command.append("cd ");
-		command.append(outfile);
-		int x = system(command.c_str());
-		if (x == -1) {
-			cout <<"Error executing cmd: " << command << std::endl;
-		}
+		name = intermediate->getOutputfilenameWithoutExtension();
+        //Folder already created during verification Process for dReach model, so dump simulink model in this folder
+		std::string command = "cd " + name;
+		system_must_succeed(command);
 	}
 	//*****************************************
 
-	std::string fileName_with_path = "", scipt_file_with_path = "", model_file_with_path = "";
-	fileName_with_path.append(outfile);	//this is the folder-name
-	fileName_with_path.append("/");
+    // "simulink_model_0"
+    simulinkModelName = "simulink_model";
+	simulinkModelName.append(std::to_string(iteration));
 
-	scipt_file_with_path=fileName_with_path;
-	scipt_file_with_path.append("getModel_");
-	scipt_file_with_path.append(outfile);
-	scipt_file_with_path.append(to_string(iteration));
+	// script file that generates the simulink model
+    // script_for_simulinkModelName= $OUTDIR/generateSimulinkModel_0.m
+    std::string script_file_with_path = user->getFilenameUnderOutputDirectory("generateSimulinkModel");
+	script_file_with_path.append(to_string(iteration));
+	script_file_with_path.append(".m");
+	intermediate->setSimulinkScriptFilenameWithPath(script_file_with_path);
+    // member variable
+	script_for_simulinkModelName = script_file_with_path;
 
-	fileName_with_path.append(outfile);
-	fileName_with_path.append(to_string(iteration));
+	ofstream ofs;
+	ofs.open(script_file_with_path);
+	if (!ofs.is_open()) {
+		std::cout << "Error opening file: " << script_file_with_path;
+        throw std::runtime_error("Error opening file: " + script_file_with_path);
+    }
+    ofs << "%% Script file for generating Programmatically Simulink Model!";
+    ofs << "\n";
+    generateSimulinkModelScript(ofs); // uses simulinkModelName
+	ofs.close();
 
-	//scipt_file_with_path = fileName_with_path;
-	model_file_with_path = fileName_with_path;
-
-	scipt_file_with_path.append(".m");	//script file that generates the simulink model
-	model_file_with_path.append(".slx");	//simulink model filename
-
-	//*****************************************
-	//std::cout<<"Creating file with path = " << scipt_file_with_path << std::endl;
-	//std::cout<<"Creating file with path = " << model_file_with_path << std::endl;
-
-	std::string outfile_withoutExtension = intermediate->getOutputfilenameWithoutExtension();
-
-	simulinkModelName = outfile_withoutExtension.append(std::to_string(iteration));
-
-	std::string script_file_withoutExtension = "getModel_";
-	script_file_withoutExtension.append(intermediate->getOutputfilenameWithoutExtension());
-	script_file_withoutExtension.append(std::to_string(iteration));
-	script_for_simulinkModelName = script_file_withoutExtension;
-
-	intermediate->setSimulinkScriptFilenameWithPath(scipt_file_with_path); //This is not required and is not used, since it is called by just the name.
+    // simulink model filename
+    // model_file_with_path= simulink_model_0.slx
+    std::string model_file_with_path = user->getFilenameUnderOutputDirectory("simulink_model_");
+    model_file_with_path.append(to_string(iteration));
+	model_file_with_path.append(".slx");
 	intermediate->setSimulinkModelFilenameWithPath(model_file_with_path);
 
-	/*std::string learned_model_path = intermediate->getMatlabDefaultPath();	//This is also done outside
-	std::cout <<"****** Default path = " <<learned_model_path << std::endl;
-	learned_model_path.append("/");
-	learned_model_path.append(outfile);
-	std::cout <<"****** Modified path = " <<learned_model_path << std::endl;
-	intermediate->setMatlabPathForLearnedModel(learned_model_path);	*/
+	//*****************************************
 
-	//cout <<"****** scipt_file_with_path = "<< scipt_file_with_path <<" **********"<<endl;
-	//cout <<"****** script_for_simulinkModelName = "<< script_for_simulinkModelName <<" **********"<<endl;
-
-	ofstream modelfile;
-	modelfile.open(scipt_file_with_path);
-	if (modelfile.is_open()) {
-		//std::cout << "\nFile " << scipt_file_with_path << " created for Matlab (Simulink Model Creation) ...\n";
-		//std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
-		modelfile << "%% Script file for generating Programmatically Simulink Model!";
-		modelfile << "\n";
-		generateSimulinkModelScript(modelfile);
-
-	} else {
-		std::cout << "Error opening file: " << scipt_file_with_path;
-	}
-
-	modelfile.close();
-	//std::cout << "\n Script file created ...\n";
-
-
+    cout << "Script file " << script_file_with_path << " generated" << endl;
 }
 
 void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
 	printDefinition(outfile);	//prints the header information
 
 	unsigned int oneVersusOne_oneVersusRest = 1;	//1 for One-Versus-One and 2 for One-Versus-Rest
-
 
 	if (ha->getTotalLocations() == 3 && oneVersusOne_oneVersusRest==2) {	//Create random Matlab function only when non-deterministic situation arise
 		addMatlabFunction(outfile);
@@ -167,6 +110,8 @@ void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
 	addTransitions(outfile);
 	addDefaultTransition(outfile);
 	variableCreation(outfile);
+
+    assert(simulinkModelName != "");
 
 	//Output ports from the Chart to be connected using lines to the outputComponents
 	outfile << "\n\n";
@@ -189,10 +134,7 @@ void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
 }
 
 void simulinkModelConstructor::printDefinition(ofstream &outfile) {
-	//std::cout <<"outfile =" << std::endl;
 	string variable_name = "";
-	/*string outfile_withoutExtension = intermediate->getOutputfilenameWithoutExtension();
-	simulinkModelName = outfile_withoutExtension.append(std::to_string(iteration));*/ //Already done
 
 	outfile << "bdclose all; \n";
 	//outfile << "sfnew " << outfile_withoutExtension << iteration << "; \n";
@@ -1044,7 +986,7 @@ int simulinkModelConstructor::executeSimulinkModelConstructor(std::unique_ptr<MA
 		cmd1.append("'))");
 //		std::cout << cmd1 << endl;
 		//x = engEvalString(ep, cmd1.c_str());
-		ep->eval(convertUTF8StringToUTF16String(cmd1));
+		MATLAB_EVAL(ep, cmd1);
 	}
 
 
@@ -1052,24 +994,23 @@ int simulinkModelConstructor::executeSimulinkModelConstructor(std::unique_ptr<MA
 	//cmd2="cd('../../../Release/";
 	//cmd2.append(folderName);
 	//cmd2.append("')");
-//	cout<< "Learned model path=" << intermediate->getMatlabPathForLearnedModel() << endl;
+    //	cout<< "Learned model path=" << intermediate->getMatlabPathForLearnedModel() << endl;
 	//engEvalString(ep, "cd('../src/benchmark/circle')");
 	cmd2="cd('";
 	cmd2.append(intermediate->getMatlabPathForLearnedModel());
 	cmd2.append("')");
 	//cout << "cmd2=" << cmd2 << endl;
-	ep->eval(convertUTF8StringToUTF16String(cmd2));
+	MATLAB_EVAL(ep, cmd2);
 
 	// ------------------------------------ ******* ------------------------------------------
-	//ep->eval(convertUTF8StringToUTF16String(simulinkModelName));
-	ep->eval(convertUTF8StringToUTF16String(script_for_simulinkModelName)); //Executed the script file to create a simulink model file
+	MATLAB_RUN(ep, script_for_simulinkModelName); //Executed the script file to create a simulink model file
 	// ------------------------------------ ******* ------------------------------------------
 
 	user->setNumberMatlabSimulationExecutedEquivalenceTest(execution_count + 1);
 
-	ep->eval(u"sfclose;");
-	ep->eval(u"bdclose all;");
-	ep->eval(u"clear;");
+	MATLAB_EVAL(ep, "sfclose;");
+	MATLAB_EVAL(ep, "bdclose all;");
+	MATLAB_EVAL(ep, "clear;");
 
 	//printf("Simulink Model of the Learned Model created!!\n");
 
@@ -1093,275 +1034,277 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
  * This function creates a Matlab script file for running the .slx model generated by the engine txt2slx.
  * Since main function of the engine is to generate the .slx model and not perform simulation. Thus, the script file only contain sample code.
  */
-	ofstream modelfile;
 	std::string filePath = intermediate->getMatlabPathForLearnedModel();
-	std::string filename = "run_";
+
+    // filename= run_xxx0.m
+	std::string filename = "runy_";
 	filename.append(intermediate->getOutputfilenameWithoutExtension());
 	filename.append(to_string(iteration));
-	//filename.append(to_string(user->getNumberMatlabSimulationExecutedEquivalenceTest()));
 	filename.append(".m");
-	std::string cmd = filePath; //Absolute path
-	cmd.append("/");
-	cmd.append(filename);
-	modelfile.open(cmd);
-	if (modelfile.is_open()) {
-		std::cout << "\nFile " << cmd << " created for Matlab (Setting up and Execution of Simulink Model) ...\n";
-		//std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
-		modelfile << "%% ******** Simulate Learned Model ******** \n";
-		modelfile << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
-		modelfile << "% run this file with the following variables in the workspace \n";
-		modelfile << "%       time_horizon:  Simulation Stop time or the simulation Time-Horizon \n";
-		modelfile << "%       time_step:   Maximum simulation time-step \n";
-		modelfile << "%       x0_0:       First variable initial value \n";
-		modelfile << "%       x1_0:       Second variable initial value \n";
-		modelfile << "\n \n \n";
 
-//		modelfile << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
-//		modelfile << "timeStepMax =" << user->getSampleTime() << "; %Maximum simulation time-step \n";
+    // $filePath/$filename
+	std::string path = filePath; //Absolute path
+	path.append("/");
+	path.append(filename);
 
-		modelfile << "timeFinal = "<< user->getTimeHorizon() <<"; %Simulation Stop time or the simulation Time-Horizon \n";
-		modelfile << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
-
-		modelfile << "\n % initial values for Simulation \n";
-
-		std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
-
-		location::ptr loc = ha->getLocation(1);	//since our location starts from 1
-		list<flow_equation> derivatives = loc->getDerivatives();
-		unsigned int dim = ha->map_size(); //size of the variable mapping
-
-		//use output variables to match only output variables and get the value. Assumed order is maintained even in the initial polytope creation
-		assert(initial_output_values.size() == ha->map_size());	//double check
-		for (unsigned int index=0; index < ha->map_size(); index++) {
-			std::string varName = ha->get_varname(index);
-			//std::cout <<"varName:" << varName << " index:" << index << std::endl;
-			if (!(user->isInputVariable(varName))) {
-				modelfile << "a" << index << " = " << initial_output_values[index] << ";  % user modifies this initial (state) values to the desired values\n";
-			}
-		}
-
-/*
-		for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
-			string prime_variableName = (*it_flow).varName;	//eg x0'
-			size_t pos = prime_variableName.find("'");
-			string variableName = prime_variableName.substr(0, pos);	//extract only the variable name minus derivative symbol
-			//modelfile << "a" << val << " = x" << val << "_0; \n";
-
-			if (!(user->isInputVariable(variableName))) {	//print only for output variables and not for input variables
-				// Todo: generate random input from user supplied initial set
-				//modelfile << "a" << val << " = initial_point(" << val + 1 << "); \n"; //val+1 since Matlab is One-Indexing
-				modelfile << "a" << val << " = 1.0; % user modifies this initial (state) values to the desired values\n"; // Hopping user will modify this initial values from 1.0 to the desired values
-			}
-
-			val++;
-		}*/
-
-
-
-		string simulinkModelName = intermediate->getOutputfilenameWithoutExtension();
-		simulinkModelName.append(to_string(iteration));
-
-		modelfile << "\n %% Putting the Warning Off \n";
-		modelfile << "\nwarning('off','all'); \n";
-
-		modelfile << "\n %% Load the model \n";
-		modelfile << "mdl ='" << simulinkModelName << "'; \n" ;
-		modelfile << "load_system(mdl); \n" ;
-		modelfile << "format shortG; \n" ;
-
-
-
-		//Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
-		//Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
-		if (user->getListInputVariables().size() > 0) {
-
-			modelfile << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
-			modelfile << "%%%%% our Tool using random bounded by initial input values or from CE \n";
-
-			modelfile << "% Make SimulationData.Dataset to feed to the Simulink model \n";
-			modelfile << "ds = Simulink.SimulationData.Dataset; \n";
-			modelfile << "%% \n";
-
-			//cout <<"\nData Set Details are " << endl;
-			//cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
-			std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
-			std::string timeseries_input_value="", timeseries_varName="";
-			std::string str_addElement="", input_port_Name="";
-
-			unsigned int tot_size=0;
-			for (std::list<struct timeseries_input>::iterator it_in = init_point.begin(); it_in != init_point.end(); it_in++) {
-				input_variable_data="";	time_data="";	input_data_varName="";
-				 input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
-				str_addElement="";	input_port_Name="";
-				if (user->isInputVariable((*it_in).var_detail.var_name)) {
-
-					input_data_varName.append((*it_in).var_detail.var_name);
-					input_data_varName.append("_input");
-					input_variable_data.append(input_data_varName);
-					input_variable_data.append(" = [");
-					//cout <<"\nDataVector are: ";
-					tot_size = (*it_in).var_values.size();
-					for (unsigned int i=0; i<(*it_in).var_values.size(); i++) {
-						//cout <<(*it_in).var_values[i] << "\t";
-						input_variable_data.append(to_string((*it_in).var_values[i]));
-						if (i < (tot_size - 1)) {
-							input_variable_data.append(" ");
-						}
-					}
-					input_variable_data.append("]; \n");
-					modelfile << input_variable_data ;
-
-					input_time_varName.append((*it_in).var_detail.var_name);
-					input_time_varName.append("_time");
-					time_data.append(input_time_varName);
-					time_data.append(" = [");
-					assert(tot_size == (*it_in).time_values.size()); //is a must for MatLab
-					for (unsigned int i=0; i<(*it_in).time_values.size(); i++) {
-						//cout <<(*it_in).time_values[i] << "\t";
-						time_data.append(to_string((*it_in).time_values[i]));
-						if (i < (tot_size - 1)) {
-							time_data.append(" ");
-						}
-					}
-					time_data.append("]; \n");
-					modelfile << time_data;
-
-					//Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
-					timeseries_varName.append("timeseries_");
-					timeseries_varName.append(input_data_varName);
-
-					timeseries_input_value.append(timeseries_varName);
-					timeseries_input_value.append(" = timeseries(");
-					timeseries_input_value.append(input_data_varName);
-					timeseries_input_value.append(", ");
-					timeseries_input_value.append(input_time_varName);
-					timeseries_input_value.append("); \n");
-
-					modelfile << timeseries_input_value;
-					/*
-					 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
-					 * This is the naming convention applied in the "txt2slx" process/engine.
-					 */
-					input_port_Name.append((*it_in).var_detail.var_name);
-					input_port_Name.append("In");
-
-					str_addElement.append("ds = ds.addElement(");
-					str_addElement.append(timeseries_varName);
-					str_addElement.append(", '");
-					str_addElement.append(input_port_Name);
-					//Note: the variable 'u' should be created as input_port in the simulink model
-					str_addElement.append("'); \n %% \n");
-
-					modelfile << str_addElement;
-
-				} //working only for input variables
-
-			} //end of iterating all the variables
-
-
-
-
-			//modelfile << "%% This is sample-code, below present code only for a single input u. Similarly, it can be extended for more input variables. \n";
-			//modelfile << "u_input = [5 10 15]; \n";
-			//modelfile << "u_time = [0 5 10]; \n";
-//			modelfile << "%%%%%% Deterministic single input value %%%%%%  \n";
-//			modelfile << "% u_input = 10;   % In Breach use SetParamRanges({'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [10 20; 10 60]) \n";
-//			modelfile << "% u_time = 0; \n";
-			//modelfile << "timeseriese_input_value = timeseries(u_input, u_time); \n";
-			//modelfile << "% Make SimulationData.Dataset to feed to the Simulink model \n";
-			//modelfile << "ds = Simulink.SimulationData.Dataset; \n";
-
-
-			//modelfile << "ds = ds.addElement(timeseriese_input_value,'u'); \n";	//Note: the variable 'u' should be created as input_port in the simulink model
-			//modelfile << "%% \n";
-			modelfile << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
-			modelfile << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
-
-		} //end-if check on input variable count
-
-
-
-		modelfile << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
-
-		modelfile << "%% Plot the result \n" ;
-		modelfile << "y = simOut.get('yOut'); \n" ;
-		modelfile << "t = simOut.get('tOut'); \n" ;
-		modelfile << "[rsize, csize] = size(y); \n" ;
-		modelfile << "for i=1:csize \n" ;
-		modelfile << "	figure(i); \n" ;
-		modelfile << "	plot(t, y( : , i)); \n" ;
-		modelfile << "end \n" ;
-
-		modelfile << "%Write the simulation result to the txt file \n" ;
-		//modelfile << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
-		string output_str="result_matrix = [t, ";
-		unsigned int i=1;
-		for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
-			output_str.append("y( : ,");
-			output_str.append(to_string(i));
-			output_str.append(")");
-			if (dim > 1 && i < dim) {
-				output_str.append(", ");
-			}
-			i++;
-		}
-		output_str.append("]; \n");
-		modelfile << output_str;
-
-
-
-
-/*		modelfile << "result = sim('"<< simulinkModelName << "'); \n" ;
-		modelfile << "tout = result.tout;  \n" ;
-
-		//Get the variable name for plotting from the user and use only those two variables
-		unsigned int i=0;
-		for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
-			string prime_variableName = (*it_flow).varName;	//eg x0'
-			size_t pos = prime_variableName.find("'");
-			string variableName = prime_variableName.substr(0, pos);	//extract only the variable name minus derivative symbol
-
-			modelfile << "x" << i <<  "= result.yout.getElement('" << variableName<< "Out').Values.Data; \n" ;
-			modelfile << "figure(" << i + 1 << ");  \n" ;
-			modelfile << "plot(tout, x" << i <<"); \n" ;
-
-			i++;
-		}*/
-
-		/*
-		modelfile << "figure(1);  \n" ;
-		modelfile << "x1 = result.yout.getElement('" << user->getPlotVars().first_variable << "Out').Values.Data; \n" ;
-		modelfile << "x2 = result.yout.getElement('" << user->getPlotVars().second_variable << "Out').Values.Data; \n" ;
-		modelfile << "plot(x1,x2); \n" ;*/
-
-/*
-		modelfile << "%Write the simulation result to the txt file \n" ;
-		//modelfile << "result_matrix = [tout, x1, x2]; \n" ;
-		string output_str="result_matrix = [tout, ";
-		i=0;
-		for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
-			output_str.append("x");
-			output_str.append(to_string(i));
-			if (dim > 1 && i < (dim - 1)) {
-				output_str.append(", ");
-			}
-			i++;
-		}
-		output_str.append("]; \n");
-		modelfile << output_str;
-*/
-
-
-		//modelfile << "result_filename = 'result.tsv'; \n" ;
-		modelfile << "result_filename = 'result.txt'; \n" ;
-		//modelfile << "writematrix(result_matrix, result_filename, 'FileType', 'text', 'Delimiter', 'tab'); \n" ;
-		modelfile << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
-
-	} else {
-		std::cout << "Error opening file: " << cmd;
+	ofstream ofs;
+	ofs.open(path);
+	if (!ofs.is_open()) {
+		std::cout << "Error opening file: " << path;
+        throw std::runtime_error("Error opening file: " + path);
 	}
 
-	modelfile.close();
+    std::cout << "\nFile " << path << " created for Matlab (Setting up and Execution of Simulink Model) ...\n";
+    //std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
+    ofs << "%% ******** Simulate Learned Model ******** \n";
+    ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
+    ofs << "% run this file with the following variables in the workspace \n";
+    ofs << "%       time_horizon:  Simulation Stop time or the simulation Time-Horizon \n";
+    ofs << "%       time_step:   Maximum simulation time-step \n";
+    ofs << "%       x0_0:       First variable initial value \n";
+    ofs << "%       x1_0:       Second variable initial value \n";
+    ofs << "\n \n \n";
+
+    //		ofs << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
+    //		ofs << "timeStepMax =" << user->getSampleTime() << "; %Maximum simulation time-step \n";
+
+    ofs << "timeFinal = "<< user->getTimeHorizon() <<"; %Simulation Stop time or the simulation Time-Horizon \n";
+    ofs << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
+
+    ofs << "\n % initial values for Simulation \n";
+
+    std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
+
+    location::ptr loc = ha->getLocation(1);	//since our location starts from 1
+    list<flow_equation> derivatives = loc->getDerivatives();
+    unsigned int dim = ha->map_size(); //size of the variable mapping
+
+    //use output variables to match only output variables and get the value. Assumed order is maintained even in the initial polytope creation
+    assert(initial_output_values.size() == ha->map_size());	//double check
+    for (unsigned int index=0; index < ha->map_size(); index++) {
+        std::string varName = ha->get_varname(index);
+        //std::cout <<"varName:" << varName << " index:" << index << std::endl;
+        if (!(user->isInputVariable(varName))) {
+            ofs << "a" << index << " = " << initial_output_values[index] << ";  % user modifies this initial (state) values to the desired values\n";
+        }
+    }
+
+    /*
+      for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
+      string prime_variableName = (*it_flow).varName;	//eg x0'
+      size_t pos = prime_variableName.find("'");
+      string variableName = prime_variableName.substr(0, pos);	//extract only the variable name minus derivative symbol
+      //ofs << "a" << val << " = x" << val << "_0; \n";
+
+      if (!(user->isInputVariable(variableName))) {	//print only for output variables and not for input variables
+      // Todo: generate random input from user supplied initial set
+      //ofs << "a" << val << " = initial_point(" << val + 1 << "); \n"; //val+1 since Matlab is One-Indexing
+      ofs << "a" << val << " = 1.0; % user modifies this initial (state) values to the desired values\n"; // Hopping user will modify this initial values from 1.0 to the desired values
+      }
+
+      val++;
+      }*/
+
+
+
+    string simulinkModelName = intermediate->getOutputfilenameWithoutExtension();
+    simulinkModelName.append(to_string(iteration));
+
+    ofs << "\n %% Putting the Warning Off \n";
+    ofs << "\nwarning('off','all'); \n";
+
+    ofs << "\n %% Load the model \n";
+    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
+    ofs << "load_system(mdl); \n" ;
+    ofs << "format shortG; \n" ;
+
+    //Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
+    //Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
+    if (user->getListInputVariables().size() > 0) {
+
+        ofs << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
+        ofs << "%%%%% our Tool using random bounded by initial input values or from CE \n";
+
+        ofs << "% Make SimulationData.Dataset to feed to the Simulink model \n";
+        ofs << "ds = Simulink.SimulationData.Dataset; \n";
+        ofs << "%% \n";
+
+        //cout <<"\nData Set Details are " << endl;
+        //cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
+        std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
+        std::string timeseries_input_value="", timeseries_varName="";
+        std::string str_addElement="", input_port_Name="";
+
+        unsigned int tot_size=0;
+        for (std::list<struct timeseries_input>::iterator it_in = init_point.begin(); it_in != init_point.end(); it_in++) {
+            input_variable_data="";	time_data="";	input_data_varName="";
+            input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
+            str_addElement="";	input_port_Name="";
+            if (user->isInputVariable((*it_in).var_detail.var_name)) {
+
+                input_data_varName.append((*it_in).var_detail.var_name);
+                input_data_varName.append("_input");
+                input_variable_data.append(input_data_varName);
+                input_variable_data.append(" = [");
+                //cout <<"\nDataVector are: ";
+                tot_size = (*it_in).var_values.size();
+                for (unsigned int i=0; i<(*it_in).var_values.size(); i++) {
+                    //cout <<(*it_in).var_values[i] << "\t";
+                    input_variable_data.append(to_string((*it_in).var_values[i]));
+                    if (i < (tot_size - 1)) {
+                        input_variable_data.append(" ");
+                    }
+                }
+                input_variable_data.append("]; \n");
+                ofs << input_variable_data ;
+
+                input_time_varName.append((*it_in).var_detail.var_name);
+                input_time_varName.append("_time");
+                time_data.append(input_time_varName);
+                time_data.append(" = [");
+                assert(tot_size == (*it_in).time_values.size()); //is a must for MatLab
+                for (unsigned int i=0; i<(*it_in).time_values.size(); i++) {
+                    //cout <<(*it_in).time_values[i] << "\t";
+                    time_data.append(to_string((*it_in).time_values[i]));
+                    if (i < (tot_size - 1)) {
+                        time_data.append(" ");
+                    }
+                }
+                time_data.append("]; \n");
+                ofs << time_data;
+
+                //Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
+                timeseries_varName.append("timeseries_");
+                timeseries_varName.append(input_data_varName);
+
+                timeseries_input_value.append(timeseries_varName);
+                timeseries_input_value.append(" = timeseries(");
+                timeseries_input_value.append(input_data_varName);
+                timeseries_input_value.append(", ");
+                timeseries_input_value.append(input_time_varName);
+                timeseries_input_value.append("); \n");
+
+                ofs << timeseries_input_value;
+                /*
+                 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
+                 * This is the naming convention applied in the "txt2slx" process/engine.
+                 */
+                input_port_Name.append((*it_in).var_detail.var_name);
+                input_port_Name.append("In");
+
+                str_addElement.append("ds = ds.addElement(");
+                str_addElement.append(timeseries_varName);
+                str_addElement.append(", '");
+                str_addElement.append(input_port_Name);
+                //Note: the variable 'u' should be created as input_port in the simulink model
+                str_addElement.append("'); \n %% \n");
+
+                ofs << str_addElement;
+
+            } //working only for input variables
+
+        } //end of iterating all the variables
+
+
+
+
+        //ofs << "%% This is sample-code, below present code only for a single input u. Similarly, it can be extended for more input variables. \n";
+        //ofs << "u_input = [5 10 15]; \n";
+        //ofs << "u_time = [0 5 10]; \n";
+        //			ofs << "%%%%%% Deterministic single input value %%%%%%  \n";
+        //			ofs << "% u_input = 10;   % In Breach use SetParamRanges({'Pedal_Angle_pulse_period', 'Pedal_Angle_pulse_amp'}, [10 20; 10 60]) \n";
+        //			ofs << "% u_time = 0; \n";
+        //ofs << "timeseriese_input_value = timeseries(u_input, u_time); \n";
+        //ofs << "% Make SimulationData.Dataset to feed to the Simulink model \n";
+        //ofs << "ds = Simulink.SimulationData.Dataset; \n";
+
+
+        //ofs << "ds = ds.addElement(timeseriese_input_value,'u'); \n";	//Note: the variable 'u' should be created as input_port in the simulink model
+        //ofs << "%% \n";
+        ofs << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
+        ofs << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
+
+    } //end-if check on input variable count
+
+
+
+    ofs << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
+
+    ofs << "%% Plot the result \n" ;
+    ofs << "y = simOut.get('yOut'); \n" ;
+    ofs << "t = simOut.get('tOut'); \n" ;
+    ofs << "[rsize, csize] = size(y); \n" ;
+    ofs << "for i=1:csize \n" ;
+    ofs << "	figure(i); \n" ;
+    ofs << "	plot(t, y( : , i)); \n" ;
+    ofs << "end \n" ;
+
+    ofs << "%Write the simulation result to the txt file \n" ;
+    //ofs << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
+    string output_str="result_matrix = [t, ";
+    unsigned int i=1;
+    for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
+        output_str.append("y( : ,");
+        output_str.append(to_string(i));
+        output_str.append(")");
+        if (dim > 1 && i < dim) {
+            output_str.append(", ");
+        }
+        i++;
+    }
+    output_str.append("]; \n");
+    ofs << output_str;
+
+
+
+
+    /*		ofs << "result = sim('"<< simulinkModelName << "'); \n" ;
+            ofs << "tout = result.tout;  \n" ;
+
+            //Get the variable name for plotting from the user and use only those two variables
+            unsigned int i=0;
+            for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
+			string prime_variableName = (*it_flow).varName;	//eg x0'
+			size_t pos = prime_variableName.find("'");
+			string variableName = prime_variableName.substr(0, pos);	//extract only the variable name minus derivative symbol
+
+			ofs << "x" << i <<  "= result.yout.getElement('" << variableName<< "Out').Values.Data; \n" ;
+			ofs << "figure(" << i + 1 << ");  \n" ;
+			ofs << "plot(tout, x" << i <<"); \n" ;
+
+			i++;
+            }*/
+
+    /*
+      ofs << "figure(1);  \n" ;
+      ofs << "x1 = result.yout.getElement('" << user->getPlotVars().first_variable << "Out').Values.Data; \n" ;
+      ofs << "x2 = result.yout.getElement('" << user->getPlotVars().second_variable << "Out').Values.Data; \n" ;
+      ofs << "plot(x1,x2); \n" ;*/
+
+    /*
+      ofs << "%Write the simulation result to the txt file \n" ;
+      //ofs << "result_matrix = [tout, x1, x2]; \n" ;
+      string output_str="result_matrix = [tout, ";
+      i=0;
+      for (list<flow_equation>::iterator it_flow = derivatives.begin(); it_flow != derivatives.end(); it_flow++) {
+      output_str.append("x");
+      output_str.append(to_string(i));
+      if (dim > 1 && i < (dim - 1)) {
+      output_str.append(", ");
+      }
+      i++;
+      }
+      output_str.append("]; \n");
+      ofs << output_str;
+    */
+
+
+    //ofs << "result_filename = 'result.tsv'; \n" ;
+    ofs << "result_filename = 'result.txt'; \n" ;
+    //ofs << "writematrix(result_matrix, result_filename, 'FileType', 'text', 'Delimiter', 'tab'); \n" ;
+    ofs << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
+
+	ofs.close();
 	std::cout << "\n Script file created for running the Learned Simulink Model ...\n";
 }
 
@@ -1376,229 +1319,218 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
  */
 void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename) {
 
+    cout << "simulinkModelConstructor::create_runScript_for_simu_engine "
+         << simulink_model_filename << " "
+         << script_filename << " "
+         << output_filename << endl;
+
 	/*
 	 * This file is called from the engine/module: simu and equi-test and now from learn-ha also
 	 * This function creates a Matlab script file for running the .slx model supplied by the user.
 	 * Since main function of this engine is to perform simulation and return the accumulated time-serise data
 	 */
-	ofstream modelfile;
-	std::string filePath="";
-	if ((user->getEngine()=="simu") || (user->getEngine()=="equi-test")) {
-		filePath = intermediate->getMatlabPathForLearnedModel();
-	} else if ((user->getEngine()=="learn-ha") || (user->getEngine()=="learn-ha-loop")) {
-		filePath = intermediate->getMatlabPathForOriginalModel();
+	ofstream ofs;
+
+    cout << "Building model file " << script_filename << endl;
+
+	ofs.open(script_filename);
+    if (!ofs.is_open()) {
+		std::cout << "Error opening file: " << script_filename;
+        throw std::runtime_error("Error opening file " + script_filename);
 	}
 
-	/*std::cout <<"File name without path:" << script_filename << std::endl;
-	std::cout <<"File name with path:" << simulink_model_filename << std::endl;
-	std::cout <<"getMatlabPathForLearnedModel:" << filePath << std::endl;*/
+    ofs << "%% ******** Simulate User Supplied Model ******** \n";
+    ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
+    ofs << "% run this file with the following variables in the workspace \n";
+    ofs << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
+    ofs << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
+    ofs << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
 
-	std::string filename = script_filename;	//"run_script_simu_user_model.m";
-	std::string cmd = filePath; //Absolute path
-	cmd.append("/");
-	cmd.append(filename);
-
-	//std::cout <<"File name:" << cmd << std::endl;
-
-	modelfile.open(cmd);
-	if (modelfile.is_open()) {
-//		std::cout << "\nRunning Script File " << cmd << " created!!\n";
-		//std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
-		modelfile << "%% ******** Simulate User Supplied Model ******** \n";
-		modelfile << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
-		modelfile << "% run this file with the following variables in the workspace \n";
-		modelfile << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
-		modelfile << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
-		modelfile << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
-
-		modelfile << "%    x0_input:       control point for the first input variable \n";
-		modelfile << "%    x0_time:       time series for the first input variable \n";
-		modelfile << "%    x1_input:       control point for the second input variable \n";
-		modelfile << "%    x1_time:       time series for the second input variable ..... and so on. \n";
-		modelfile << "%     \n";
-		modelfile << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
-		modelfile << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
+    ofs << "%    x0_input:       control point for the first input variable \n";
+    ofs << "%    x0_time:       time series for the first input variable \n";
+    ofs << "%    x1_input:       control point for the second input variable \n";
+    ofs << "%    x1_time:       time series for the second input variable ..... and so on. \n";
+    ofs << "%     \n";
+    ofs << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
+    ofs << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
 
 
-		modelfile << "\n \n \n";
+    ofs << "\n \n \n";
 
-		modelfile << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
-		modelfile << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
+    ofs << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
+    ofs << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
 
-		modelfile << "\n % initial values for Simulation \n";
+    ofs << "\n % initial values for Simulation \n";
 
-		std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
-
-
-		std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
-
-		size_t found = outfilename.find(".");	//extract file-name from extension
-		if (found != string::npos) {
-			outfilename = outfilename.substr (0,found);
-		}
-
-		std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
-
-		modelfile << "\n %% Putting the Warning Off \n";
-		modelfile << "\nwarning('off','all'); \n";
-
-		modelfile << "\n %% Load the model \n";
-		modelfile << "mdl ='" << simulinkModelName << "'; \n" ;
-		modelfile << "load_system(mdl); \n" ;
-		modelfile << "format shortG; \n" ;
+    std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
 
 
-		//Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
-		//Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
-		if (user->getListInputVariables().size() > 0) {
+    std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
 
-			modelfile << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
-			modelfile << "%%%%% our Tool using random bounded by initial input values or from CE \n";
+    size_t found = outfilename.find(".");	//extract file-name from extension
+    if (found != string::npos) {
+        outfilename = outfilename.substr (0,found);
+    }
 
-			modelfile << "% Make SimulationData.Dataset to feed to the Simulink model \n";
-			modelfile << "ds = Simulink.SimulationData.Dataset; \n";
-			modelfile << "%% \n";
+    std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
 
-			//cout <<"\nData Set Details are " << endl;
-			//cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
-			std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
-			std::string timeseries_input_value="", timeseries_varName="";
-			std::string str_addElement="", input_port_Name="";
+    ofs << "\n %% Putting the Warning Off \n";
+    ofs << "\nwarning('off','all'); \n";
 
-			//unsigned int tot_size=0;
-			std::list<std::string> input_variables= user->getListInputVariables();
+    ofs << "\n %% Load the model \n";
+    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
+    ofs << "load_system(mdl); \n" ;
+    ofs << "format shortG; \n" ;
 
-			for (std::list<std::string>::iterator inputVar = input_variables.begin(); inputVar != input_variables.end(); inputVar++) {
-				std::string varName = (*inputVar);
-				input_variable_data="";	time_data="";	input_data_varName="";
-				 input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
-				str_addElement="";	input_port_Name="";
-				if (user->isInputVariable(varName)) {	//Although now this check is not required
+    //Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
+    //Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
+    if (user->getListInputVariables().size() > 0) {
 
-					input_data_varName.append(varName);
-					input_data_varName.append("_input");
+        ofs << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
+        ofs << "%%%%% our Tool using random bounded by initial input values or from CE \n";
 
-					input_time_varName.append(varName);
-					input_time_varName.append("_time");
+        ofs << "% Make SimulationData.Dataset to feed to the Simulink model \n";
+        ofs << "ds = Simulink.SimulationData.Dataset; \n";
+        ofs << "%% \n";
 
-					//Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
-					timeseries_varName.append("timeseries_");
-					timeseries_varName.append(input_data_varName);
+        //cout <<"\nData Set Details are " << endl;
+        //cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
+        std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
+        std::string timeseries_input_value="", timeseries_varName="";
+        std::string str_addElement="", input_port_Name="";
 
-					timeseries_input_value.append(timeseries_varName);
-					timeseries_input_value.append(" = timeseries(");
-					timeseries_input_value.append(input_data_varName);
-					timeseries_input_value.append(", ");
-					timeseries_input_value.append(input_time_varName);
-					timeseries_input_value.append("); \n");
+        //unsigned int tot_size=0;
+        std::list<std::string> input_variables= user->getListInputVariables();
 
-					modelfile << timeseries_input_value;
-					/*
-					 * Todo:
-					 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
-					 * This is the naming convention applied in the "txt2slx" process/engine. In general, when no name is assigned in the simulink model it is "In1" "In2" by default
-					 */
-					input_port_Name.append(varName);
-					input_port_Name.append("In");
+        for (std::list<std::string>::iterator inputVar = input_variables.begin(); inputVar != input_variables.end(); inputVar++) {
+            std::string varName = (*inputVar);
+            input_variable_data="";	time_data="";	input_data_varName="";
+            input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
+            str_addElement="";	input_port_Name="";
+            if (user->isInputVariable(varName)) {	//Although now this check is not required
 
-					str_addElement.append("ds = ds.addElement(");
-					str_addElement.append(timeseries_varName);
-					str_addElement.append(", '");
-					str_addElement.append(input_port_Name);
-					//Note: the variable 'u' should be created as input_port in the simulink model
-					str_addElement.append("'); \n %% \n");
+                input_data_varName.append(varName);
+                input_data_varName.append("_input");
 
-					modelfile << str_addElement;
+                input_time_varName.append(varName);
+                input_time_varName.append("_time");
 
-				} //working only for input variables
+                //Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
+                timeseries_varName.append("timeseries_");
+                timeseries_varName.append(input_data_varName);
 
-			} //end of iterating all the variables
+                timeseries_input_value.append(timeseries_varName);
+                timeseries_input_value.append(" = timeseries(");
+                timeseries_input_value.append(input_data_varName);
+                timeseries_input_value.append(", ");
+                timeseries_input_value.append(input_time_varName);
+                timeseries_input_value.append("); \n");
+
+                ofs << timeseries_input_value;
+                /*
+                 * Todo:
+                 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
+                 * This is the naming convention applied in the "txt2slx" process/engine. In general, when no name is assigned in the simulink model it is "In1" "In2" by default
+                 */
+                input_port_Name.append(varName);
+                input_port_Name.append("In");
+
+                str_addElement.append("ds = ds.addElement(");
+                str_addElement.append(timeseries_varName);
+                str_addElement.append(", '");
+                str_addElement.append(input_port_Name);
+                //Note: the variable 'u' should be created as input_port in the simulink model
+                str_addElement.append("'); \n %% \n");
+
+                ofs << str_addElement;
+
+            } //working only for input variables
+
+        } //end of iterating all the variables
 
 
-			modelfile << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
-			modelfile << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
+        ofs << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
+        ofs << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
 
-		} //end-if check on input variable count
+    } //end-if check on input variable count
 
 
 
-		modelfile << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
+    ofs << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
 
-		modelfile << "%% Plot the result \n" ;
-		modelfile << "y = simOut.get('yOut'); \n" ;
-		modelfile << "t = simOut.get('tOut'); \n" ;
-		modelfile << "[rsize, csize] = size(y); \n" ;
-		//*********** Plotting the original output from the Simulink model *****************
-		modelfile << "for i=1:csize \n" ;
-		modelfile << "	figure(i); \n" ;
-		modelfile << "	plot(t, y( : , i)); \n" ;
-		modelfile << "	title('Original Model','FontSize',26, 'FontWeight', 'bold'); \n" ;
-		modelfile << "	xlabel('time', 'FontSize',26, 'FontWeight', 'bold'); \n" ;
-		modelfile << "	grid on; \n" ;
-		modelfile << "	grid minor; \n" ;
-		modelfile << "end \n" ;
+    ofs << "%% Plot the result \n" ;
+    ofs << "y = simOut.get('yOut'); \n" ;
+    ofs << "t = simOut.get('tOut'); \n" ;
+    ofs << "[rsize, csize] = size(y); \n" ;
+    //*********** Plotting the original output from the Simulink model *****************
+    ofs << "for i=1:csize \n" ;
+    ofs << "	figure(i); \n" ;
+    ofs << "	plot(t, y( : , i)); \n" ;
+    ofs << "	title('Original Model','FontSize',26, 'FontWeight', 'bold'); \n" ;
+    ofs << "	xlabel('time', 'FontSize',26, 'FontWeight', 'bold'); \n" ;
+    ofs << "	grid on; \n" ;
+    ofs << "	grid minor; \n" ;
+    ofs << "end \n" ;
 
-		//*********** Plotting original output done *****************
+    //*********** Plotting original output done *****************
 
-		// ******* If Data Filtering required by the user ***********
+    // ******* If Data Filtering required by the user ***********
 
-		//std::cout<<" user selected fixed/variable-step solver?: " << user->getFixedIntervalData() << std::endl;
-		if (user->getFixedIntervalData()==1) {	// 0: variable outputs obtained from the model-solver. 1: get fixed timestep outputs.
-			addFilteringCode(modelfile);
-		}
+    //std::cout<<" user selected fixed/variable-step solver?: " << user->getFixedIntervalData() << std::endl;
+    if (user->getFixedIntervalData()==1) {	// 0: variable outputs obtained from the model-solver. 1: get fixed timestep outputs.
+        addFilteringCode(ofs);
+    }
 
-		// *********** Data Filtering done ***********
+    // *********** Data Filtering done ***********
 
 
-		modelfile << "% Write the simulation result to the txt file \n" ;
-		//modelfile << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
-		string output_str="result_matrix = [t, ";
-		//unsigned int i=1;
+    ofs << "% Write the simulation result to the txt file \n" ;
+    //ofs << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
+    string output_str="result_matrix = [t, ";
+    //unsigned int i=1;
 
-		//location::ptr loc = ha->getLocation(1);	//since our location starts from 1
-		//list<flow_equation> derivatives = loc->getDerivatives();
-		unsigned int dim=ha->map_size(); //size of the variable mapping
+    //location::ptr loc = ha->getLocation(1);	//since our location starts from 1
+    //list<flow_equation> derivatives = loc->getDerivatives();
+    unsigned int dim=ha->map_size(); //size of the variable mapping
 
-		// ---------------------------------
-		//Todo: first write the input variables and then the output variables
-		unsigned int output_size = user->getListOutputVariables().size();
+    // ---------------------------------
+    //Todo: first write the input variables and then the output variables
+    unsigned int output_size = user->getListOutputVariables().size();
 
-		//Writing first the input variables, which is all followed by the output ports
-		for (unsigned int i=output_size; i < dim; i++) {
-			output_str.append("y( : , ");
-			output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
-			output_str.append(")");
-			if (dim > 1) {
-				output_str.append(", ");
-			}
-		}
+    //Writing first the input variables, which is all followed by the output ports
+    for (unsigned int i=output_size; i < dim; i++) {
+        output_str.append("y( : , ");
+        output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
+        output_str.append(")");
+        if (dim > 1) {
+            output_str.append(", ");
+        }
+    }
 
-		//Writing then the output variables, which are the starting output ports
-		for (unsigned int i=0; i < output_size; i++) {
-			output_str.append("y( : , ");
-			output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
-			output_str.append(")");
-			if (dim > 1 && i < (output_size - 1)) {
-				output_str.append(", ");
-			}
-		}
+    //Writing then the output variables, which are the starting output ports
+    for (unsigned int i=0; i < output_size; i++) {
+        output_str.append("y( : , ");
+        output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
+        output_str.append(")");
+        if (dim > 1 && i < (output_size - 1)) {
+            output_str.append(", ");
+        }
+    }
 
-		// ---------------------------------
+    // ---------------------------------
 
-		output_str.append("]; \n");
-		modelfile << output_str;
+    output_str.append("]; \n");
+    ofs << output_str;
 
-		//modelfile << "result_filename = 'result_simu_data.txt'; \n" ;
-		modelfile << "result_filename = '";
-		modelfile << output_filename;
-		modelfile << "'; \n" ;
-		modelfile << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
+    //ofs << "result_filename = 'result_simu_data.txt'; \n" ;
+    ofs << "result_filename = '";
+    ofs << output_filename;
+    ofs << "'; \n" ;
+    ofs << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
 
-	} else {
-		std::cout << "Error opening file: " << cmd;
-	}
+	ofs.close();
 
-	modelfile.close();
+    cout << "Built model file " << script_filename << endl;
 //	std::cout << "\n Script file created for running the User supplied Simulink Model ...\n";
 }
 
@@ -1609,232 +1541,216 @@ void simulinkModelConstructor::create_runScript_for_learn_ha_loop_engine(std::st
 	 * This function creates a Matlab script file for running the .slx model supplied by the user.
 	 * Since main function of this engine is to perform simulation and return the accumulated time-serise data
 	 */
-	ofstream modelfile;
-	std::string filePath="";
-	if (user->getEngine()=="learn-ha-loop") {
-		filePath = intermediate->getMatlabPathForLearnedModel();
+	ofstream ofs;
+	ofs.open(script_filename);
+	if (!ofs.is_open()) {
+		std::cout << "Failed to write script file: " << script_filename;
+        throw std::runtime_error("Failed to write script file: " + script_filename);
 	}
 
-	//std::cout <<"File name without path:" << script_filename << std::endl;
+    ofs << "%% ******** Simulate User Supplied Model ******** \n";
+    ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
+    ofs << "% run this file with the following variables in the workspace \n";
+    ofs << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
+    ofs << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
+    ofs << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
 
-	std::string filename = script_filename;	//"run_script_simu_user_model.m";
-	std::string cmd = filePath; //Absolute path
-	cmd.append("/");
-	cmd.append(filename);
-
-//	std::cout <<"File name:" << cmd << std::endl;
-
-	modelfile.open(cmd);
-	if (modelfile.is_open()) {
-//		std::cout << "\nRunning Script File " << cmd << " created!!\n";
-		//std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
-		modelfile << "%% ******** Simulate User Supplied Model ******** \n";
-		modelfile << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
-		modelfile << "% run this file with the following variables in the workspace \n";
-		modelfile << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
-		modelfile << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
-		modelfile << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
-
-		modelfile << "%    x0_input:       control point for the first input variable \n";
-		modelfile << "%    x0_time:       time series for the first input variable \n";
-		modelfile << "%    x1_input:       control point for the second input variable \n";
-		modelfile << "%    x1_time:       time series for the second input variable ..... and so on. \n";
-		modelfile << "%     \n";
-		modelfile << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
-		modelfile << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
+    ofs << "%    x0_input:       control point for the first input variable \n";
+    ofs << "%    x0_time:       time series for the first input variable \n";
+    ofs << "%    x1_input:       control point for the second input variable \n";
+    ofs << "%    x1_time:       time series for the second input variable ..... and so on. \n";
+    ofs << "%     \n";
+    ofs << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
+    ofs << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
 
 
-		modelfile << "\n \n \n";
+    ofs << "\n \n \n";
 
-		modelfile << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
-		modelfile << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
+    ofs << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
+    ofs << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
 
-		modelfile << "\n % initial values for Simulation \n";
+    ofs << "\n % initial values for Simulation \n";
 
-		std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
-
-
-		std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
-
-		size_t found = outfilename.find(".");	//extract file-name from extension
-		if (found != string::npos) {
-			outfilename = outfilename.substr (0,found);
-		}
-
-		std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
-
-		modelfile << "\n %% Putting the Warning Off \n";
-		modelfile << "\nwarning('off','all'); \n";
-
-		modelfile << "\n %% Load the model \n";
-		modelfile << "mdl ='" << simulinkModelName << "'; \n" ;
-		modelfile << "load_system(mdl); \n" ;
-		modelfile << "format shortG; \n" ;
+    std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
 
 
-		//Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
-		//Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
-		if (user->getListInputVariables().size() > 0) {
+    std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
 
-			modelfile << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
-			modelfile << "%%%%% our Tool using random bounded by initial input values or from CE \n";
+    size_t found = outfilename.find(".");	//extract file-name from extension
+    if (found != string::npos) {
+        outfilename = outfilename.substr (0,found);
+    }
 
-			modelfile << "% Make SimulationData.Dataset to feed to the Simulink model \n";
-			modelfile << "ds = Simulink.SimulationData.Dataset; \n";
-			modelfile << "%% \n";
+    std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
 
-			//cout <<"\nData Set Details are " << endl;
-			//cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
-			std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
-			std::string timeseries_input_value="", timeseries_varName="";
-			std::string str_addElement="", input_port_Name="";
+    ofs << "\n %% Putting the Warning Off \n";
+    ofs << "\nwarning('off','all'); \n";
 
-			//unsigned int tot_size=0;
-			std::list<std::string> input_variables= user->getListInputVariables();
-
-			for (std::list<std::string>::iterator inputVar = input_variables.begin(); inputVar != input_variables.end(); inputVar++) {
-				std::string varName = (*inputVar);
-				input_variable_data="";	time_data="";	input_data_varName="";
-				 input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
-				str_addElement="";	input_port_Name="";
-				if (user->isInputVariable(varName)) {	//Although now this check is not required
-
-					input_data_varName.append(varName);
-					input_data_varName.append("_input");
-
-					input_time_varName.append(varName);
-					input_time_varName.append("_time");
-
-					//Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
-					timeseries_varName.append("timeseries_");
-					timeseries_varName.append(input_data_varName);
-
-					timeseries_input_value.append(timeseries_varName);
-					timeseries_input_value.append(" = timeseries(");
-					timeseries_input_value.append(input_data_varName);
-					timeseries_input_value.append(", ");
-					timeseries_input_value.append(input_time_varName);
-					timeseries_input_value.append("); \n");
-
-					modelfile << timeseries_input_value;
-					/*
-					 * Todo:
-					 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
-					 * This is the naming convention applied in the "txt2slx" process/engine. In general, when no name is assigned in the simulink model it is "In1" "In2" by default
-					 */
-					input_port_Name.append(varName);
-					input_port_Name.append("In");
-
-					str_addElement.append("ds = ds.addElement(");
-					str_addElement.append(timeseries_varName);
-					str_addElement.append(", '");
-					str_addElement.append(input_port_Name);
-					//Note: the variable 'u' should be created as input_port in the simulink model
-					str_addElement.append("'); \n %% \n");
-
-					modelfile << str_addElement;
-
-				} //working only for input variables
-
-			} //end of iterating all the variables
+    ofs << "\n %% Load the model \n";
+    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
+    ofs << "load_system(mdl); \n" ;
+    ofs << "format shortG; \n" ;
 
 
-			modelfile << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
-			modelfile << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
+    //Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
+    //Only If the input variable is present in the model, then create the input time-series data ds and load into the model as LoadExternalInput=on
+    if (user->getListInputVariables().size() > 0) {
 
-		} //end-if check on input variable count
+        ofs << "%%%%% Non-deterministic inputs %%%%%%% These values are obtained from \n";
+        ofs << "%%%%% our Tool using random bounded by initial input values or from CE \n";
+
+        ofs << "% Make SimulationData.Dataset to feed to the Simulink model \n";
+        ofs << "ds = Simulink.SimulationData.Dataset; \n";
+        ofs << "%% \n";
+
+        //cout <<"\nData Set Details are " << endl;
+        //cout <<"Check-out size of time-signal per-simulation =" << init_point.size()<< endl;
+        std::string input_data_varName ="", input_time_varName ="", input_variable_data="", time_data="";
+        std::string timeseries_input_value="", timeseries_varName="";
+        std::string str_addElement="", input_port_Name="";
+
+        //unsigned int tot_size=0;
+        std::list<std::string> input_variables= user->getListInputVariables();
+
+        for (std::list<std::string>::iterator inputVar = input_variables.begin(); inputVar != input_variables.end(); inputVar++) {
+            std::string varName = (*inputVar);
+            input_variable_data="";	time_data="";	input_data_varName="";
+            input_time_varName =""; timeseries_input_value=""; timeseries_varName="";
+            str_addElement="";	input_port_Name="";
+            if (user->isInputVariable(varName)) {	//Although now this check is not required
+
+                input_data_varName.append(varName);
+                input_data_varName.append("_input");
+
+                input_time_varName.append(varName);
+                input_time_varName.append("_time");
+
+                //Eg., timeseriese_varName_input = timeseries(u_input, u_time); \n"
+                timeseries_varName.append("timeseries_");
+                timeseries_varName.append(input_data_varName);
+
+                timeseries_input_value.append(timeseries_varName);
+                timeseries_input_value.append(" = timeseries(");
+                timeseries_input_value.append(input_data_varName);
+                timeseries_input_value.append(", ");
+                timeseries_input_value.append(input_time_varName);
+                timeseries_input_value.append("); \n");
+
+                ofs << timeseries_input_value;
+                /*
+                 * Todo:
+                 * We have to assume here the input-port name would be "varName" followed by "In". Eg.,  "x0In" or "x1In"
+                 * This is the naming convention applied in the "txt2slx" process/engine. In general, when no name is assigned in the simulink model it is "In1" "In2" by default
+                 */
+                input_port_Name.append(varName);
+                input_port_Name.append("In");
+
+                str_addElement.append("ds = ds.addElement(");
+                str_addElement.append(timeseries_varName);
+                str_addElement.append(", '");
+                str_addElement.append(input_port_Name);
+                //Note: the variable 'u' should be created as input_port in the simulink model
+                str_addElement.append("'); \n %% \n");
+
+                ofs << str_addElement;
+
+            } //working only for input variables
+
+        } //end of iterating all the variables
+
+
+        ofs << "set_param(mdl, 'LoadExternalInput', 'on');  \n";
+        ofs << "set_param(mdl, 'ExternalInput', 'ds'); % Set the initial input values in the model. \n";
+
+    } //end-if check on input variable count
 
 
 
-		modelfile << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
+    ofs << "simOut = sim(mdl, 'SaveOutput', 'on', 'OutputSaveName', 'yOut', 'SaveTime', 'on','TimeSaveName','tOut', 'LimitDataPoints', 'off', 'SaveFormat', 'Array'); \n";
 
-		modelfile << "%% Plot the result \n" ;
-		modelfile << "y = simOut.get('yOut'); \n" ;
-		modelfile << "t = simOut.get('tOut'); \n" ;
-		modelfile << "[rsize, csize] = size(y); \n" ;
-		modelfile << "for i=1:csize \n" ;
-		modelfile << "	figure(i); \n" ;
-		modelfile << "	plot(t, y( : , i)); \n" ;
-		modelfile << "	title('Learned Model','FontSize',26, 'FontWeight', 'bold'); \n" ;
-		modelfile << "	xlabel('time', 'FontSize',26, 'FontWeight', 'bold'); \n" ;
-		modelfile << "	grid on; \n" ;
-		modelfile << "	grid minor; \n" ;
-		modelfile << "end \n" ;
+    ofs << "%% Plot the result \n" ;
+    ofs << "y = simOut.get('yOut'); \n" ;
+    ofs << "t = simOut.get('tOut'); \n" ;
+    ofs << "[rsize, csize] = size(y); \n" ;
+    ofs << "for i=1:csize \n" ;
+    ofs << "	figure(i); \n" ;
+    ofs << "	plot(t, y( : , i)); \n" ;
+    ofs << "	title('Learned Model','FontSize',26, 'FontWeight', 'bold'); \n" ;
+    ofs << "	xlabel('time', 'FontSize',26, 'FontWeight', 'bold'); \n" ;
+    ofs << "	grid on; \n" ;
+    ofs << "	grid minor; \n" ;
+    ofs << "end \n" ;
 
 
 
 
 
-		// ******* Data Filtering: Fixed timestep output for equivalence testing required ***********
+    // ******* Data Filtering: Fixed timestep output for equivalence testing required ***********
 
 
-		// ******* If Data Filtering required by the user ***********
+    // ******* If Data Filtering required by the user ***********
 
-		//std::cout<<" user selected fixed/variable-step solver?: " << user->getFixedIntervalData() << std::endl;
-		if (user->getFixedIntervalData()==1) {	// 0: (As-it-is in the .slx model) outputs obtained from the model-solver. 1: get fixed-time step outputs.
-			addFilteringCode(modelfile);
-		}
+    //std::cout<<" user selected fixed/variable-step solver?: " << user->getFixedIntervalData() << std::endl;
+    if (user->getFixedIntervalData()==1) {	// 0: (As-it-is in the .slx model) outputs obtained from the model-solver. 1: get fixed-time step outputs.
+        addFilteringCode(ofs);
+    }
 
-		//addFilteringCode(modelfile); // modified after NFM
-		// *********** Data Filtering done ***********
-
-
+    //addFilteringCode(ofs); // modified after NFM
+    // *********** Data Filtering done ***********
 
 
-		modelfile << "%Write the simulation result to the txt file \n" ;
-		//modelfile << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
-		string output_str="result_matrix = [t, ";
-		//unsigned int i=1;
 
-		//location::ptr loc = ha->getLocation(1);	//since our location starts from 1
-		//list<flow_equation> derivatives = loc->getDerivatives();
-		unsigned int dim=ha->map_size(); //size of the variable mapping
 
-		// ---------------------------------
-		//Todo: first write the input variables and then the output variables
-		unsigned int output_size = user->getListOutputVariables().size();
+    ofs << "%Write the simulation result to the txt file \n" ;
+    //ofs << "result_matrix = [t, y( : , 1), y( : , 2)]; \n" ;
+    string output_str="result_matrix = [t, ";
+    //unsigned int i=1;
 
-        // XXX Seems duped.
-		//Writing first the input variables, which is all followed by the output ports
-		for (unsigned int i=output_size; i < dim; i++) {
-			output_str.append("y( : , ");
-			output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
-			output_str.append(")");
-			if (dim > 1) {
-				output_str.append(", ");
-			}
-		}
+    //location::ptr loc = ha->getLocation(1);	//since our location starts from 1
+    //list<flow_equation> derivatives = loc->getDerivatives();
+    unsigned int dim=ha->map_size(); //size of the variable mapping
 
-		//Writing then the output variables, which are the starting output ports
-		for (unsigned int i=0; i < output_size; i++) {
-			output_str.append("y( : , ");
-			output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
-			output_str.append(")");
-			if (dim > 1 && i < (output_size - 1)) {
-				output_str.append(", ");
-			}
-		}
+    // ---------------------------------
+    //Todo: first write the input variables and then the output variables
+    unsigned int output_size = user->getListOutputVariables().size();
 
-		// ---------------------------------
+    // XXX Seems duped.
+    //Writing first the input variables, which is all followed by the output ports
+    for (unsigned int i=output_size; i < dim; i++) {
+        output_str.append("y( : , ");
+        output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
+        output_str.append(")");
+        if (dim > 1) {
+            output_str.append(", ");
+        }
+    }
 
-		output_str.append("]; \n");
-		modelfile << output_str;
+    //Writing then the output variables, which are the starting output ports
+    for (unsigned int i=0; i < output_size; i++) {
+        output_str.append("y( : , ");
+        output_str.append(to_string(i+1));   //+1 Matlab begin 1-based indexing
+        output_str.append(")");
+        if (dim > 1 && i < (output_size - 1)) {
+            output_str.append(", ");
+        }
+    }
 
-		//modelfile << "result_filename = 'result_simu_data.txt'; \n" ;
-		modelfile << "result_filename = '";
-		modelfile << output_filename;
-		modelfile << "'; \n" ;
-		modelfile << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
+    // ---------------------------------
 
-	} else {
-		std::cout << "Error opening file: " << cmd;
-	}
+    output_str.append("]; \n");
+    ofs << output_str;
 
-	modelfile.close();
+    //ofs << "result_filename = 'result_simu_data.txt'; \n" ;
+    ofs << "result_filename = '";
+    ofs << output_filename;
+    ofs << "'; \n" ;
+    ofs << "writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); \n" ;
+
+	ofs.close();
 //	std::cout << "\n Script file created for running the User supplied Simulink Model ...\n";
 }
 
-void simulinkModelConstructor::addFilteringCode(ofstream &modelfile) {
+void simulinkModelConstructor::addFilteringCode(ofstream &ofs) {
 	/*
 	 * Addon code called from create_runScript_for_simu_engine() to perform Data Filtering
 	 * Filtering: Extract simulation data based on fixed timestep values and discard the data obtained due to variable Solver used in the Simulink model.
@@ -1875,53 +1791,53 @@ void simulinkModelConstructor::addFilteringCode(ofstream &modelfile) {
 	 */
 
 
-	modelfile << "tstep = 0;  \n";
-	modelfile << "seq_index = 1;  \n";
-	modelfile << "totalSamples = timeFinal / timeStepMax + 1;  \n";		//
-	modelfile << "t_temp1 = zeros(totalSamples, 1);  \n";
-	modelfile << "y_temp1 = zeros(totalSamples, csize);  \n";
-	modelfile << "firstFound = 1; \n";
+	ofs << "tstep = 0;  \n";
+	ofs << "seq_index = 1;  \n";
+	ofs << "totalSamples = timeFinal / timeStepMax + 1;  \n";		//
+	ofs << "t_temp1 = zeros(totalSamples, 1);  \n";
+	ofs << "y_temp1 = zeros(totalSamples, csize);  \n";
+	ofs << "firstFound = 1; \n";
 
-	modelfile << "for i = 1:rsize     %rsize is the total rows of y or y_temp  \n";
+	ofs << "for i = 1:rsize     %rsize is the total rows of y or y_temp  \n";
 
-	modelfile << "  diffVal = t(i) - tstep;     %initially time-step will be >= 0  \n";
-	modelfile << "	if (diffVal >= 0)    \n";
-	modelfile << "		firstFound = 1;    \n";
-	modelfile << "	end \n \n";
-	modelfile << "	if (diffVal >= 0 && firstFound == 1)  %1st value that matches, i.e., positive value    \n";
-	modelfile << "		t_temp1(seq_index) = t(i);   \n";
-	modelfile << "      for j = 1:csize     %csize is the total columns of y or y_temp, i.e., for each variables  \n";
-	modelfile << "          y_temp1(seq_index, j) = y(i, j);   \n";
-	modelfile << "      end   \n";
-	modelfile << "		seq_index = seq_index + 1;    \n";
-	modelfile << "		tstep = tstep + timeStepMax;  \n";
-	modelfile << "		firstFound = 0;    \n";
-	modelfile << "	end    \n";		 //end of if
-	modelfile << "end   \n";									 //end of for i= 1:r
+	ofs << "  diffVal = t(i) - tstep;     %initially time-step will be >= 0  \n";
+	ofs << "	if (diffVal >= 0)    \n";
+	ofs << "		firstFound = 1;    \n";
+	ofs << "	end \n \n";
+	ofs << "	if (diffVal >= 0 && firstFound == 1)  %1st value that matches, i.e., positive value    \n";
+	ofs << "		t_temp1(seq_index) = t(i);   \n";
+	ofs << "      for j = 1:csize     %csize is the total columns of y or y_temp, i.e., for each variables  \n";
+	ofs << "          y_temp1(seq_index, j) = y(i, j);   \n";
+	ofs << "      end   \n";
+	ofs << "		seq_index = seq_index + 1;    \n";
+	ofs << "		tstep = tstep + timeStepMax;  \n";
+	ofs << "		firstFound = 0;    \n";
+	ofs << "	end    \n";		 //end of if
+	ofs << "end   \n";									 //end of for i= 1:r
 	// ***************** Code for creating variables *****************
 
 	// ******* Fixing minor bug *************
 	//Due to variable time-step sometime some fixed timestep values are missed (unavailable in the simulation result).
 	//Observed: Usually happened only one record for eg., 0.0010 is missed. Further inspection on more than one miss is required
 	//Fix: we just replace the last zero values to non-zero value.
-	modelfile << "last_row = y_temp1(totalSamples, :);   \n";
-	modelfile << "if last_row == 0   \n";
+	ofs << "last_row = y_temp1(totalSamples, :);   \n";
+	ofs << "if last_row == 0   \n";
 
-	modelfile << "	secondlast_row = y_temp1(totalSamples - 1, :);   \n";
-	modelfile << "	y_temp1(totalSamples, :) = secondlast_row;   \n";
-	modelfile << "	secondlast_row_time = t_temp1(totalSamples - 1);   \n";
-	modelfile << "	t_temp1(totalSamples) = secondlast_row_time;   \n";
-	modelfile << "end   \n";
+	ofs << "	secondlast_row = y_temp1(totalSamples - 1, :);   \n";
+	ofs << "	y_temp1(totalSamples, :) = secondlast_row;   \n";
+	ofs << "	secondlast_row_time = t_temp1(totalSamples - 1);   \n";
+	ofs << "	t_temp1(totalSamples) = secondlast_row_time;   \n";
+	ofs << "end   \n";
 	// ***
 
-	modelfile << "t = t_temp1; \n";		// replacing the filtered data back to the original variable t
-	modelfile << "y = y_temp1; \n";	// replacing the filtered data back to the original variable y
+	ofs << "t = t_temp1; \n";		// replacing the filtered data back to the original variable t
+	ofs << "y = y_temp1; \n";	// replacing the filtered data back to the original variable y
 }
 
 
 void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 
-	ofstream modelfile;
+	ofstream ofs;
 	std::string filePath = intermediate->getMatlabPathForLearnedModel();
 	std::string filename = "runSmallScript_";
 	filename.append(intermediate->getOutputfilenameWithoutExtension());
@@ -1931,11 +1847,11 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 	std::string cmd = filePath; //Absolute path
 	cmd.append("/");
 	cmd.append(filename);
-	modelfile.open(cmd);
-	if (modelfile.is_open()) {
+	ofs.open(cmd);
+	if (ofs.is_open()) {
 		//std::cout << "\nFile " << cmd << " created for Matlab (helping script for Execution of Simulink Model and generating output-file) ...\n";
-		modelfile << "%% ******** Simulate Learned Model ******** \n";
-		modelfile << "% Run the simulation and generate a txt file containing a result of the simulation using Fixed-step. \n";
+		ofs << "%% ******** Simulate Learned Model ******** \n";
+		ofs << "% Run the simulation and generate a txt file containing a result of the simulation using Fixed-step. \n";
 
 		// ***************** Code for creating variables for writing to the file *****************
 
@@ -1970,16 +1886,16 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 			end
 		 end
 		 */
-		modelfile << "[r,c]=size(learned_tout);";
-		modelfile << "\n";
-		modelfile << "tstep=0;";
-		modelfile << "\n";
-		modelfile << "seq_index=1;";
-		modelfile << "\n";
-		modelfile << "totalSamples = timeFinal / timeStepMax + 1;";
-		modelfile << "\n";
-		modelfile << "t_out = zeros(totalSamples, 1);";
-		modelfile << "\n";
+		ofs << "[r,c]=size(learned_tout);";
+		ofs << "\n";
+		ofs << "tstep=0;";
+		ofs << "\n";
+		ofs << "seq_index=1;";
+		ofs << "\n";
+		ofs << "totalSamples = timeFinal / timeStepMax + 1;";
+		ofs << "\n";
+		ofs << "t_out = zeros(totalSamples, 1);";
+		ofs << "\n";
 		string varName ="", varTempName="", varName_create="";
 		//varName =""; varNamereate=""; varTempName="";
 		for (unsigned int v=0; v < user->getSysDimension(); v++) {
@@ -1987,20 +1903,20 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 			varName.append(to_string(v));
 			varName_create = varName;
 			varName_create.append(" = zeros(totalSamples, 1);");
-			modelfile << varName_create;
-			modelfile << "\n";
+			ofs << varName_create;
+			ofs << "\n";
 		}
-		modelfile << "firstFound = 1;";		modelfile << "\n";
+		ofs << "firstFound = 1;";		ofs << "\n";
 		varName ="";	varTempName="";		varName_create="";
-		modelfile << "for i= 1:r";
-		modelfile << "\n";
-		//modelfile << "disp(['learned_tout(i) = ' num2str(learned_tout(i))])"; 	modelfile << "\n";
-		modelfile << "diffVal = learned_tout(i) - tstep; %initially time-step will be >= 0"; 	modelfile << "\n";
-		modelfile << "	if (diffVal >= 0)";		modelfile << "\n";
-		modelfile << "		firstFound = 1;";		modelfile << "\n";
-		modelfile << "	end";		modelfile << "\n";			modelfile << "\n";
-		modelfile << "	if (diffVal >= 0 && firstFound == 1)  %1st value that matches, i.e., positive value";	modelfile << "\n";
-		modelfile << "		t_out(seq_index) = learned_tout(i);";	modelfile << "\n";
+		ofs << "for i= 1:r";
+		ofs << "\n";
+		//ofs << "disp(['learned_tout(i) = ' num2str(learned_tout(i))])"; 	ofs << "\n";
+		ofs << "diffVal = learned_tout(i) - tstep; %initially time-step will be >= 0"; 	ofs << "\n";
+		ofs << "	if (diffVal >= 0)";		ofs << "\n";
+		ofs << "		firstFound = 1;";		ofs << "\n";
+		ofs << "	end";		ofs << "\n";			ofs << "\n";
+		ofs << "	if (diffVal >= 0 && firstFound == 1)  %1st value that matches, i.e., positive value";	ofs << "\n";
+		ofs << "		t_out(seq_index) = learned_tout(i);";	ofs << "\n";
 		for (unsigned int v=0; v < user->getSysDimension(); v++) {
 			varTempName  = "temp_x";
 			varTempName.append(to_string(v));
@@ -2011,17 +1927,17 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 			varName_create.append("(seq_index) = ");
 			varName_create.append(varTempName);
 			varName_create.append("(i);");
-			modelfile << varName_create;
-			modelfile << "\n";
+			ofs << varName_create;
+			ofs << "\n";
 		}	//Initialise the vector for efficient operation (avoids resizing of the vector)
-		//modelfile << "disp(['temp_x0(i) = ' num2str(temp_x0(i))])";		modelfile << "\n";
-		//modelfile << "disp(['x0(i) = ' num2str(x0(seq_index))])";		modelfile << "\n";
+		//ofs << "disp(['temp_x0(i) = ' num2str(temp_x0(i))])";		ofs << "\n";
+		//ofs << "disp(['x0(i) = ' num2str(x0(seq_index))])";		ofs << "\n";
 
-		modelfile << "		seq_index = seq_index +1;";	modelfile << "\n";
-		modelfile << "		tstep = tstep + timeStepMax;";	modelfile << "\n";
-		modelfile << "		firstFound = 0; ";	modelfile << "\n";
-		modelfile << "	end";				modelfile << "\n";		 //end of if
-		modelfile << "end";									 //end of for i= 1:r
+		ofs << "		seq_index = seq_index +1;";	ofs << "\n";
+		ofs << "		tstep = tstep + timeStepMax;";	ofs << "\n";
+		ofs << "		firstFound = 0; ";	ofs << "\n";
+		ofs << "	end";				ofs << "\n";		 //end of if
+		ofs << "end";									 //end of for i= 1:r
 
 		// ***************** Code for creating variables *****************
 
@@ -2029,7 +1945,7 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 		std::cout << "Error opening file: " << cmd;
 	}
 
-	modelfile.close();
+	ofs.close();
 	//std::cout << "\n Script file created for being used in the Learned Simulink Model ...\n";
 
 }

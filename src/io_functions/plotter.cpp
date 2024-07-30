@@ -34,16 +34,19 @@ void plotter(user_inputs::ptr &user, intermediateResult::ptr &intermediate, std:
 
 
 	std::string jsonFileName = "";
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
-//	jsonFileName.append("/");
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
 	jsonFileName.append(intermediate->getDReachSatSmt2filenameWithPathWithoutExtension());
 	jsonFileName.append(".smt2.json");
 
-	std::string outfile = intermediate->getOutputfilenameWithoutExtension(); //
-	outfile.append(".data"); 	//File for printing all (variables') values obtained from Counter-example Trace
+	//File for printing all (variables') values obtained from Counter-example Trace
+	std::string outfile = user->getFilenameUnderOutputDirectory("plotter.data");
 
-	std::string outfile_plot = user->getOutputFilename(); // File for plotting the counter-example for Visualization
+    // File for plotting the counter-example for Visualization
+	std::string outfile_plot = user->getFilenameUnderOutputDirectory("plotter.plot");
+
+    cout << "plotter "
+         << "jsonFileName: " << jsonFileName << " "
+         << "outfile: " << outfile << " "
+         << "outfile_plot: " << outfile_plot << endl;
 
 	std::string x_var = user->getPlotVars().first_variable;
 	std::string y_var = user->getPlotVars().second_variable;
@@ -427,13 +430,10 @@ void setTimeseries_Data(list<struct timeseries_input> &res, unsigned int jump_id
 void gnu_plotter(user_inputs::ptr &user, intermediateResult::ptr &intermediate){
 
 	std::string jsonFileName = "";
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
-//	jsonFileName.append("/");
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
 	jsonFileName.append(intermediate->getDReachSatSmt2filenameWithPathWithoutExtension());
 	jsonFileName.append(".smt2.json");
 
-	std::string outfile = user->getOutputFilename();
+	std::string outfile = user->getFilenameUnderOutputDirectory("gnuplot.plot");
 
 	std::string x_var = user->getPlotVars().first_variable;
 	std::string y_var = user->getPlotVars().second_variable;
@@ -531,14 +531,11 @@ void plot_all_variables(user_inputs::ptr &user, intermediateResult::ptr &interme
 
 
 	std::string jsonFileName = "";
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
-//	jsonFileName.append("/");
-//	jsonFileName.append(intermediate->getOutputfilenameWithoutExtension());
 	jsonFileName.append(intermediate->getDReachSatSmt2filenameWithPathWithoutExtension());
 	jsonFileName.append(".smt2.json");
 
-	std::string outfile = intermediate->getOutputfilenameWithoutExtension(); //user->getOutputFilename();
-	outfile.append(".data"); 	//File for printing all (variables') values obtained from Counter-example Trace
+    //File for printing all (variables') values obtained from Counter-example Trace
+	std::string outfile = user->getFilenameUnderOutputDirectory("plot_all_variables.data");
 
 	std::string x_var = user->getPlotVars().first_variable;
 	std::string y_var = user->getPlotVars().second_variable;
@@ -551,7 +548,6 @@ void plot_all_variables(user_inputs::ptr &user, intermediateResult::ptr &interme
 
 
 	std::ofstream outFile;
-	//outFile.open(user_options.getOutFilename().c_str());
 	outFile.open(outfile);
 
 	unsigned int numberOfJumps, numberOfVariables, numberOfDataPoints_perJump_1, numberOfDataPoints_perJump_0;

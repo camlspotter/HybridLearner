@@ -23,7 +23,7 @@ void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep,
 	hybridAutomata::ptr H = params->getH();
 
 	//Ask user if convert equality guard to range (+/- epsilon) constraints.
-	ha_model_parser(H, userInputs, intermediate); //locations (invariant and ode) followed by transitions (guard and reset)
+	ha_model_parser(H, userInputs /*, intermediate*/); //locations (invariant and ode) followed by transitions (guard and reset)
 	//verifyHA_output(H);
 
 	/*
@@ -99,19 +99,18 @@ void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep,
 
 	// ---------- few Path setting for execution to create the .slx model
 	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
+
+    // The absolute path to HybridLearner/build
 	intermediate->setMatlabDefaultPath(linux_util->getCurrentWorkingDirectoryWithPath());
+
+    // The absolute path to HybridLearner/
 	intermediate->setToolRootPath(linux_util->getParentWorkingDirectoryWithPath());
-	std::string  learned_path ="";
-	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
-	learned_path.append(linux_util->getCurrentWorkingDirectoryWithPath());	//either Release or Debug
-	learned_path.append("/");
-	learned_path.append(intermediate->getOutputfilenameWithoutExtension());
-	intermediate->setMatlabPathForLearnedModel(learned_path);		//Very important Line for running Matlab script
+
+	intermediate->setMatlabPathForLearnedModel(userInputs->getOutputDirectory()); //Very important Line for running Matlab script
 
 	std::cout <<"Creating Simulink model file with extension .slx .... please wait..." << std::endl;
 	model->executeSimulinkModelConstructor(ep);
 	std::cout << "Model .slx file created successfully!!" << std::endl;
-
 
 	run_script_generator(model, params, ep);
 

@@ -32,9 +32,8 @@ private:
 	bool original_model;	//True if previous execution path is the original model ("...../BBC4CPS/src/benchmark/circle"), Otherwise False
 	bool learned_model;	//True if previous execution path is the learned model ("...../BBC4CPS/Release/outfilename"), Otherwise False
 
-
-	std::string learnAlgo_default_inputfile_path; //Path for the Learning Algo (Naijun's) for dumping the time-serise file Eg., "/home/amit/workspace/BBC4CPS/src/pwa/naijun"
-
+    // LearnAlgoDefaultInputfile = HybridLearner/src/learnHA/data
+	std::string learnAlgo_default_inputfile_path;
 
 public:
 	typedef boost::shared_ptr<intermediateResult> ptr;
@@ -43,6 +42,8 @@ public:
 	void setDReachModelFilenameWithPath(
 			const std::string &dReachModelFilenameWithPath);
 
+    // xxx, when --output-filename xxx.txt
+    // should be removed
 	const std::string&  getOutputfilenameWithoutExtension() const;
 
 	void setOutputfilenameWithoutExtension(
@@ -64,9 +65,11 @@ public:
 	void setSimulinkScriptFilenameWithPath(
 			const std::string &simulinkScriptFilenameWithPath);
 
+    // Equals to pwd
 	const std::string&  getMatlabDefaultPath() const;
 	void setMatlabDefaultPath(const std::string &matlabDefaultPath);
 
+    // Equals to OutputDirectory.  Should be removed
 	const std::string&  getMatlabPathForLearnedModel() const;
 	void setMatlabPathForLearnedModel(
 			const std::string &matlabPathForLearnedModel);
@@ -75,6 +78,7 @@ public:
 	void setMatlabPathForOriginalModel(
 			const std::string &matlabPathForOriginalModel);
 
+    // Absolute path of HybridLearner/
 	const std::string& getToolRootPath() const;
 	void setToolRootPath(const std::string &toolRootPath);
 

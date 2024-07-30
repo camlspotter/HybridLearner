@@ -14,12 +14,11 @@
  */
 void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::unique_ptr<MATLABEngine> &ep){
 
-	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
 
-//	cout <<"Value is " << userInputs->getFixedIntervalData() << endl;
-//	std::cout << "Running Engine: Learning Hybrid Automaton in a Loop ... \n";
+    //	cout <<"Value is " << userInputs->getFixedIntervalData() << endl;
+    //	std::cout << "Running Engine: Learning Hybrid Automaton in a Loop ... \n";
 	/*
 	 * Step 1: Take input a Simulink Model M, which is the system to Learn: user may input absolute or relative and/or partial path
 	 * Step 2: Generate simulation traces based on user's inputs. User will provide variable name present in the original model M and not in M'
@@ -36,7 +35,16 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 	std::list<std::vector<double> > list_outputs;
 
 	initial_processing_for_InputFileName(params);
+
+    // Following files are created:
+    // run_script_simu_user_model.m
+    // simu.txt
+    // slprj/*
+    // oscillator.slxc
+    // result_simu_data.txt
+    // tmp_simu.txt
 	generate_initial_traces_for_learn_ha_loop(list_inputs, list_outputs, params, ep, report);	// traces generated from the Original model (after creating running-script)
+
 	//Note: due to issue in unique_prt copy, we have also generated random-inputs for equivalence-testing steps here having variable names as original-model's names
 	initial_setup_for_learning(params);  // copy the traces file into the folder "src/pwa/naijun"
 
@@ -55,6 +63,9 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 	std::vector<double> CE_output_var;
 	std::list<struct timeseries_input> CE_input_var;
 
+    cout << "Intentional exit" << endl;
+    exit(1);
+
 	while (loop) { //Infinite Loop: stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 
 		//Efficient Learning Loop
@@ -66,7 +77,7 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
 		boost::timer::cpu_timer modelParsing;
 		modelParsing.start();
-		ha_model_parser(H, userInputs, intermediate); //locations (invariant and ode) followed by transitions (guard and reset)
+		ha_model_parser(H, userInputs); //locations (invariant and ode) followed by transitions (guard and reset)
 		modelParsing.stop();
 		wall_clock_modelParser = modelParsing.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 		running_time = wall_clock_modelParser / (double) 1000;	//convert milliseconds to seconds
@@ -124,63 +135,27 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
-//	hybridAutomata::ptr H = params->getH();
-
-
+    //	hybridAutomata::ptr H = params->getH();
 
 	// ---------- few Path setting for execution to create the .slx model
 	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
+    // MatlabDefault=`pwd`
 	intermediate->setMatlabDefaultPath(linux_util->getCurrentWorkingDirectoryWithPath());
+    // ToolRoot=`pwd`/..
 	intermediate->setToolRootPath(linux_util->getParentWorkingDirectoryWithPath());
 
-/*
-	std::string  learned_path ="";
-	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
-	learned_path.append(linux_util->getCurrentWorkingDirectoryWithPath());	//either Release or Debug
-//	learned_path.append("/");		Maybe for now, engine==equi-test, we do not want to create any folder, just output in the Release folder
-//	learned_path.append(intermediate->getOutputfilenameWithoutExtension());
-	intermediate->setMatlabPathForLearnedModel(learned_path);	//todo: currently for engine=='equi-test', we will use interface for LearnedModel
-*/
 	// ------------------------------------------------------------------------
 
-	std::string learnAlgo_inputfile_Path = linux_util->getParentWorkingDirectoryWithPath(); //For eg., "/home/amit/workspace/HybridLearner/src/pwa/naijun"
-//	learnAlgo_inputfile_Path.append("/src/pwa/naijun"); // -------> OLD implementation
-	learnAlgo_inputfile_Path.append("/src/learnHA/data"); // -------> NEW implementation
+    // LearnAlgoDefaultInputfile = HybridLearner/src/learnHA/data
+	std::string learnAlgo_inputfile_Path = linux_util->getParentWorkingDirectoryWithPath();
+	learnAlgo_inputfile_Path.append("/src/learnHA/data");
 	intermediate->setLearnAlgoDefaultInputfilePath(learnAlgo_inputfile_Path);
 
+    // model_file_M=../src/test_cases/engine/learn_ha_loop/oscillator.slx
+	std::string model_file_M = userInputs->getSimulinkModelFilename();
+	std::string filePath;
 
-
-	std::string model_file_M = userInputs->getSimulinkModelFilename();	//can also include the path Eg., "../src/test_cases/engine/learn_ha/bball.slx"
-	std::string fileName="", filePath="";
-
-/*	std::string original_model_file_path="", key="/", userPath="";
-	std::size_t found = model_file_M.rfind(key);	// locate the last "/" character
-	if (found!=std::string::npos) {
-
-		fileName = model_file_M.substr(found+1);		// is "bball.slx"
-		unsigned int tot_len = model_file_M.length(), file_len = fileName.length();
-		file_len += 1; //to exclude the last '/' character in the path
-		userPath = model_file_M.substr(0, tot_len - file_len);	// is "../src/test_cases/engine/learn_ha/"
-
-		//std::cout <<"file Name=" << fileName <<"   path="<< filePath << std::endl;
-		//std::cout <<"file Name length=" << file_len <<"   path length="<< tot_len << std::endl;
-
-
-		filePath.append(linux_util->getCurrentWorkingDirectoryWithPath());  //Release or Debug
-		filePath.append("/");
-		filePath.append(userPath);	// this include the last "/". NOW '/' is EXCLUDED
-
-
-
-
-	} else {	//no path is supplied. Only fileName is supplied by the user
-		fileName = model_file_M;
-		filePath = linux_util->getCurrentWorkingDirectoryWithPath();
-
-	}
-	*/
-
-	fileName = getFileName_without_Path(model_file_M, filePath);
+    std::string fileName = getFileName_without_Path(model_file_M, filePath);
 
 	intermediate->setMatlabPathForOriginalModel(filePath);
 
@@ -189,8 +164,6 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 	userInputs->setSimulinkModelFilename(fileName);	// Note: replaced the original filename with path into filename without path and path is stored in intermediate->getMatlabPathForOriginalModel()
 
 	//std::cout <<"file Name=" << fileName <<"   path="<< intermediate->getMatlabPathForOriginalModel() << std::endl;
-
-
 }
 
 
@@ -198,11 +171,8 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_var> &list_input_variable_values,
 		std::list<std::vector<double> > &list_output_variable_values, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report) {
 
-//	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
-
-
 
 	std::list<std::string> inputVarList =  userInputs->getListInputVariables();
 	std::string variableName;
@@ -229,6 +199,7 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
 	std::list<struct timeseries_all_var> initial_simu_inputValues_timeSeriesData;
 
 	generate_input_information(initial_inputValues_timeSeriesData, initial_output_values, params, ep, report);	//initial values: This function has the random-generation SEED
+
 //	std::cout <<"10 this is done" <<std::endl;
 	// Note: inputs are generated for max(initial-simu-size, max-traces). But for initial traces only use initial-simu-size
 	std::list<std::vector<double> >::iterator it_out = initial_output_values.begin();
@@ -239,8 +210,16 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
 
 		it_out++;	it_in++;
 	}
-	generate_simulation_traces_original_model_to_learn(initial_simu_inputValues_timeSeriesData, initial_simu_output_values, params, ep, report);
-	//generate_simulation_traces_original_model_to_learn(initial_inputValues_timeSeriesData, initial_output_values);
+
+	// Following files are created:
+    // run_script_simu_user_model.m
+    // simu.txt
+    // slprj/
+    // oscillator.slxc
+    // result_simu_data.txt
+    // tmp_simu.txt
+    generate_simulation_traces_original_model_to_learn(initial_simu_inputValues_timeSeriesData, initial_simu_output_values, params, ep, report);
+
 	std::list<std::vector<double> > initial_output_for_equivalence;
 	std::list<struct timeseries_all_var> initial_input_timeseries_for_equivalence;
 	it_in = initial_inputValues_timeSeriesData.begin();
@@ -257,33 +236,8 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
 
 
 void initial_setup_for_learning(parameters::ptr params) {
-
 	user_inputs::ptr userInputs = params->getUserInputs();
-
-
-
-//copy the trace file into working folder of learning-algorithm-project
-	string commandStr ="cp ";
-
-	commandStr.append(userInputs->getSimulationFilename()); //which was stored in the Release folder
-	commandStr.append(" ");
-	//commandStr.append(intermediate->getLearnAlgoDefaultInputfilePath()); //absolute path
-	//commandStr.append(" ../src/pwa/naijun"); //relative path from the folder Release // -------> OLD implementation
-	commandStr.append(" ../src/learnHA/data"); //relative path from the folder Release // -------> NEW implementation
-	//cout << "commandStr = "<<commandStr<<endl;
-
-	//system("cp finalFile.txt ../src/pwa/naijun"); //This is temporary fix as the Learning algorithm required
-	int x = system(commandStr.c_str());
-	if (x == -1) {
-		std::cout <<"Error executing cmd: " << commandStr <<std::endl;
-	}
-//	string simuFileNameWithPath = "naijun/"; // -------> OLD implementation
-	string simuFileNameWithPath = "data/"; // -------> NEW implementation
-	//simuFileNameWithPath.append(user_Inputs->getInputFilename());
-	simuFileNameWithPath.append(userInputs->getSimulationFilename());
-	userInputs->setInputFilename(simuFileNameWithPath);//Now modify the inputfilename since a hard-coded path is specified under folder "naijun/"
-	//***************** End of Step 2 ******************
-	//cout << "Done 1" << endl;
+	userInputs->setInputFilename(userInputs->getSimulationFilename());
 }
 
 
@@ -295,9 +249,7 @@ void updateTraceFile(//unsigned int iteration, (unused)
 
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
-//	hybridAutomata::ptr H = params->getH();
-
-
+    //	hybridAutomata::ptr H = params->getH();
 
 	//adds new time-serise data to the initial trace-file. In fact we do not need to simulate again just append the result-trace-file
 	cout <<"Now going to Simulate the Original Model to update the Simulation-Trace-File" << endl;
@@ -365,9 +317,6 @@ void updateTraceFile(//unsigned int iteration, (unused)
 	commandStr.append(userInputs->getSimulationFilename());
 	commandStr.append(" ");
 	commandStr.append(intermediate->getLearnAlgoDefaultInputfilePath()); //absolute path
-	//commandStr.append(" ../src/pwa/naijun"); //relative path from the folder Release
-	//cout <<"Naijun's Inputfile path: "<< intermediate->getLearnAlgoDefaultInputfilePath() << endl;
-	//system("cp finalFile.txt ../src/pwa/naijun"); //This is temporary fix as the Learning algorithm required
 
 	system_must_succeed(commandStr);
 
@@ -379,57 +328,22 @@ void updateTraceFile(//unsigned int iteration, (unused)
  */
 void call_LearnHA(parameters::ptr params, summary::ptr &report) {
 
-	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
 //	hybridAutomata::ptr H = params->getH();
 
 	//This function is called from the engine "learn-ha-loop"
 	//std::cout << "Running Engine: Learning Hybrid Automaton  ... \n";
 
-	//initial_setting();	//copy the file from user supplied or current folder to "src/pwa/naijun/filename" this being the working directory for the learning algorithm.
-
-
-
-	boost::timer::cpu_timer naijun_runtime;
-	naijun_runtime.start();
+	boost::timer::cpu_timer timer;
+	timer.start();
 	learnHA_caller(userInputs);	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
-	//system("pwd"); //although supplied cd ../src/pwa but still in the current Release location
-	naijun_runtime.stop();
-
-
-
-
-
+	timer.stop();
 	double wall_clock;
-	wall_clock = naijun_runtime.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
-
+	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
 	//std::cout << "\n\n*******Learning Nonlinear Switched Dynamical Systems (specific Hybrid Automata)****\n \t Running Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
 //	std::cout << "\nRunning Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
-
 	report->setRuntimeLearningAlgo(running_time);
-
-//	std::cout << "\nModel Learning Phase completed ........"<<std::endl;
-
-	// ********* Now copy/move the learned model file from "/src/pwa" to current folder *********
-	string copycommand ="";
-	//system("pwd");
-	copycommand.append("cp ");
-	//copycommand.append(intermediate->getToolRootPath());
-//	copycommand.append("../src/pwa/"); // -------> OLD implementation
-	copycommand.append("../src/learnHA/"); // -------> NEW implementation
-	copycommand.append(userInputs->getOutputFilename());
-	//std::cout <<"Project default path=" << intermediate->getMatlabDefaultPath() << std::endl;
-	//copycommand.append(" .");	//to the current working directory, i.e. in the Release directory
-
-	copycommand.append(" ");
-	copycommand.append(intermediate->getMatlabDefaultPath());
-
-	int x = system(copycommand.c_str());
-	if (x == -1) {
-		cout << "Error executing cmd: " << copycommand << endl;
-	}
-
 }
 
 
@@ -453,11 +367,7 @@ void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<
 //	cout << "Done Creating the script file for creating Simulink Model!!!" << endl;
 
 	// ---------- few Path setting for execution to create the .slx model
-	std::string  learned_path ="";
-	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
-	learned_path.append(intermediate->getMatlabDefaultPath());	//either Release or Debug
-	learned_path.append("/");
-	learned_path.append(intermediate->getOutputfilenameWithoutExtension());
+	std::string learned_path = userInputs->getOutputDirectory();
 	intermediate->setMatlabPathForLearnedModel(learned_path);
 
 //	std::cout <<"Creating Simulink model file with extension .slx .... please wait..." << std::endl;
@@ -467,33 +377,10 @@ void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<
 	//running script file generated for learned model with just the input variable name
 	// ----------------------run script generator-----------------------------
 
-	std::string model_filename= userInputs->getOutputFilename();
-	//cout <<"model_filename=" <<model_filename <<endl;
-	// ---------- Create run_script from .slx model
-	std::string script_filename = "run_script_", script_extension=".m", output_filename="result_", result_extension=".txt";
-	std::string filename_without_extension, model_extension_is="";
-	size_t found = model_filename.find(".");	//extract .slx from the model file
-
-	if (found != string::npos){
-		filename_without_extension = model_filename.substr(0, found);
-		model_extension_is = model_filename.substr(found+1);	// After "." get all substring
-	}
-
-	model_filename = filename_without_extension;
-	model_filename.append(to_string(count));	// iteration number appended
-	model_filename.append(".");	//
-	model_filename.append(model_extension_is);	// iteration number appended
-
-
-	filename_without_extension.append(to_string(count));	// iteration number appended
-
-	script_filename.append(filename_without_extension);	//user supplied simulink-model filename without extension
-	script_filename.append(script_extension);	//.m extension appended
-
-	output_filename.append(filename_without_extension);
-	output_filename.append(result_extension);
-
-	model->create_runScript_for_learn_ha_loop_engine(model_filename, script_filename, output_filename);
+    std::string simulink_model_filename = userInputs->getFilenameUnderOutputDirectory("simulink_model" + to_string(count) + ".txt");
+    std::string script_filename = userInputs->getFilenameUnderOutputDirectory("run_script" + to_string(count) + ".m");
+    std::string output_filename = userInputs->getFilenameUnderOutputDirectory("output" + to_string(count) + ".txt");
+	model->create_runScript_for_learn_ha_loop_engine(simulink_model_filename, script_filename, output_filename);
 
 	// ----------------------------------------------------------------------------
 }
@@ -516,50 +403,50 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration, model_setup::p
 	 */
 
 	//-----------------------------------------------------------------------------------------------------
-	std::string model_filename = userInputs->getOutputFilename();	//Learned model is TWO
+	std::string output_filename = userInputs->getOutputFilename();	//Learned model is TWO
+
+    // filename_without_extension= "xxx"
+    // model_extension_is = "txt"
 	std::string filename_without_extension="", model_extension_is="";
-
-	size_t found = model_filename.find(".");	//extract .slx or .txt from the model file
-
+	size_t found = output_filename.find(".");	//extract .slx or .txt from the model file
 	if (found != string::npos){
-		filename_without_extension = model_filename.substr(0, found);
-		model_extension_is = model_filename.substr(found+1);	// After "." get all substring
-	}
+		filename_without_extension = output_filename.substr(0, found);
+		model_extension_is = output_filename.substr(found+1);	// After "." get all substring
+	} else {
+        throw std::runtime_error("output_filename must contain '.'");
+    }
 
-	model_filename = filename_without_extension;
+    // model_filename = xxx0.txt
+    std::string model_filename = filename_without_extension;
 	model_filename.append(to_string(iteration));	// iteration number appended
 	model_filename.append(".");	//
 	model_filename.append(model_extension_is);	// iteration number appended
 
 	std::string model_file_two = model_filename;	//Learned model is two
 	std::string model_file_one = userInputs->getSimulinkModelFilename();	//Original model is ONE
-	//cout <<"model_file_one=" << model_file_one << endl;
-	//cout <<"model_file_two=" << model_file_two << endl;
 
-	//Original model is hard coded
-	std::string script_filename_one = "run_script_simu_user_model.m", output_filename_one="result_simu_data.txt";
+	std::string script_filename_one = "run_script_simu_user_model.m";
+    std::string output_filename_one="result_simu_data.txt";
 
-	std::string script_filename_two = "run_script_", output_filename_two="result_";
-	//Note: this hard-coded filenames if required to be changed, also change in the function above engineSelector::generate_run_script_file(std::string model_filename)
-
+    // script_filename_two= run_script_xxx0m
+	std::string script_filename_two = "run_script_";
 	script_filename_two.append(filename_without_extension);
 	script_filename_two.append(to_string(iteration));
 	script_filename_two.append(".m");		//.m extension appended
 
+    // output_filename_two= result_xxx0.txt
+    std::string output_filename_two="result_";
 	output_filename_two.append(filename_without_extension);
 	output_filename_two.append(to_string(iteration));
 	output_filename_two.append(".txt");
 //-----------------------------------------------------------------------------------------------------
 
 	bool flagEquivalent=true;
-	//std::list<std::vector<double> >::iterator it_out_val = list_outputs.begin(); //iterator for the output variables
-	//for (std::list<struct timeseries_all_var>::iterator it =list_inputs.begin(); it != list_inputs.end(); it++, it_out_val++) {
 	double maxDistance=0.0;
 	std::list<std::vector<double> >::reverse_iterator it_out_val = list_outputs.rbegin(); //iterator for the output variables
 	for (std::list<struct timeseries_all_var>::reverse_iterator it =list_inputs.rbegin(); it != list_inputs.rend(); it++, it_out_val++) {
 
 		std::list<struct timeseries_input> init_point = (*it).timeseries_signal;
-		//cout <<"init_point.size()=" << init_point.size() << endl;
 		std::vector<double> output_variable_init_values = (*it_out_val);
 
 		// ***************  --------------------------------- ***************
@@ -587,8 +474,6 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration, model_setup::p
 		//flagEquivalent = equivalence_testing(file_original_with_path, file_learned_with_path, maxDistance); //interface modified
 		flagEquivalent = compute_trace_equivalence(file_original_with_path, file_learned_with_path, maxDistance, params);
 
-
-
 //		cout <<"Maximum Euclidean Distance=" << maxDistance << endl;
 //		cout <<"Maximum Average Absolute difference between traces=" << maxDistance << endl;
 
@@ -600,8 +485,6 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration, model_setup::p
 			break;
 		}
 	}
-
-
 
 	if (flagEquivalent==true) {
 		std::cout << "The two Simulink models are Equivalent!!!" << std::endl;
@@ -622,38 +505,38 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
 
-
-
-
 	simulinkModelConstructor::ptr model = simulinkModelConstructor::ptr(new simulinkModelConstructor(H, userInputs, intermediate));
 	unsigned int iterations_count = 0; // just a label for the first model creation
 	model->setIteration(iterations_count);	//this may not be required now
 
-	//create_run_script()	//run_script file containing all the variables populated and command to execute the sim of .slx model
-	//We assume file generated is "run_script_simu_user_model.m"
+	// We assume file generated is "run_script_simu_user_model.m"
 	// Now creating script file for later running the simulation and obtaining output-file having fixed time-step
-	//Creating a script file for Running the simulink model just created.
-	std::string script_filename = "run_script_simu_user_model.m", output_filename="result_simu_data.txt";
+	// Creating a script file for Running the simulink model just created.
+	std::string script_filename = userInputs->getFilenameUnderOutputDirectory("run_script_simu_user_model.m");
+    std::string output_filename = userInputs->getFilenameUnderOutputDirectory("result_simu_data.txt");
 	std::string simulink_model_filename = userInputs->getSimulinkModelFilename();
+
+    // It builds script_filename="$OUTDIR/run_script_simu_user_model.m"
 	model->create_runScript_for_simu_engine(simulink_model_filename, script_filename, output_filename);
+
 	// *************** setting up the mergedFile(s) ***************
-	std::string simuFileName = "simu_", tmpSimuFile = "tmp_simu_";
-	simuFileName.append(userInputs->getOutputFilename());
-	//user->setInputFilename(simuFileName);
-	tmpSimuFile.append(userInputs->getOutputFilename());
-
+	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory("simu.txt");
+	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("tmp_simu.txt");
 	userInputs->setSimulationFilename(simuFileName);
-	std::string deleteCommand = "rm ";
-	deleteCommand.append(simuFileName);
-	deleteCommand.append(" ");
-	deleteCommand.append(tmpSimuFile);
 
-//	cout << "del command: "<< deleteCommand << endl;
-	int x = system(deleteCommand.c_str());	//Deleting simu_modelFile.txt and tmp_simu_modelFile.txt. Todo: check if exists before delete
-	if (x == -1) {
-		std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-	}
+    // rm $simuFileName $tmpSimuFile
+	{
+        std::string deleteCommand = "rm ";
+        deleteCommand.append(simuFileName);
+        deleteCommand.append(" ");
+        deleteCommand.append(tmpSimuFile);
+        int x = system(deleteCommand.c_str());	//Deleting simu_modelFile.txt and tmp_simu_modelFile.txt. Todo: check if exists before delete
+        if (x == -1) {
+            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
+        }
+    }
 	// *************** mergedFile deleted if exists ***************
+
 	unsigned int matlab_execution_count=0;
 	/*
 	//std::ofstream finalFile("finalFile.txt",  std::ios_base::binary | std::ios_base::app);
@@ -685,12 +568,8 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 
 	//simulation_trace_testing::ptr simu_test = simulation_trace_testing::ptr(new simulation_trace_testing());;
 
-	std::string cmd="cat ";
-	//std::cout <<"Now Going to simulate!!" << std::endl;
-
 	boost::timer::cpu_timer matlab_simulation;
 	matlab_simulation.start();
-
 
 	unsigned int counting=1;
 
@@ -706,22 +585,15 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 		//if (counting >= 31) { //because upto 32 I have already generated tracefiles
 
 		// ***************  --------------------------------- ***************
+
+        // This builds the following files:
+        // slprj/
+        // result_simu_data.txt
 		simu_model_file(ep, userInputs, init_point, output_variable_init_values, script_filename, output_filename, intermediate, H); //Populate initial data in Matlab's Workspace and then run the script file
+
 		// ***************  --------------------------------- ***************
 
-		std::string resultFileName ="";
-		resultFileName.append(intermediate->getMatlabPathForOriginalModel());
-		//std::cout <<"check if it is the release folder without end-slash? = " << resultFileName << std::endl;
-		//getSimulationOutputFileName(userInputs->getModel(), intermediate->getToolRootPath());
-		//resultFileName.append("/result_simu_data.txt");	//We assume the file "result_simu_data.txt" is generated after each simulation
-		resultFileName.append("/");	//We assume the file "result_simu_data.txt" is generated after each simulation
-		resultFileName.append(output_filename);	//We assume the file "result_simu_data.txt" is generated after each simulation
-
-
-
 /*
-
-
 		// **************** Code to  generating simulation-trace file for comparison with tool POSEHAD and also to generate traces used for Testing ***********
 		// Temporary Code for generating simulation-trace file for comparison with tool POSEHAD
 		string copy_cmd="cp ", benchmarkName="outputData/bball_";  //benchmarkName="outputData/bball_"; // benchmarkName="outputData/excitableCells_";
@@ -737,56 +609,48 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 		// ***********************************
 */
 
-
-
-
-
-
-		//}
-
 		//cout << "Absolute path of the simulation generated output file: " << resultFileName << endl;
-		// * cat resultFile > tmpSimuFile //on the 1st iteration
-		// * cat  simuFileName  resultFile  >  tmpSimuFile   //from 2nd iteration onwards
-		// * cp tmpSimuFile  simuFileName
-
-
-
 		if (matlab_execution_count==0){	//1st iteration
+            // cat $output_filename > $tmpSimuFile
+            std::string cmd;
 			cmd="cat ";
-			cmd.append(resultFileName);
+			cmd.append(output_filename);
 			cmd.append(" > ");
 			cmd.append(tmpSimuFile);
 			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			x = system(cmd.c_str());
+			int x = system(cmd.c_str());
 			if (x == -1) {
 				std::cout <<"Error executing cmd: " << cmd <<std::endl;
 			}
 		} else {	//2nd iterations onwards
+            // cat $simuFileName $output_filename > $tmpSimuFile
+            std::string cmd;
 			cmd="cat ";
 			cmd.append(simuFileName);
 			cmd.append(" ");
-			cmd.append(resultFileName);
+			cmd.append(output_filename);
 			cmd.append(" > ");
 			cmd.append(tmpSimuFile);
 			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			x = system(cmd.c_str());
+			int x = system(cmd.c_str());
 			if (x == -1) {
 				std::cout <<"Error executing cmd: " << cmd <<std::endl;
 			}
 		}
 
-		cmd="cp ";
-		cmd.append(tmpSimuFile);
-		cmd.append(" ");
-		cmd.append(simuFileName);
-		//cout << "  Cmd: " << cmd <<endl;
-		x = system(cmd.c_str());
-		if (x == -1) {
-			std::cout <<"Error executing cmd: " << cmd <<std::endl;
-		}
-
-
-
+        // cp $tmpSimuFile $simuFileName
+        {
+            std::string cmd;
+            cmd="cp ";
+            cmd.append(tmpSimuFile);
+            cmd.append(" ");
+            cmd.append(simuFileName);
+            //cout << "  Cmd: " << cmd <<endl;
+            int x = system(cmd.c_str());
+            if (x == -1) {
+                std::cout <<"Error executing cmd: " << cmd <<std::endl;
+            }
+        }
 
 		matlab_execution_count++;
 		userInputs->setNumberMatlabSimulationExecuted(matlab_execution_count);
@@ -800,18 +664,6 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
 //	std::cout << "Matlab Simulation and Trace File generation: Running Time (in Seconds) = " << running_time << std::endl;
 	report->setRuntimeMatlabInitialSimulation(running_time);
-
-//
-/*
-
-
-  	std::cout<<"engineSelector::generate_simulation_traces_original_model_to_learn: Terminating the tool after generating Trace File!" <<endl;
-	exit(1);
-
-*/
-
-
-
 }
 
 

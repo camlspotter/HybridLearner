@@ -67,11 +67,10 @@ void printPolytope2File(std::unique_ptr<MATLABEngine> &ep,
 	ep->eval(convertUTF8StringToUTF16String(vectorB));
 
 
+    // cd('$ToolRoot/src/io_functionsmatlab_util')
 	string cmd = "cd('";
 	cmd.append(intermediate->getToolRootPath());
-	cmd.append("/src/io_functions/matlab_util");
-	cmd.append("')");
-	//engEvalString(ep, "cd('../src/benchmark/oscillator')");
+	cmd.append("/src/io_functions/matlab_util')");
 	ep->eval(convertUTF8StringToUTF16String(cmd));
 
 	//ep->eval(convertUTF8StringToUTF16String("run_circle"));
@@ -90,9 +89,9 @@ void printPolytope2File(std::unique_ptr<MATLABEngine> &ep,
 
 	ep->eval(u"points = [X, Y];");
 	ep->eval(u"result_filename = 'vertices.txt';");
-	ep->eval(u"writematrix(points, result_filename, 'Delimiter', 'tab');");
+	ep->eval(u"writematrix(points, result_filename, 'Delimiter', 'tab');" );
 
-
+    // cp $ToolRoot/src/io_functions/matlab_util/vertices.txt $ToolRoot/Release/$fileName
 	string copycommand = "";
 	copycommand.append("cp ");
 	copycommand.append(intermediate->getToolRootPath());

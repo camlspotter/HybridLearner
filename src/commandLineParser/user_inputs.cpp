@@ -148,12 +148,28 @@ const std::string& user_inputs::getInputFilename() {
 void user_inputs::setInputFilename(const std::string& inputFilename) {
 	input_filename = inputFilename;
 }
+
 const std::string& user_inputs::getOutputFilename() const {
 	return output_filename;
 }
 
 void user_inputs::setOutputFilename(const std::string& outputFilename) {
 	output_filename = outputFilename;
+}
+
+const std::string& user_inputs::getOutputDirectory() const {
+	return output_directory;
+}
+
+void user_inputs::setOutputDirectory(const std::string& outputDirectory) {
+	output_directory = outputDirectory;
+}
+
+const std::string user_inputs::getFilenameUnderOutputDirectory(const std::string& name) const {
+    std::string s(output_directory);
+    s.append("/"); // XXX use proper directory separator
+    s.append(name);
+    return s;
 }
 
 

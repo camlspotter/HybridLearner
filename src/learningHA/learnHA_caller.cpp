@@ -20,17 +20,19 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
 	 *
 	 * */
 
-	std::string cmd_str="";
+	std::string cmd_str;
 
-//	std::cout<<"\n***** Now running Python to execute HA Learning Algorithm ******"<<std::endl;
+	std::cout<<"\n***** Now running Python to execute HA Learning Algorithm ******"<<std::endl;
 
-	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";	//For OS Ubuntu 20.04 LTS I have modified the command to python3 instead of python
-	//std::cout<<("Check the output!!")<<std::endl;
-
+    // XXX Assumes HybridLearner is executed at build/
+	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";
 	cmd_str.append("--input-filename ");
 	cmd_str.append(user_Inputs->getInputFilename());
-	cmd_str.append(" --output-filename ");
-	cmd_str.append(user_Inputs->getOutputFilename());  //To redirect the model output
+
+	cmd_str.append(" --output-directory ");
+    cmd_str.append(user_Inputs->getOutputDirectory());
+    cmd_str.append(" ");
+
 	cmd_str.append(" --modes ");
 	cmd_str.append(std::to_string(user_Inputs->getModeSize()));
 
@@ -104,12 +106,12 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
 	cmd_str.append(" --is-invariant ");
 	cmd_str.append(std::to_string(user_Inputs->getInvariant())); // a integer number: 0 and 1 for computing Invariant or 2 for ignoring computation
 
-//	std::cout << "Command: "<<cmd_str << std::endl;
+	std::cout << "Command: "<< cmd_str << std::endl;
 
 	int x1 = system(cmd_str.c_str());
-	//system("pwd"); //although supplied cd ../src/pwa but still in the current Release location
-	if (x1 == -1) {
+	if (x1 != 0) {
 		std::cout <<"Error executing cmd: " << cmd_str <<std::endl;
+        throw std::runtime_error("Error executing cmd: " + cmd_str);
 	}
 }
 
@@ -144,20 +146,10 @@ void initial_setting(parameters::ptr &params){
 	if (x == -1) {
 		std::cout <<"Error executing cmd: " << commandStr <<std::endl;
 	}
-	//string simuFileNameWithPath = "naijun/";	//	......> OLD implementation
-	string simuFileNameWithPath = "data/";	//	......> NEW implementation
-	//simuFileNameWithPath.append(user_Inputs->getInputFilename());
-	//simuFileNameWithPath.append(userInputs->getSimuTraceFilename());	 //Todo: here only the file name is required, get from above extract filename
-
-
 
 	// ---------- few Path setting for execution to create the .slx model
 
 	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
-/*	intermediate->setMatlabDefaultPath(linux_util->getCurrentWorkingDirectoryWithPath());
-	intermediate->setToolRootPath(linux_util->getParentWorkingDirectoryWithPath());
-*/ // --------> NEW modification
-
 
 	std::string trace_file_user = userInputs->getSimuTraceFilename();	//user can supply: just file name or absolute path from Release folder
 	std::string fileName="", filePath="", userPath="";
@@ -184,12 +176,12 @@ void initial_setting(parameters::ptr &params){
 
 	} else {	//no path is supplied. Only fileName is supplied by the user
 		fileName = trace_file_user;
-//		filePath = linux_util->getCurrentWorkingDirectoryWithPath();
-//		intermediate->setMatlabPathForOriginalModel(filePath);
 	}
 
-	// Note: fileName is not without any path, it only contain the filename
-	//simuFileNameWithPath.append(userInputs->getSimuTraceFilename()); //: here only the file name is required, get from above extract filename
+    cout << "simuTraceFilename " << userInputs->getSimuTraceFilename() << endl;
+    cout << "fileName " << fileName << endl;
+    
+	string simuFileNameWithPath = "data/";
 	simuFileNameWithPath.append(fileName);
 
 	userInputs->setInputFilename(simuFileNameWithPath);//Now modify the inputfilename since a hard-coded path is specified under folder "naijun/". Now "data/"

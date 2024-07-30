@@ -95,13 +95,8 @@ void engineSelector::selectLearn_HA() {
 	parameters::ptr params = parameters::ptr(new parameters());
 	params->setParameters(userInputs, H, intermediate);
 
-	/*
-	 * To call learning algorithm implemented in Python have to copy the input file(simulation-trace)
-	 * inside the folder "src/learnHA/data" since at the moment Python project is reading file only within its location (current folder)
-	 */
 	boost::timer::cpu_timer timer;
 	timer.start();
-
 	initial_setting(params);	//copy the file from user supplied or current folder to "src/pwa/naijun/filename" this being the working directory for the learning algorithm.
 	learnHA_caller(userInputs);	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
 
@@ -151,6 +146,7 @@ bool engineSelector::selectEquiTest(){
  */
 void engineSelector::select() {
 
+    cout << "engineSelector::select " << userInputs->getEngine() << endl;
 
 	// ----Selects trajectory simulation engine: Generates simulation trace file for a given .slx or .mdl simulink-model file (with input specifications)
 	if (boost::algorithm::iequals(userInputs->getEngine(),"simu")==true) {
@@ -173,8 +169,7 @@ void engineSelector::select() {
 	// Select the engine learn-ha-loop: learns an HA in a loop using a simulink model (and input specifications) as input
 	if(boost::algorithm::iequals(userInputs->getEngine(),"learn-ha-loop")==true) {
 		selectLearn_HA_loop();
-//		report->printSummary();
-
+        // report->printSummary();
 		return;
 	}
 

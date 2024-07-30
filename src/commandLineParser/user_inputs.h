@@ -79,6 +79,7 @@ private:
 	int max_degree;		//Degree of the Polynomial ODEs
 	int boundary_degree; 		//Degree of the Polynomial Guard
 	std::string output_filename;	//output file that
+	std::string output_directory;
 	std::string input_filename;
 	std::string simulation_filename; //internally generated file
 	std::string ODESolver;	//stores user's choice of ODE Solver for .slx model creation
@@ -170,8 +171,11 @@ public:
 
 	double getSampleTime() const;
 	void setSampleTime(double sampleTime);
+
+    // XXX Why "size"?
 	int getModeSize() const;
 	void setModeSize(int numModes);
+
 	double getTimeHorizon() const;
 	void setTimeHorizon(double timeHorizon);
 
@@ -203,8 +207,18 @@ public:
 
 	const std::string& getInputFilename();
 	void setInputFilename(const std::string& inputFilename);
+
+    // XXX a source of confusion and must be removed.  Use OutputDirectory instead.
 	const std::string& getOutputFilename() const;
 	void setOutputFilename(const std::string& outputFilename);
+
+    // The absolute path $OUTDIR specified by --output-directory
+	const std::string& getOutputDirectory() const;
+	void setOutputDirectory(const std::string& outputDirectory);
+
+    // Returns an absolute path of the given path under the output directory: $OUTDIR/$name
+    const std::string getFilenameUnderOutputDirectory(const std::string& name) const;
+
 	const struct plot_variables& getPlotVars() const;
 	void setPlotVars(const struct plot_variables &plotVars);
 
@@ -257,6 +271,7 @@ public:
 
 	const std::string& getModelFilename() const;
 	void setModelFilename(const std::string &modelFilename);
+
 	unsigned int getGuard() const;
 	void setGuard(unsigned int guard);
 	const std::string& getVariableCategory() const;
@@ -275,6 +290,7 @@ public:
 	const std::string& getSimuTraceFilename() const;
 	void setSimuTraceFilename(const std::string &simuTraceFilename);
 
+    // --simulink-model-file
 	const std::string& getSimulinkModelFilename() const;
 	void setSimulinkModelFilename(const std::string &simulinkModelFilename);
 

@@ -23,8 +23,6 @@ int main(int argc, char *argv[]) {
 	user_inputs::ptr user_Inputs = user_inputs::ptr(new user_inputs());
 
 	try {
-//		std::cout << std::endl;
-//		std::cout << "**** Running tool HybridLearner ... ****"  << std::endl;
 
 		commandLineParser(argc, argv, user_Inputs);
 
