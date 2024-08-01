@@ -53,18 +53,22 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
 	bool flag=false, loop=true;
 	unsigned int tot_count=0;
-	double wall_clock_modelParser=0.0, running_time=0.0;
 
 	//model_setup::ptr la_setup = model_setup::ptr(new model_setup(userInputs->getVariableCategory(), userInputs->getInputSignalType(), userInputs->getNumberOfControlPoints(),
 	//userInputs->getInitialSet_userInput()));
 	model_setup::ptr la_setup = model_setup::ptr(new model_setup(H, userInputs)); //creates a copy of H and userInputs
 
-
 	std::vector<double> CE_output_var;
 	std::list<struct timeseries_input> CE_input_var;
 
-    cout << "Intentional exit" << endl;
-    exit(1);
+    // Files already generated here
+    //
+    // run_script_simu_user_model.m
+    // simu.txt
+    // slprj/
+    // oscillator.slxc
+    // result_simu_data.txt
+    // tmp_simu.txt
 
 	while (loop) { //Infinite Loop: stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 
@@ -73,13 +77,20 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 			updateTraceFile(/* tot_count, CE_output_var, CE_input_var, */ params);	//adds new time-serise data to the initial trace-file
 		}
 
+        // learnHA generates the following files:
+        // data_scale
+        // learnHA_out.txt
+        // svm_model_file
 		call_LearnHA(params, report);
 
-		boost::timer::cpu_timer modelParsing;
-		modelParsing.start();
+		boost::timer::cpu_timer timer;
+		timer.start();
+
 		ha_model_parser(H, userInputs); //locations (invariant and ode) followed by transitions (guard and reset)
-		modelParsing.stop();
-		wall_clock_modelParser = modelParsing.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
+
+        double wall_clock_modelParser=0.0, running_time=0.0;
+		timer.stop();
+		wall_clock_modelParser = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 		running_time = wall_clock_modelParser / (double) 1000;	//convert milliseconds to seconds
 		report->setRuntimeModelParsing(running_time);
 
@@ -97,12 +108,16 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 		//Now create a simulink model (txtslx) for equivalence testing. But run the model_setup_for_learned_model before construction.
 		// This setup should modify ha and user class to contain details with variable names.
 		la_setup->setup_for_learned_model(H, userInputs);	//This should modify the objects with new variables names
-		constructModel(tot_count, params, ep);	//creating .slx and .m (running script) files, taking care of the variable-names for learned model in the presence of original model
+
+        // This generates the following files:
+        // run_script0.m
+        // simulink_model0.slx
+        // generateSimulinkModel0.m
+        //creating .slx and .m (running script) files, taking care of the variable-names for learned model in the presence of original model
+		constructModel(tot_count, params, ep);	
+
 		//Execute in loop the learned_model and then the original_model and test the equivalence-distance
-
-
 		struct CE_list CEs;
-
 		int for_paper = 1;
 		if (for_paper == 0)
 			flag = equivalenceTesting_for_learn_ha_loop(tot_count, la_setup, list_inputs, list_outputs, CE_output_var, CE_input_var, params, ep); //these list_inputs and list_outputs are generated using original_model's variable-names
@@ -125,8 +140,7 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
 	} //End of Loop
 
-//	report->printSummary();
-
+    //	report->printSummary();
 }
 
 

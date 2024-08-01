@@ -807,7 +807,7 @@ between two modes.
 
     if (!in) {
         std::cout << "Model file '" << model_filename << "' not found, verify if the Learning algorithm worked!!!" << std::endl;
-        throw std::runtime_error("Model file not found");
+        throw std::runtime_error("Model file " + model_filename + " not found");
 	}
 
 	unsigned int tot_modes, tot_dimension, tot_transitions;
