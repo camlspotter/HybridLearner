@@ -5,7 +5,25 @@
  *      Author: amit
  */
 
-#include "simulation_utilities.h"
+#include "../../utilities/matlab.h"
+
+#include "../../commandLineParser/user_inputs.h"
+#include "../../utilities/intermediateResult.h"
+#include "../../hybridautomata/hybridAutomata.h"
+#include "../../commandLineParser/parameters.h"
+#include "../../commandLineParser/user_inputs_helper.h"
+#include "../../simulinkModelling/simulinkModelConstructor.h"
+#include "../../io_functions/summary.h"
+#include "../../io_functions/data_structs.h"
+#include <boost/timer/timer.hpp>
+#include "../learn_ha/model_setup.h"
+#include "../../utilities/linux_utilities.h"
+#include "../../utilities/myRandomNumberGenerator.h"
+#include "../../utilities/polytope/polytope.h"
+#include "../../simulation/simulation.h"
+
+#include "../../utilities/string_operations.h"
+
 
 /*
  * This function is used in engine:

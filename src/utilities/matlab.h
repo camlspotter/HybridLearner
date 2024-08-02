@@ -1,5 +1,5 @@
-#ifndef UTILITIES_MATLAB_H
-#define UTILITIES_MATLAB_H
+#ifndef UTILITIES_MATLAB_H_
+#define UTILITIES_MATLAB_H_
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -8,7 +8,9 @@
 #include <MatlabEngine.hpp>
 #pragma GCC diagnostic pop
 
-#endif
+using namespace matlab::engine;
 
 #define MATLAB_EVAL(ep,cmd) do{std::cout << "MATLAB eval: " << cmd << std::endl; ep->eval(convertUTF8StringToUTF16String(cmd));}while(0)
 #define MATLAB_RUN(ep,fn) do{std::string command = "run(\"" + fn + "\")"; MATLAB_EVAL(ep,command);}while(0)
+
+#endif

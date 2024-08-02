@@ -10,7 +10,6 @@
 
 
 #include <string>
-#include <iostream>
 
 struct flow_equation {
 	bool isConstant_dynamic;

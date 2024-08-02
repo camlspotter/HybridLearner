@@ -7,6 +7,14 @@
 
 #include "user_inputs_helper.h"
 
+#include "../io_functions/data_structs.h"
+#include <list>
+#include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+#include "commandLineParser.h"
+#include "../simulation/simulation.h"
+
 user_inputs_helper::user_inputs_helper() {
 	// TODO Auto-generated constructor stub
 	//std::cout <<"Created user inputs helper object" << std::endl;

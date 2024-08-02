@@ -5,8 +5,39 @@
  *      Author: amit
  */
 
-#include "learn_ha_loop.h"
+#include <iostream>
+#include <list>
+#include <vector>
+#include "model_setup.h"
+#include <boost/timer/timer.hpp>
+#include "../../modelParser/modelParser.h"
+#include "../../commandLineParser/parameters.h"
+#include "../../io_functions/summary.h"
+#include "../../utilities/linux_utilities.h"
+#include "../../utilities/intermediateResult.h"
+#include "../../simulinkModelling/simulinkModelConstructor.h"
+#include "../simulation/simulation_utilities.h"
+#include "../../io_functions/data_structs.h"
+#include "../../learningHA/learnHA_caller.h"
+#include "../equivalence_testing/equivalence_test_utils.h"
 #include "../../utilities/system.h"
+#include "../../utilities/matlab.h"
+#include "../../utilities/string_operations.h"
+
+void initial_processing_for_InputFileName(parameters::ptr params);
+void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_var> &list_input_variable_values,
+		std::list<std::vector<double> > &list_output_variable_values, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report);
+void initial_setup_for_learning(parameters::ptr params);
+void updateTraceFile(// unsigned int iteration, (unused)
+                     // std::vector<double> CE, (unused)
+                     // list<struct timeseries_input> CE_trace, (unused)
+                     parameters::ptr params);
+void call_LearnHA(parameters::ptr params, summary::ptr &report);
+void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep);
+bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration, model_setup::ptr la_setup, std::list<struct timeseries_all_var> &list_inputs,
+		std::list<std::vector<double> > &list_outputs, std::vector<double> &CE_output_var, std::list<struct timeseries_input> &CE_input_var, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep);
+void generate_simulation_traces_original_model_to_learn(std::list<struct timeseries_all_var> &initial_simulation_timeSeriesData,
+		std::list<std::vector<double> > &initial_output_values, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report);
 
 /*
  * Learns an Automaton HA, given a simulink model M, by simulating M and learning M' in a refinement loop based on equivalence testing of M' and M.
@@ -14,14 +45,11 @@
  */
 void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::unique_ptr<MATLABEngine> &ep){
 
+    // Step 1: Take input a Simulink Model M, which is the system to Learn: user may input absolute or relative and/or partial path
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
 
-    //	cout <<"Value is " << userInputs->getFixedIntervalData() << endl;
-    //	std::cout << "Running Engine: Learning Hybrid Automaton in a Loop ... \n";
 	/*
-	 * Step 1: Take input a Simulink Model M, which is the system to Learn: user may input absolute or relative and/or partial path
-	 * Step 2: Generate simulation traces based on user's inputs. User will provide variable name present in the original model M and not in M'
 	 * Step 3: Using the traces Learn an HA and create a model file M' (Abstract). This model at present we name as x0, x1, x2 and so on with the sequence input followed by output variables.
 	 * Step 4: Using M' create a Simulink Model M' (having input and output variables like M) as per the user's input specification BUT DIFFERENT VARIABLE NAMES
 	 * Step 5: Generate random input and perform simulation of M and M' and test for Equivalence
@@ -36,20 +64,24 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
 	initial_processing_for_InputFileName(params);
 
+    // Step 2: Generate simulation traces based on user's inputs.
+    // User will provide variable name present in the original model M and not in M'
+    // 
+	// Traces generated from the Original model (after creating running-script)
+    //
     // Following files are created:
-    // run_script_simu_user_model.m
-    // simu.txt
-    // slprj/*
-    // oscillator.slxc
-    // result_simu_data.txt
-    // tmp_simu.txt
-	generate_initial_traces_for_learn_ha_loop(list_inputs, list_outputs, params, ep, report);	// traces generated from the Original model (after creating running-script)
+    //   run_script_simu_user_model.m
+    //   simu.txt
+    //   slprj/*
+    //   oscillator.slxc
+    //   (result_simu_data.txt)
+    //   (tmp_simu.txt)
+	generate_initial_traces_for_learn_ha_loop(list_inputs, list_outputs, params, ep, report);
 
 	//Note: due to issue in unique_prt copy, we have also generated random-inputs for equivalence-testing steps here having variable names as original-model's names
-	initial_setup_for_learning(params);  // copy the traces file into the folder "src/pwa/naijun"
+	initial_setup_for_learning(params);
 
 	//generate_random_inputs_for_equivalence_testing(list_inputs, list_outputs);	//we may pass seed here if required later
-
 
 	bool flag=false, loop=true;
 	unsigned int tot_count=0;
@@ -61,15 +93,6 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 	std::vector<double> CE_output_var;
 	std::list<struct timeseries_input> CE_input_var;
 
-    // Files already generated here
-    //
-    // run_script_simu_user_model.m
-    // simu.txt
-    // slprj/
-    // oscillator.slxc
-    // result_simu_data.txt
-    // tmp_simu.txt
-
 	while (loop) { //Infinite Loop: stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 
 		//Efficient Learning Loop
@@ -77,10 +100,13 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 			updateTraceFile(/* tot_count, CE_output_var, CE_input_var, */ params);	//adds new time-serise data to the initial trace-file
 		}
 
+        // Step 3: Using the traces Learn an HA and create a model file M' (Abstract).
+        // This model at present we name as x0, x1, x2 and so on with the sequence input followed by output variables.
+        //
         // learnHA generates the following files:
-        // data_scale
-        // learnHA_out.txt
-        // svm_model_file
+        //   data_scale
+        //   learnHA_out.txt
+        //   svm_model_file
 		call_LearnHA(params, report);
 
 		boost::timer::cpu_timer timer;
@@ -110,9 +136,9 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 		la_setup->setup_for_learned_model(H, userInputs);	//This should modify the objects with new variables names
 
         // This generates the following files:
-        // run_script0.m
-        // simulink_model0.slx
-        // generateSimulinkModel0.m
+        //   run_script0.m
+        //   simulink_model0.slx
+        //   generateSimulinkModel0.m
         //creating .slx and .m (running script) files, taking care of the variable-names for learned model in the presence of original model
 		constructModel(tot_count, params, ep);	
 
@@ -149,7 +175,6 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
-    //	hybridAutomata::ptr H = params->getH();
 
 	// ---------- few Path setting for execution to create the .slx model
 	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
@@ -167,8 +192,8 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 
     // model_file_M=../src/test_cases/engine/learn_ha_loop/oscillator.slx
 	std::string model_file_M = userInputs->getSimulinkModelFilename();
-	std::string filePath;
 
+	std::string filePath;
     std::string fileName = getFileName_without_Path(model_file_M, filePath);
 
 	intermediate->setMatlabPathForOriginalModel(filePath);

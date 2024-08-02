@@ -5,16 +5,14 @@
  *      Author: amit
  */
 
+#ifndef COMMANDLINEPARSER_PARAMETERS_H_
+#define COMMANDLINEPARSER_PARAMETERS_H_
+
 #include "user_inputs.h"
 #include "../utilities/polytope/polytope.h"
 #include "../utilities/myRandomNumberGenerator.h"
 #include "../utilities/intermediateResult.h"
 #include "../hybridautomata/hybridAutomata.h"
-#include <boost/shared_ptr.hpp>
-
-
-#ifndef COMMANDLINEPARSER_PARAMETERS_H_
-#define COMMANDLINEPARSER_PARAMETERS_H_
 
 class parameters {
 
@@ -23,8 +21,6 @@ class parameters {
 	myRandomNumberGenerator::ptr randomGenObj;
 	intermediateResult::ptr intermediate;
 	hybridAutomata::ptr H;
-
-
 
 public:
 	typedef boost::shared_ptr<parameters> ptr;

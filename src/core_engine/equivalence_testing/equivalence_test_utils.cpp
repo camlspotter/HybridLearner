@@ -5,8 +5,18 @@
  *      Author: amit
  */
 
-#include "equivalence_test_utils.h"
+#include "../../commandLineParser/parameters.h"
+#include "../../utilities/vector_operations.h"
 
+bool compute_trace_equivalence(std::string file_one, std::string file_two, double &max_distance, parameters::ptr params);
+
+#ifdef PAPER
+
+double call_python_compute_cost(std::string file_one, std::string file_two);
+
+double call_python_compute_DTW_cost(std::string file_one, std::string file_two);
+
+#endif
 
 /*
  * This function is used in the engines:

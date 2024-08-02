@@ -7,6 +7,7 @@
 
 
 #include "summary.h"
+#include <iostream>
 
 using namespace std;
 

@@ -9,6 +9,15 @@
 
 #include "user_inputs.h"
 
+#include <string>
+#include <list>
+#include <iostream>
+#include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+#include "../io_functions/data_structs.h"
+#include "../benchmark/model_variable_mapping.h"
+#include <boost/algorithm/string.hpp>	//used for trim()
 #include <fstream>
 
 using namespace std;

@@ -12,14 +12,6 @@
 #include "../commandLineParser/user_inputs.h"
 #include "../io_functions/data_structs.h"
 
-#include <boost/shared_ptr.hpp>
-#include <iomanip>
-#include <string>
-#include <sstream>
-
-#include <fstream>
-#include <iostream>
-
 using namespace std;
 
 class modelConstructor {

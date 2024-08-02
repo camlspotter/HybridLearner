@@ -9,6 +9,7 @@
 
 
 #include "variable_to_index_mapping.h"
+#include <iostream>
 #include <boost/algorithm/string.hpp> //string comparison
 
 

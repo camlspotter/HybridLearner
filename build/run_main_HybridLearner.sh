@@ -39,11 +39,11 @@ trap close_matlab ERR INT
 
 echo "Done Learning Models"
 
-close_matlab; exit 0
-
 # Before executing this, we assume the script run_results_main_learn_models is already executed and models are learned and copied in the respective folders.
 matlab -nodisplay -nosplash -r "cd('../examples'); run('run_main.m'); exit;"
 echo "Done generating output Trajectories"
+
+close_matlab; exit 0
 
 # Before executing this, we assume the scripts (1) run_results_main_learn_models and (2) run_main.m
 # have already been excuted and models are learned and output trajectories are generated and copied in the respective folders.

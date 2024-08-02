@@ -6,8 +6,17 @@
  */
 
 
-#include "model_translator.h"
+#include "../../simulinkModelling/simulinkModelConstructor.h"
+#include "../../modelParser/modelParser.h"
+#include "../../commandLineParser/parameters.h"
+#include "../../utilities/linux_utilities.h"
+#include "../../utilities/intermediateResult.h"
+#include "../../commandLineParser/user_inputs_helper.h"
+#include "../../io_functions/summary.h"
+#include "../../simulation/simulation.h"
+#include <boost/timer/timer.hpp>
 
+void run_script_generator(simulinkModelConstructor::ptr &model, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep);
 
 //Performs the actual model parsing and creating .slx model
 void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report) {

@@ -10,7 +10,11 @@
  *
  */
 
-#include "plotter.h"
+
+#include "../commandLineParser/user_inputs.h"
+#include "../utilities/intermediateResult.h"
+#include "data_structs.h"
+
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -19,6 +23,8 @@
 #include <fstream>
 #include <list>
 #include <assert.h>
+
+void setTimeseries_Data(list<struct timeseries_input> &res, unsigned int jump_id, string variableName, vector<double> timeVector, vector<double> dataVector);
 
 //TODO: Remember to keep this json namespace separeate from std namespace, their is a bug if kept together
 using json = nlohmann::json;
@@ -30,6 +36,11 @@ void setInitialValue(std::vector<double> &initial_CE_values, double value, strin
 */
 
 
+/*
+ * Efficient function for printing two-output files at the same time with simpler loop
+ * 1) First File named as outputfile.data containing the data for improving the Learned model (counter-example)
+ * 2) Second file named as outputfile.txt contains data for Plotting using GNU-Plot utilities.
+ */
 void plotter(user_inputs::ptr &user, intermediateResult::ptr &intermediate, std::vector<double> &initial_CE_values, list<struct timeseries_input> &CE_data_list) {
 
 

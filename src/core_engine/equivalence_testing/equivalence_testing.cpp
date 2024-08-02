@@ -6,6 +6,12 @@
  */
 
 #include "equivalence_testing.h"
+#include <string>
+#include "../../utilities/linux_utilities.h"
+#include "../../utilities/intermediateResult.h"
+#include "../../hybridautomata/hybridAutomata.h"
+#include "../../simulinkModelling/simulinkModelConstructor.h"
+#include "../../utilities/string_operations.h"
 
 equivalence_testing::equivalence_testing() {
 	// TODO Auto-generated constructor stub

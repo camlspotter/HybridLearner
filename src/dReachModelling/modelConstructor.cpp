@@ -7,6 +7,15 @@
 
 #include "modelConstructor.h"
 
+#include <boost/shared_ptr.hpp>
+#include <iomanip>
+#include <string>
+#include <sstream>
+
+#include <fstream>
+#include <iostream>
+
+
 void modelConstructor::printModelFile(hybridAutomata::ptr &H, ofstream &outfile, user_inputs::ptr &user) {
 	print_header(H, outfile, user);
 	locationPrinter(H, outfile);

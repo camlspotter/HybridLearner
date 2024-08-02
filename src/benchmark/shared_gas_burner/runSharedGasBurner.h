@@ -8,7 +8,7 @@
 #ifndef BENCHMARK_SHARED_GAS_BURNER_RUNSHAREDGASBURNER_H_
 #define BENCHMARK_SHARED_GAS_BURNER_RUNSHAREDGASBURNER_H_
 
-#include "../../utilities/matlab.h"//#include "MatlabDataArray.hpp"
+#include "../../utilities/matlab.h"
 
 //#include <stdlib.h>
 #include <stdio.h>

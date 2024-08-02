@@ -6,6 +6,8 @@
  */
 
 #include "hybridAutomata.h"
+#include <bits/stdc++.h>	//used for assert with count in: assert(list_locations.count(Loc_Id)!=0);
+#include <assert.h>
 
 using namespace std;
 

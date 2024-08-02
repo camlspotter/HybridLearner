@@ -5,17 +5,12 @@
  *      Author: amit
  */
 
-#include <string>
-#include "../../utilities/linux_utilities.h"
-#include "../../utilities/intermediateResult.h"
-#include "../../commandLineParser/parameters.h"
-#include "../../io_functions/summary.h"
-#include "../../hybridautomata/hybridAutomata.h"
-#include "../../simulinkModelling/simulinkModelConstructor.h"
-
 #ifndef CORE_ENGINE_EQUIVALENCE_TESTING_EQUIVALENCE_TESTING_H_
 #define CORE_ENGINE_EQUIVALENCE_TESTING_EQUIVALENCE_TESTING_H_
 
+#include "../../utilities/matlab.h"
+#include "../../commandLineParser/parameters.h"
+#include "../../io_functions/summary.h"
 
 using namespace std;
 using namespace matlab::engine;

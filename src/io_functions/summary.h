@@ -9,10 +9,8 @@
 #define IO_FUNCTIONS_SUMMARY_H_
 
 #include <boost/shared_ptr.hpp>
-#include <iostream>
 #include <list>
 #include "data_structs.h"
-
 
 class summary {
 public:
