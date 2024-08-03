@@ -1,9 +1,0 @@
-include ../config
-
-MATLAB_INCLUDE_PATH=$(MATLAB_ROOT)/extern/include
-MATLAB_LIBRARY_PATH_1=$(MATLAB_ROOT)/extern/bin/glnxa64
-MATLAB_LIBRARY_PATH_2=$(MATLAB_ROOT)/bin/glnxa64
-MATLAB_LIBRARY_PATH_3=$(MATLAB_ROOT)/extern/lib/glnxa64
-MATLAB_STDCPP_PATH=$(MATLAB_ROOT)/sys/os/glnxa64/orig/libstdc++.so.6
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib:/usr/local/lib:/usr/lib/x86_64-linux-gnu:$(MATLAB_ROOT)/bin/glnxa64:$(MATLAB_ROOT)/bin/glnxa64/builtins/sl_main/:$(MATLAB_ROOT)/extern/bin/glnxa64:$(MATLAB_ROOT)/extern/lib/glnxa64:$(MATLAB_ROOT)/sys/os/glnxa64
-# PATH=$(PATH):/usr/lib/x86_64-linux-gnu/glib-2.0/:/usr/bin:$(MATLAB_ROOT)/bin
