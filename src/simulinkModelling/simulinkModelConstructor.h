@@ -37,9 +37,6 @@ class simulinkModelConstructor {
 	intermediateResult::ptr intermediate;
 	unsigned int iteration; //Keeps track of the number of iterations (when the .slx file created)
 
-    // "simulink_model0", "simulink_model1", etc
-	std::string simulinkModelName; //without the extension For eg.,   circle0 for 1st iteration, circle1 for 2nd iteration
-
 	// script file that generates the simulink model
     // "$OUTDIR/generateSimulinkModel0.m", "$OUTDIR/generateSimulinkModel1.m", etc
     std::string script_for_simulinkModelName;
@@ -61,26 +58,8 @@ class simulinkModelConstructor {
 
 	void addFilteringCode(ofstream &modelfile);
 
-public:
-	typedef boost::shared_ptr<simulinkModelConstructor> ptr;
-
-	simulinkModelConstructor(){
-		user = user_inputs::ptr (new user_inputs());
-		intermediate  = intermediateResult::ptr(new intermediateResult());
-		ha = hybridAutomata::ptr(new hybridAutomata());
-		iteration = 0;
-	};
-	simulinkModelConstructor(hybridAutomata::ptr &H, user_inputs::ptr &user_input, intermediateResult::ptr &inter) {
-		ha = H;
-		user = user_input;
-		intermediate = inter;
-		iteration = 0;
-	};
-
-	int executeSimulinkModelConstructor(std::unique_ptr<MATLABEngine> &ep);
-
 	void generateSimulinkModelScript(ofstream &outfile);
-	void printSimulinkModelFile();
+
 	void printDefinition(ofstream &outfile);
 	void addMatlabFunction(ofstream &outfile);	//Adds a MATLAB Function inside StateFlow.Chart to generate a Random number for non-deterministic transitions
 	void addLocations(ofstream &outfile);
@@ -108,13 +87,41 @@ public:
 	void parameterVariableCreation(ofstream &outfile);
 
 	unsigned int getIteration() const;
-	//The keeps track of the number of times Equivalence Test is executed and so it the .slx model files created.
-	void setIteration(unsigned int iteration);
 
 	const string& getSimulinkModelName() const;
-	void setSimulinkModelName(const string &simulinkModelName);
 
-	void createSetupScriptFile(std::list<struct timeseries_input> init_point, std::vector<double> initial_output_values);
+	const string& getScriptForSimulinkModelName() const;
+	void setScriptForSimulinkModelName(
+			const string &scriptForSimulinkModelName);
+
+	void createSmallScriptFile_ForFixedOutput();
+
+    // simulink_model0, etc
+    std::string simulinkModelName() const
+    {
+        return "simulink_model" + std::to_string(iteration);
+    }
+
+public:
+	typedef boost::shared_ptr<simulinkModelConstructor> ptr;
+
+	simulinkModelConstructor(){
+		user = user_inputs::ptr (new user_inputs());
+		intermediate  = intermediateResult::ptr(new intermediateResult());
+		ha = hybridAutomata::ptr(new hybridAutomata());
+		iteration = 0;
+	};
+
+	simulinkModelConstructor(hybridAutomata::ptr &H, user_inputs::ptr &user_input, intermediateResult::ptr &inter) {
+		ha = H;
+		user = user_input;
+		intermediate = inter;
+		iteration = 0;
+	};
+
+	int executeSimulinkModelConstructor(std::unique_ptr<MATLABEngine> &ep);
+
+	void printSimulinkModelFile();
 
 	//This is specific to the engine="simu"
 	void create_runScript_for_simu_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename);
@@ -122,11 +129,11 @@ public:
 	//This has similar function like create_runScript_for_simu_engine() but differs in the path
 	void create_runScript_for_learn_ha_loop_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename);
 
-	const string& getScriptForSimulinkModelName() const;
-	void setScriptForSimulinkModelName(
-			const string &scriptForSimulinkModelName);
+	//The keeps track of the number of times Equivalence Test is executed and so it the .slx model files created.
+	void setIteration(unsigned int iteration);
 
-	void createSmallScriptFile_ForFixedOutput();
+	void createSetupScriptFile(std::list<struct timeseries_input> init_point, std::vector<double> initial_output_values);
+
 };
 
 

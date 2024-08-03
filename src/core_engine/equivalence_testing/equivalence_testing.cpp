@@ -7,11 +7,9 @@
 
 #include "equivalence_testing.h"
 #include <string>
-#include "../../utilities/linux_utilities.h"
 #include "../../utilities/intermediateResult.h"
 #include "../../hybridautomata/hybridAutomata.h"
 #include "../../simulinkModelling/simulinkModelConstructor.h"
-#include "../../utilities/string_operations.h"
 
 equivalence_testing::equivalence_testing() {
 	// TODO Auto-generated constructor stub
@@ -61,8 +59,6 @@ void equivalence_testing::generate_script_files(parameters::ptr params){
 	std::string  learned_path ="";
 	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
 	learned_path.append(linux_util->getCurrentWorkingDirectoryWithPath());	//either Release or Debug
-//	learned_path.append("/");		Maybe for now, engine==equi-test, we do not want to create any folder, just output in the Release folder
-//	learned_path.append(intermediate->getOutputfilenameWithoutExtension());
 	intermediate->setMatlabPathForLearnedModel(learned_path);	//todo: currently for engine=='equi-test', we will use interface for LearnedModel
 	// ------------------------------------------------------------------------
 

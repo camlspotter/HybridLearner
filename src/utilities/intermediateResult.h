@@ -16,7 +16,6 @@
 
 class intermediateResult {
 private:
-	std::string outputfilename_without_extension;	//for dReach
 	std::string dReach_model_filename_with_path;	//output file that our tool generate
 	std::string dReach_sat_smt2filename_with_path;	//Eg., osci_1_0.smt2
 	std::string dReach_sat_smt2filename_with_path_without_extension;	//Eg., osci_1_0   This is used to identify the correct json file
@@ -41,13 +40,6 @@ public:
 	const std::string& getDReachModelFilenameWithPath() const;
 	void setDReachModelFilenameWithPath(
 			const std::string &dReachModelFilenameWithPath);
-
-    // xxx, when --output-filename xxx.txt
-    // should be removed
-	const std::string&  getOutputfilenameWithoutExtension() const;
-
-	void setOutputfilenameWithoutExtension(
-			const std::string &outputfilenameWithoutExtension);
 
 	const std::string& getDReachSatSmt2filenameWithPath() const;
 	void setDReachSatSmt2filenameWithPath(
@@ -77,10 +69,6 @@ public:
 	const std::string&  getMatlabPathForOriginalModel() const;
 	void setMatlabPathForOriginalModel(
 			const std::string &matlabPathForOriginalModel);
-
-    // Absolute path of HybridLearner/
-	const std::string& getToolRootPath() const;
-	void setToolRootPath(const std::string &toolRootPath);
 
 	bool isLearnedModel() const;
 	void setLearnedModel(bool learnedModel);

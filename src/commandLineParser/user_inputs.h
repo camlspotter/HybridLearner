@@ -70,8 +70,9 @@ private:
 	std::string simulink_model_files;  //two file names supplied by the users as a string for equivalence testing
 	int max_degree;		//Degree of the Polynomial ODEs
 	int boundary_degree; 		//Degree of the Polynomial Guard
-	std::string output_filename;	//output file that
 	std::string output_directory;
+	std::string current_working_directory;
+	std::string hybrid_learner_root_directory;
 	std::string input_filename;
 	std::string simulation_filename; //internally generated file
 	std::string ODESolver;	//stores user's choice of ODE Solver for .slx model creation
@@ -200,13 +201,15 @@ public:
 	const std::string& getInputFilename();
 	void setInputFilename(const std::string& inputFilename);
 
-    // XXX a source of confusion and must be removed.  Use OutputDirectory instead.
-	const std::string& getOutputFilename() const;
-	void setOutputFilename(const std::string& outputFilename);
-
     // The absolute path $OUTDIR specified by --output-directory
 	const std::string& getOutputDirectory() const;
 	void setOutputDirectory(const std::string& outputDirectory);
+
+	const std::string& getCurrentWorkingDirectory() const;
+	void setCurrentWorkingDirectory(const std::string& abspath);
+
+	const std::string& getHybridLearnerRootDirectory() const;
+	void setHybridLearnerRootDirectory(const std::string& abspath);
 
     // Returns an absolute path of the given path under the output directory: $OUTDIR/$name
     const std::string getFilenameUnderOutputDirectory(const std::string& name) const;

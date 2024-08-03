@@ -32,6 +32,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
     // XXX Assumes HybridLearner is executed at build/
 	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";
 	cmd_str.append("--input-filename ");
+    assert( user_Inputs->getInputFilename().is_absolute() );
 	cmd_str.append(user_Inputs->getInputFilename());
 
 	cmd_str.append(" --output-directory ");
@@ -154,8 +155,6 @@ void initial_setting(parameters::ptr &params){
 
 	// ---------- few Path setting for execution to create the .slx model
 
-	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
-
 	std::string trace_file_user = userInputs->getSimuTraceFilename();	//user can supply: just file name or absolute path from Release folder
 	std::string fileName="", filePath="", userPath="";
 	std::string only_filename_user;
@@ -170,7 +169,7 @@ void initial_setting(parameters::ptr &params){
 
 		//std::cout <<"file Name=" << fileName <<"   path="<< filePath << std::endl;
 
-		filePath.append(linux_util->getCurrentWorkingDirectoryWithPath());  //Release or Debug
+		filePath.append(getcwd());  //Release or Debug
 		filePath.append("/");
 		filePath.append(userPath);	// this include the last "/". NOW '/' is EXCLUDED
 

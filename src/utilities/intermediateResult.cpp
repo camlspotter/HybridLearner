@@ -18,15 +18,6 @@ void intermediateResult::setDReachModelFilenameWithPath(
 	dReach_model_filename_with_path = dReachModelFilenameWithPath;
 }
 
-const std::string&  intermediateResult::getOutputfilenameWithoutExtension() const {
-	return outputfilename_without_extension;
-}
-
-void intermediateResult::setOutputfilenameWithoutExtension(
-		const std::string &outputfilenameWithoutExtension) {
-	outputfilename_without_extension = outputfilenameWithoutExtension;
-}
-
 const std::string& intermediateResult::getDReachSatSmt2filenameWithPath() const {
 	return dReach_sat_smt2filename_with_path;
 }
@@ -91,10 +82,6 @@ void intermediateResult::setMatlabPathForOriginalModel(
 	matlab_path_for_original_model = matlabPathForOriginalModel;
 }
 
-const std::string&  intermediateResult::getToolRootPath() const {
-	return tool_root_path;
-}
-
 bool intermediateResult::isLearnedModel() const {
 	return learned_model;
 }
@@ -109,10 +96,6 @@ bool intermediateResult::isOriginalModel() const {
 
 void intermediateResult::setOriginalModel(bool originalModel) {
 	original_model = originalModel;
-}
-
-void intermediateResult::setToolRootPath(const std::string &toolRootPath) {
-	tool_root_path = toolRootPath;
 }
 
 const std::string&  intermediateResult::getLearnAlgoDefaultInputfilePath() const {

@@ -76,14 +76,14 @@ bool randomEquivalenceTesting::execute_random_equivalence_test(parameters::ptr p
 	generate_input_information(initial_inputValues_timeSeriesData, initial_output_values, params, ep, report);	//initial values
 	// -------------- --------------
 
-	std::string path_for_file_one = "", path_for_file_two = "";
-
 	std::list<std::string> model_files = userInputs->getSimulinkModelFilenames();
 	assert(model_files.size()==2);	//Two model file should be provided to run Equivalence Test
 	std::list<std::string>::iterator it=model_files.begin();
-	std::string model_file_one = getFileName_without_Path((*it), path_for_file_one);
+    std::string path_for_file_one = dirname(*it);
+	std::string model_file_one = basename(*it);
 	it++; //next iterator for next model filename
-	std::string model_file_two = getFileName_without_Path((*it), path_for_file_two);
+    std::string path_for_file_two = dirname(*it);
+	std::string model_file_two = basename(*it);
 	//
 	std::cout <<" List of files are " << std::endl;
 	std::cout <<" Model File one = " << model_file_one << "   path_for_file_one = " << path_for_file_one << std::endl;
@@ -124,8 +124,8 @@ bool randomEquivalenceTesting::execute_random_equivalence_test(parameters::ptr p
 
 	// ------------------------------------------
 
-	std::string output_filename_one_withPath = getFileNameWithPath(output_filename_one, path_for_file_one);
-	std::string output_filename_two_withPath = getFileNameWithPath(output_filename_two, path_for_file_two);
+	std::string output_filename_one_withPath = concat_path(path_for_file_one, output_filename_one);
+	std::string output_filename_two_withPath = concat_path(path_for_file_two, output_filename_two);
 
 
 	// -------------- Simulate the two models for each initial input signal and test for equivalence --------------

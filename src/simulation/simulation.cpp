@@ -162,7 +162,7 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
         simulate_model(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
 
-        std::string resultFileName = getSimulationOutputFileName(user->getModel(), intermediate->getToolRootPath());
+		std::string resultFileName = user->getFilenameUnderOutputDirectory("result.txt");
 
         if (matlab_execution_count==0) {	//1st iteration
             // cat $resultFileName > $tmpSimuFile
@@ -246,7 +246,7 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
 		simulate_model(ep, user, init_point, output_variable_init_values, intermediate); //this will generate the file "result.tsv" for this init_point
 
-		std::string resultFileName = getSimulationOutputFileName(user->getModel(), intermediate->getToolRootPath());
+		std::string resultFileName = user->getFilenameUnderOutputDirectory("result.txt");
 
 		if (matlab_execution_count==0){	//1st iteration
             // cat $resultFileName > $tmpSimuFile
@@ -296,32 +296,6 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		}
 
 	} //End of all simulation traces
-}
-
-//Now the function returns the Absolute path
-const std::string getSimulationOutputFileName(unsigned int model, const std::string &toolRootPath) {
-
-	std::string resultfile = "";
-	resultfile.append(toolRootPath);
-
-	if (model == 1) {
-		resultfile.append("/src/benchmark/circle/result.txt");
-	} else if (model == 2) {
-		resultfile.append("/src/benchmark/oscillator/result.txt");
-	} else if (model == 3){
-		resultfile.append("/src/benchmark/shared_gas_burner/result.txt");
-	} else if (model == 4){
-		resultfile.append("/src/benchmark/nav_inst1/result.txt");
-	} else if (model == 5){
-		resultfile.append("/src/benchmark/AFC/result.txt");
-	} else if (model == 6){
-		resultfile.append("/src/benchmark/AT/result.txt");
-	} else if (model == 7){
-		resultfile.append("/src/benchmark/bball_with_input/result.txt");
-	}
-
-
-	return resultfile;
 }
 
 bool safetyCheck(user_inputs::ptr &user, double &violation_TimeHorizon) {

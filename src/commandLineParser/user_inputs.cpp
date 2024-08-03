@@ -158,14 +158,6 @@ void user_inputs::setInputFilename(const std::string& inputFilename) {
 	input_filename = inputFilename;
 }
 
-const std::string& user_inputs::getOutputFilename() const {
-	return output_filename;
-}
-
-void user_inputs::setOutputFilename(const std::string& outputFilename) {
-	output_filename = outputFilename;
-}
-
 const std::string& user_inputs::getOutputDirectory() const {
 	return output_directory;
 }
@@ -181,6 +173,22 @@ const std::string user_inputs::getFilenameUnderOutputDirectory(const std::string
     return s;
 }
 
+
+const std::string& user_inputs::getCurrentWorkingDirectory() const {
+	return current_working_directory;
+}
+
+void user_inputs::setCurrentWorkingDirectory(const std::string& abspath) {
+	current_working_directory = abspath;
+}
+
+const std::string& user_inputs::getHybridLearnerRootDirectory() const {
+	return hybrid_learner_root_directory;
+}
+
+void user_inputs::setHybridLearnerRootDirectory(const std::string& abspath) {
+	hybrid_learner_root_directory = abspath;
+}
 
 //*******************************************
 const std::string& user_inputs::getControllerFilename() const {

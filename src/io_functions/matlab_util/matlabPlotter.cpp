@@ -10,8 +10,8 @@
 using namespace std;
 
 void printPolytope2File(std::unique_ptr<MATLABEngine> &ep,
-		intermediateResult::ptr intermediate, user_inputs::ptr users,
-		polytope::ptr poly, std::string fileName) {
+                        user_inputs::ptr users,
+                        polytope::ptr poly, std::string fileName) {
 
 	string matrixA = "", vectorB = "";
 
@@ -69,7 +69,7 @@ void printPolytope2File(std::unique_ptr<MATLABEngine> &ep,
 
     // cd('$ToolRoot/src/io_functionsmatlab_util')
 	string cmd = "cd('";
-	cmd.append(intermediate->getToolRootPath());
+	cmd.append(users->getHybridLearnerRootDirectory());
 	cmd.append("/src/io_functions/matlab_util')");
 	ep->eval(convertUTF8StringToUTF16String(cmd));
 
@@ -94,10 +94,10 @@ void printPolytope2File(std::unique_ptr<MATLABEngine> &ep,
     // cp $ToolRoot/src/io_functions/matlab_util/vertices.txt $ToolRoot/Release/$fileName
 	string copycommand = "";
 	copycommand.append("cp ");
-	copycommand.append(intermediate->getToolRootPath());
+	copycommand.append(users->getHybridLearnerRootDirectory());
 	copycommand.append("/src/io_functions/matlab_util/vertices.txt");
 	copycommand.append(" ");//to the current working directory, i.e. in the Release directory
-	copycommand.append(intermediate->getToolRootPath());
+	copycommand.append(users->getHybridLearnerRootDirectory());
 	copycommand.append("/Release/");
 	copycommand.append(fileName);
 	int x = system(copycommand.c_str());

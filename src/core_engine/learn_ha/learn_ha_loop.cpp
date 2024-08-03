@@ -177,32 +177,25 @@ void initial_processing_for_InputFileName(parameters::ptr params) {
 	user_inputs::ptr userInputs = params->getUserInputs();
 
 	// ---------- few Path setting for execution to create the .slx model
-	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
     // MatlabDefault=`pwd`
-	intermediate->setMatlabDefaultPath(linux_util->getCurrentWorkingDirectoryWithPath());
-    // ToolRoot=`pwd`/..
-	intermediate->setToolRootPath(linux_util->getParentWorkingDirectoryWithPath());
+	intermediate->setMatlabDefaultPath(getcwd());
 
 	// ------------------------------------------------------------------------
 
     // LearnAlgoDefaultInputfile = HybridLearner/src/learnHA/data
-	std::string learnAlgo_inputfile_Path = linux_util->getParentWorkingDirectoryWithPath();
+	std::string learnAlgo_inputfile_Path = dirname(getcwd());
 	learnAlgo_inputfile_Path.append("/src/learnHA/data");
 	intermediate->setLearnAlgoDefaultInputfilePath(learnAlgo_inputfile_Path);
 
     // model_file_M=../src/test_cases/engine/learn_ha_loop/oscillator.slx
 	std::string model_file_M = userInputs->getSimulinkModelFilename();
 
-	std::string filePath;
-    std::string fileName = getFileName_without_Path(model_file_M, filePath);
+	std::string filePath = dirname(model_file_M);
+    std::string fileName = basename(model_file_M);
 
 	intermediate->setMatlabPathForOriginalModel(filePath);
 
-	intermediate->setMatlabPathForLearnedModel(linux_util->getCurrentWorkingDirectoryWithPath()); // todo: may be create a folder by the name supplied by the user.
-
-	userInputs->setSimulinkModelFilename(fileName);	// Note: replaced the original filename with path into filename without path and path is stored in intermediate->getMatlabPathForOriginalModel()
-
-	//std::cout <<"file Name=" << fileName <<"   path="<< intermediate->getMatlabPathForOriginalModel() << std::endl;
+	intermediate->setMatlabPathForLearnedModel(getcwd());
 }
 
 
@@ -299,33 +292,10 @@ void updateTraceFile(//unsigned int iteration, (unused)
 	cout << "previous_SimulationTraceFile = "<< previous_SimulationTraceFile << endl;
 	//Now get result-file name from the original-running-path
 
-
-
-	std::string output_filename="result_simu_data.txt";	//currently it is hardcoded
-
-	std::string model_filename = userInputs->getOutputFilename();
-	std::string filename_without_extension="", model_extension_is="";
-	size_t found = model_filename.find(".");
-	if (found != string::npos){
-		filename_without_extension = model_filename.substr(0, found);
-		//model_extension_is = model_filename.substr(found+1);	// After "." get all substring
-	}
-//	model_filename = filename_without_extension;
-//	model_filename.append(to_string(iteration));	// iteration number appended
-//	model_filename.append(".");	//
-//	model_filename.append(model_extension_is);	// iteration number appended
-
-
-	std::string resultFileName ="";
-	resultFileName.append(intermediate->getMatlabPathForOriginalModel());
-	resultFileName.append("/");
-	resultFileName.append(output_filename);	//We assume the file "result_simu_data.txt" is generated after each simulation
+	std::string resultFileName = userInputs->getFilenameUnderOutputDirectory("result_simu_data.txt");
 	cout << "original Simulation TraceFile = "<< resultFileName << endl;
 
-	std::string tmpSimuFile = "update_tmp_simulation_";
-	tmpSimuFile.append(filename_without_extension);
-	tmpSimuFile.append(".txt");
-
+	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("update_tmp_simulation.txt");
 
 	/*
 	 * cat  simuFileName  resultFile  >  tmpSimuFile   //from 2nd iteration onwards
@@ -339,7 +309,6 @@ void updateTraceFile(//unsigned int iteration, (unused)
 	cmd.append(tmpSimuFile);
 	//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
 	system_must_succeed(cmd);
-
 
 	cmd="cp ";
 	cmd.append(tmpSimuFile);
@@ -358,7 +327,6 @@ void updateTraceFile(//unsigned int iteration, (unused)
 	commandStr.append(intermediate->getLearnAlgoDefaultInputfilePath()); //absolute path
 
 	system_must_succeed(commandStr);
-
 }
 
 /*
@@ -392,8 +360,6 @@ void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
-
-
 
 	//This fixing for userInputs: sys_dimension is a hard to remember fix. Better fixing can be applied later.
 	H->setDimension(H->map_size());
@@ -441,43 +407,31 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration, model_setup::p
 	 * 3) Here list_inputs and list_outputs have variable-names as original-names
 	 */
 
-	//-----------------------------------------------------------------------------------------------------
-	std::string output_filename = userInputs->getOutputFilename();	//Learned model is TWO
 
-    // filename_without_extension= "xxx"
-    // model_extension_is = "txt"
-	std::string filename_without_extension="", model_extension_is="";
-	size_t found = output_filename.find(".");	//extract .slx or .txt from the model file
-	if (found != string::npos){
-		filename_without_extension = output_filename.substr(0, found);
-		model_extension_is = output_filename.substr(found+1);	// After "." get all substring
-	} else {
-        throw std::runtime_error("output_filename must contain '.'");
+	std::string model_file_two;
+    {
+        std::string model_filename = "model";
+        model_filename.append(to_string(iteration));	// iteration number appended
+        model_filename.append(".txt");
+        model_filename = userInputs->getFilenameUnderOutputDirectory(model_filename);
+        model_file_two = model_filename;	//Learned model is two
     }
-
-    // model_filename = xxx0.txt
-    std::string model_filename = filename_without_extension;
-	model_filename.append(to_string(iteration));	// iteration number appended
-	model_filename.append(".");	//
-	model_filename.append(model_extension_is);	// iteration number appended
-
-	std::string model_file_two = model_filename;	//Learned model is two
+    
 	std::string model_file_one = userInputs->getSimulinkModelFilename();	//Original model is ONE
 
 	std::string script_filename_one = "run_script_simu_user_model.m";
     std::string output_filename_one="result_simu_data.txt";
 
     // script_filename_two= run_script_xxx0m
-	std::string script_filename_two = "run_script_";
-	script_filename_two.append(filename_without_extension);
+	std::string script_filename_two = userInputs->getFilenameUnderOutputDirectory("eqtest_run_script");
 	script_filename_two.append(to_string(iteration));
 	script_filename_two.append(".m");		//.m extension appended
 
     // output_filename_two= result_xxx0.txt
-    std::string output_filename_two="result_";
-	output_filename_two.append(filename_without_extension);
+    std::string output_filename_two = userInputs->getFilenameUnderOutputDirectory("eqresult");
 	output_filename_two.append(to_string(iteration));
 	output_filename_two.append(".txt");
+
 //-----------------------------------------------------------------------------------------------------
 
 	bool flagEquivalent=true;

@@ -18,6 +18,8 @@
 #include "../io_functions/data_structs.h"
 #include "../hybridautomata/variable_to_index_mapping.h"
 #include "../utilities/polytope/polytope.h"
+#include "../utilities/linux_utilities.h" // getcwd
+#include "../utilities/string_operations.h" // concat_path
 
 #include <fstream>
 #include <limits.h>
@@ -151,8 +153,7 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	//("simu-init-point", po::value<std::string>(), "Select the initial-point for simulation. Multiple points can be supplied separated by & symbol \n"
 	//		" syntax: 'x0=7,x1=8 & x0=10,x1=15' where x0 and x1 are system-learned variables.")	//todo: to be removed
 
-	("output-directory", po::value<std::string>(), "output directory")
-	("output-file,o", po::value<std::string>(), "output file name for redirecting the outputs");
+	("output-directory", po::value<std::string>(), "output directory");
 
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
@@ -194,15 +195,15 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	if (vm.count("simulink-model-file")) {
 		if (userInputs->getEngine()=="equi-test") {
-			userInputs->setSimulinkModelFiles(vm["simulink-model-file"].as<std::string>());
+			userInputs->setSimulinkModelFiles(abspath(vm["simulink-model-file"].as<std::string>()));
 		} else {	//for simu and learn-ha only single file is supplied
-			userInputs->setSimulinkModelFilename(vm["simulink-model-file"].as<std::string>());
+			userInputs->setSimulinkModelFilename(abspath(vm["simulink-model-file"].as<std::string>()));
 		}
 	} else {
 		//if ((boost::iequals(userInputs->getEngine(),"simu")==true) || (boost::iequals(userInputs->getEngine(),"equi-test")==true)) {
 		if ((boost::iequals(userInputs->getEngine(),"simu")==true) || (boost::iequals(userInputs->getEngine(),"equi-test")==true) || (boost::iequals(userInputs->getEngine(),"learn-ha-loop")==true)) {
 			std::cout << "No model file(s) supplied, please input .slx/.mdl Model filename(s) using --simulink-model-file option.\n";
-			throw(new exception());
+			throw(new exception()); // XXX bad exception
 		}
 		// not compulsory for  simu and equi-test (for now)
 	}
@@ -570,23 +571,11 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 		throw(new exception());
 	}
 
-
-	if (vm.count("output-file")) {
-		userInputs->setOutputFilename(vm["output-file"].as<std::string>());
-	} else {
-		fileName = "out.txt";
-		userInputs->setOutputFilename(fileName); //default file is set to out.txt
-	}
-
 	if (vm.count("output-directory")) {
-        // It must be absolute, since some sub-programs are executed with different cwd.
-        char tmp[PATH_MAX];
-        if ( !getcwd(tmp, PATH_MAX)) {
-            throw std::runtime_error("cwd is too long");
-        }
-        std::string cwd(tmp);
-        // XXX if the given value is absolute, do not concate nate with pwd
-        std::string dir = cwd + "/" + vm["output-directory"].as<std::string>(); // XXX use proper separator
+        std::string cwd = getcwd();
+        userInputs->setCurrentWorkingDirectory(cwd);
+        userInputs->setHybridLearnerRootDirectory(cwd + "/.."); // XXX fixed
+        std::string dir = concat_path(cwd, vm["output-directory"].as<std::string>()); // XXX use proper separator
 		userInputs->setOutputDirectory(dir);
 	} else {
 		std::cout << "Missing --output-directory. \n";

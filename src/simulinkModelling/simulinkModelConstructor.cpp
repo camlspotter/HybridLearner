@@ -11,6 +11,7 @@
 #include <string>
 #include <sys/stat.h>
 #include "../utilities/system.h"
+#include "../utilities/string_operations.h"
 #include <boost/tokenizer.hpp>
 
 void simulinkModelConstructor::printSimulinkModelFile() {
@@ -18,56 +19,10 @@ void simulinkModelConstructor::printSimulinkModelFile() {
 //		extern  unsigned int log_set;
 //		std::ofstream log_file("bbc4cps_log_file.txt",  std::ios_base::binary | std::ios_base::app);
 
-	std::string name="";
-
-	if (user->getEngine() == "txt2slx") {
-		/* if the modelfile supplied by user have absolute or sub path like ../src/testcases/engine/txt2slx/raj.txt
-			then, first search the character '/' if found find the position of the last '/' and extract rest character and then extract the extension as done below.
-		*/
-		std::string outfilename = user->getModelFilename(); //Model file in .txt form supplied by the user
-		size_t found = outfilename.rfind("/");	//find if '/' is present from reverse of the string
-		if (found != string::npos) { //when found
-			outfilename = outfilename.substr (found+1); //from found position+1 rest all substr extract
-			//cout << "last part of the filename =" << outfilename << endl;
-			//Now, extract the filename without extension
-			size_t pos = outfilename.rfind(".");	//extract file-name from extension
-			if (pos != string::npos) {
-				outfilename = outfilename.substr (0,pos);
-			}
-		} else {	//only extract the filename without extension
-			size_t found = outfilename.rfind(".");	//extract file-name from extension
-			if (found != string::npos) {
-				outfilename = outfilename.substr (0,found);
-			}
-		}
-
-		name = outfilename;
-		intermediate->setOutputfilenameWithoutExtension(name);
-	} else if ((user->getEngine() == "learn-ha") || (user->getEngine() == "learn-ha-loop")) {
-        // outfileName = xxx.ext
-        // name = xxx
-		std::string outfileName = user->getOutputFilename();	//created learned model
-		size_t pos = outfileName.rfind(".");	//extract file-name from extension
-		if (pos != string::npos) {
-			name = outfileName.substr (0,pos);
-		}
-
-        // OutputfilenameWithoutExtension = xxx
-		intermediate->setOutputfilenameWithoutExtension(name);
-	} else {	//executed for engine="bbc"
-		name = intermediate->getOutputfilenameWithoutExtension();
-        //Folder already created during verification Process for dReach model, so dump simulink model in this folder
-		std::string command = "cd " + name;
-		system_must_succeed(command);
-	}
 	//*****************************************
 
-    // "simulink_model_0"
-    simulinkModelName = "simulink_model";
-	simulinkModelName.append(std::to_string(iteration));
-
 	// script file that generates the simulink model
-    // script_for_simulinkModelName= $OUTDIR/generateSimulinkModel_0.m
+    // script_for_simulinkModelName= $OUTDIR/generateSimulinkModel0.m
     std::string script_file_with_path = user->getFilenameUnderOutputDirectory("generateSimulinkModel");
 	script_file_with_path.append(to_string(iteration));
 	script_file_with_path.append(".m");
@@ -98,7 +53,8 @@ void simulinkModelConstructor::printSimulinkModelFile() {
     cout << "Script file " << script_file_with_path << " generated" << endl;
 }
 
-void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
+void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile)
+{
 	printDefinition(outfile);	//prints the header information
 
 	unsigned int oneVersusOne_oneVersusRest = 1;	//1 for One-Versus-One and 2 for One-Versus-Rest
@@ -112,11 +68,9 @@ void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
 	addDefaultTransition(outfile);
 	variableCreation(outfile);
 
-    assert(simulinkModelName != "");
-
 	//Output ports from the Chart to be connected using lines to the outputComponents
 	outfile << "\n\n";
-	outfile << "chartOutSignal = get_param('"<< simulinkModelName << "/Chart', 'PortHandles'); \n";
+	outfile << "chartOutSignal = get_param('"<< simulinkModelName() << "/Chart', 'PortHandles'); \n";
 	outfile << "\n\n";
 	addInputComponents(outfile);  // when model has input variables
 	addOutputComponents(outfile);
@@ -124,8 +78,8 @@ void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile){
 
 
 	outfile << "\n\n";
-	outfile << "Simulink.BlockDiagram.arrangeSystem('"<< simulinkModelName << "'); \n";
-	outfile << "Simulink.BlockDiagram.arrangeSystem('"<< simulinkModelName << "/Chart'); \n";
+	outfile << "Simulink.BlockDiagram.arrangeSystem('"<< simulinkModelName() << "'); \n";
+	outfile << "Simulink.BlockDiagram.arrangeSystem('"<< simulinkModelName() << "/Chart'); \n";
 
 	outfile << "\n\n";
 	outfile << "sfsave; \n";
@@ -139,7 +93,7 @@ void simulinkModelConstructor::printDefinition(ofstream &outfile) {
 
 	outfile << "bdclose all; \n";
 	//outfile << "sfnew " << outfile_withoutExtension << iteration << "; \n";
-	outfile << "sfnew " << simulinkModelName << "; \n";
+	outfile << "sfnew " << simulinkModelName() << "; \n";
 	outfile << "rt = sfroot; \n";
 	outfile << "ch = find(rt,'-isa','Stateflow.Chart'); \n";
 	//outfile << "set_param(bdroot, 'StopTime', 'timeFinal', 'MaxStep', 'timeStepMax'); \n";  //This is for variable-step with MaxStep as timeStepMax
@@ -543,14 +497,14 @@ void simulinkModelConstructor::addInputComponents(ofstream &outfile) {
 	if (number_of_input_variables >= 1) {
 		for (list<std::string>::iterator it = inputVariables.begin(); it != inputVariables.end(); it++) {
 			string variableName = *it;	//extract the variable name
-			outfile << "add_block('simulink/Sources/In1', '" << simulinkModelName << "/" << variableName << "In'); \n";
-			outfile << variableName << "Input = get_param('" << simulinkModelName << "/" << variableName <<"In', 'PortHandles'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"In', 'Port', '" << portNo << "'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"In', 'SignalType', 'auto'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"In', 'position', [-40, " << y_pos << ", 0, " << height << "]); \n";
+			outfile << "add_block('simulink/Sources/In1', '" << simulinkModelName() << "/" << variableName << "In'); \n";
+			outfile << variableName << "Input = get_param('" << simulinkModelName() << "/" << variableName <<"In', 'PortHandles'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"In', 'Port', '" << portNo << "'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"In', 'SignalType', 'auto'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"In', 'position', [-40, " << y_pos << ", 0, " << height << "]); \n";
 
 			outfile <<"\n \n";	//Adding the line here itself
-			outfile <<"add_line('" << simulinkModelName << "', " << variableName <<"Input.Outport(1), chartOutSignal.Inport(" << portNo << ")); \n";
+			outfile <<"add_line('" << simulinkModelName() << "', " << variableName <<"Input.Outport(1), chartOutSignal.Inport(" << portNo << ")); \n";
 			outfile <<"\n \n";
 
 			height +=next_height;
@@ -581,15 +535,15 @@ void simulinkModelConstructor::addOutputComponents(ofstream &outfile) {
 
 		if (!(user->isInputVariable(variableName))) {	//print reset only for output variables and not for input variables
 
-			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName << "/" << variableName << "Out'); \n";
-			outfile << variableName << "In = get_param('" << simulinkModelName << "/" << variableName <<"Out', 'PortHandles'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
+			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName() << "/" << variableName << "Out'); \n";
+			outfile << variableName << "In = get_param('" << simulinkModelName() << "/" << variableName <<"Out', 'PortHandles'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
 
 			outfile <<"\n \n";	//Adding the line here itself
-			outfile <<"add_line('" << simulinkModelName << "', chartOutSignal.Outport(" << portNo << "), " << variableName <<"In.Inport(1)); \n";
+			outfile <<"add_line('" << simulinkModelName() << "', chartOutSignal.Outport(" << portNo << "), " << variableName <<"In.Inport(1)); \n";
 			outfile <<"\n \n";
 
 			height +=next_height;
@@ -619,15 +573,15 @@ void simulinkModelConstructor::addOutputComponents(ofstream &outfile) {
 		//connecting the output port of the Chart to input port of the Output component
 		if (!(user->isInputVariable(variableName))) {	//for output variables
 			//Creating an output-component for every variable (both input and output variables)
-			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName << "/" << variableName << "Out'); \n";
-			outfile << variableName << "Output = get_param('" << simulinkModelName << "/" << variableName <<"Out', 'PortHandles'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
+			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName() << "/" << variableName << "Out'); \n";
+			outfile << variableName << "Output = get_param('" << simulinkModelName() << "/" << variableName <<"Out', 'PortHandles'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
 
 			outfile <<"\n \n";	//Adding the line here itself
-			outfile <<"add_line('" << simulinkModelName << "', chartOutSignal.Outport(" << portNo << "), " << variableName <<"Output.Inport(1)); \n";
+			outfile <<"add_line('" << simulinkModelName() << "', chartOutSignal.Outport(" << portNo << "), " << variableName <<"Output.Inport(1)); \n";
 			outfile <<"\n \n";
 			height +=next_height;
 			y_pos += next_height;
@@ -645,17 +599,17 @@ void simulinkModelConstructor::addOutputComponents(ofstream &outfile) {
 		//connecting the output port of the Chart to input port of the Output component
 		if ((user->isInputVariable(variableName))) {	//for input variables
 			//Creating an output-component for every variable (both input and output variables)
-			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName << "/" << variableName << "Out'); \n";
-			outfile << variableName << "Output = get_param('" << simulinkModelName << "/" << variableName <<"Out', 'PortHandles'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
+			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName() << "/" << variableName << "Out'); \n";
+			outfile << variableName << "Output = get_param('" << simulinkModelName() << "/" << variableName <<"Out', 'PortHandles'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
 
 			outfile <<"\n \n";	//Adding the line here itself
 			//Input components directly connecting to the output components. This is need so as to get the actual input data from MatLab simulation
 			//port ID for input variables are ordered after output variables
-			outfile <<"add_line('" << simulinkModelName << "', " <<variableName <<"Input.Outport(1), " << variableName <<"Output.Inport(1)); \n";
+			outfile <<"add_line('" << simulinkModelName() << "', " <<variableName <<"Input.Outport(1), " << variableName <<"Output.Inport(1)); \n";
 			outfile <<"\n \n";
 			height +=next_height;
 			y_pos += next_height;
@@ -670,13 +624,13 @@ void simulinkModelConstructor::addOutputComponents(ofstream &outfile) {
 	if (number_of_input_variables >= 1) {
 		for (list<std::string>::iterator it = inputVariables.begin(); it != inputVariables.end(); it++) {
 			string variableName = *it;	//extract the variable name
-			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName << "/" << variableName << "Out'); \n";
-			outfile << variableName << "Output = get_param('" << simulinkModelName << "/" << variableName <<"Out', 'PortHandles'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
-			outfile << "set_param('" << simulinkModelName << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
-			outfile <<"add_line('" << simulinkModelName << "', " <<variableName <<"Input.Outport(1), " << variableName <<"Output.Inport(1)); \n";
+			outfile << "add_block('simulink/Sinks/Out1', '" << simulinkModelName() << "/" << variableName << "Out'); \n";
+			outfile << variableName << "Output = get_param('" << simulinkModelName() << "/" << variableName <<"Out', 'PortHandles'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalName', '" << variableName << "Out'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'Port', '" << portNo << "'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'SignalType', 'auto'); \n";
+			outfile << "set_param('" << simulinkModelName() << "/" << variableName <<"Out', 'position', [140, " << y_pos << ", 180, " << height << "]); \n";
+			outfile <<"add_line('" << simulinkModelName() << "', " <<variableName <<"Input.Outport(1), " << variableName <<"Output.Inport(1)); \n";
 			outfile <<"\n \n";
 			height +=next_height;
 			y_pos += next_height;
@@ -836,15 +790,6 @@ void simulinkModelConstructor::setIteration(unsigned int iteration) {
 	this->iteration = iteration;
 }
 
-const string& simulinkModelConstructor::getSimulinkModelName() const {
-	return simulinkModelName;
-}
-
-void simulinkModelConstructor::setSimulinkModelName(
-		const string &simulinkModelName) {
-	this->simulinkModelName = simulinkModelName;
-}
-
 void simulinkModelConstructor::parameterVariableCreation(ofstream &outfile){
 	//Read any one of the location and parse through the ODE's varName this contains the prime-variable
 
@@ -974,13 +919,6 @@ int simulinkModelConstructor::executeSimulinkModelConstructor(std::unique_ptr<MA
 
 	if (execution_count == 0) {	//running for the first time
 		//cout <<"Running for the first iteration \n" << endl;
-		string folderName = intermediate->getOutputfilenameWithoutExtension();
-		//cout << "folderName="<< folderName << endl;
-		/*string cmd1 = "addpath (genpath('../../../Release/";
-		cmd1.append(folderName);	//I assume this will take with respect to the present-working-directory, i.e. Release
-		cmd1.append("'))");
-		cout << cmd1 << endl;*/
-
 		//engEvalString(ep, "addpath (genpath('circle'))"); //Since tool BBC4CPS will be executed from Release or Debug
 		string cmd1 = "addpath (genpath('";
 		cmd1.append(intermediate->getMatlabPathForLearnedModel());
@@ -992,11 +930,6 @@ int simulinkModelConstructor::executeSimulinkModelConstructor(std::unique_ptr<MA
 
 
 	std::string cmd2="";
-	//cmd2="cd('../../../Release/";
-	//cmd2.append(folderName);
-	//cmd2.append("')");
-    //	cout<< "Learned model path=" << intermediate->getMatlabPathForLearnedModel() << endl;
-	//engEvalString(ep, "cd('../src/benchmark/circle')");
 	cmd2="cd('";
 	cmd2.append(intermediate->getMatlabPathForLearnedModel());
 	cmd2.append("')");
@@ -1035,18 +968,10 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
  * This function creates a Matlab script file for running the .slx model generated by the engine txt2slx.
  * Since main function of the engine is to generate the .slx model and not perform simulation. Thus, the script file only contain sample code.
  */
-	std::string filePath = intermediate->getMatlabPathForLearnedModel();
-
-    // filename= run_xxx0.m
-	std::string filename = "runy_";
-	filename.append(intermediate->getOutputfilenameWithoutExtension());
-	filename.append(to_string(iteration));
-	filename.append(".m");
-
-    // $filePath/$filename
-	std::string path = filePath; //Absolute path
-	path.append("/");
-	path.append(filename);
+    // path= run_xxx0.m
+	std::string path = user->getFilenameUnderOutputDirectory("run");
+	path.append(to_string(iteration));
+	path.append(".m");
 
 	ofstream ofs;
 	ofs.open(path);
@@ -1058,6 +983,7 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
     std::cout << "\nFile " << path << " created for Matlab (Setting up and Execution of Simulink Model) ...\n";
     //std::cout << "\nFile " << model_file_with_path << " created (Simulink Model) ...\n";
     ofs << "%% ******** Simulate Learned Model ******** \n";
+    ofs << "%% ******** by createSetupScriptFile ******** \n";
     ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
     ofs << "% run this file with the following variables in the workspace \n";
     ofs << "%       time_horizon:  Simulation Stop time or the simulation Time-Horizon \n";
@@ -1106,17 +1032,14 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
       val++;
       }*/
 
-
-
-    string simulinkModelName = intermediate->getOutputfilenameWithoutExtension();
-    simulinkModelName.append(to_string(iteration));
-
     ofs << "\n %% Putting the Warning Off \n";
     ofs << "\nwarning('off','all'); \n";
 
-    ofs << "\n %% Load the model \n";
-    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
-    ofs << "load_system(mdl); \n" ;
+    std::string model_name = basename_without_ext(simulinkModelName());
+    // It seems the model name cannot be a path name
+    ofs << "\n %% Load the model\n";
+    ofs << "mdl ='" << model_name << "'; \n" ;
+    ofs << "load_system('" << simulinkModelName() << "'); \n" ;
     ofs << "format shortG; \n" ;
 
     //Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
@@ -1259,7 +1182,7 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
 
 
 
-    /*		ofs << "result = sim('"<< simulinkModelName << "'); \n" ;
+    /*		ofs << "result = sim('"<< simulinkModelName() << "'); \n" ;
             ofs << "tout = result.tout;  \n" ;
 
             //Get the variable name for plotting from the user and use only those two variables
@@ -1320,20 +1243,18 @@ void simulinkModelConstructor::createSetupScriptFile(std::list<struct timeseries
  */
 void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename) {
 
-    cout << "simulinkModelConstructor::create_runScript_for_simu_engine "
-         << simulink_model_filename << " "
-         << script_filename << " "
-         << output_filename << endl;
-
 	/*
 	 * This file is called from the engine/module: simu and equi-test and now from learn-ha also
 	 * This function creates a Matlab script file for running the .slx model supplied by the user.
 	 * Since main function of this engine is to perform simulation and return the accumulated time-serise data
 	 */
+
+    cout << "simulinkModelConstructor::create_runScript_for_simu_engine "
+         << simulink_model_filename << " "
+         << "build: " << script_filename << " "
+         << output_filename << endl;
+
 	ofstream ofs;
-
-    cout << "Building model file " << script_filename << endl;
-
 	ofs.open(script_filename);
     if (!ofs.is_open()) {
 		std::cout << "Error opening file: " << script_filename;
@@ -1341,12 +1262,12 @@ void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simu
 	}
 
     ofs << "%% ******** Simulate User Supplied Model ******** \n";
+    ofs << "%% ******** by create_runScript_for_simu_engine ******** \n";
     ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
     ofs << "% run this file with the following variables in the workspace \n";
     ofs << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
     ofs << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
     ofs << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
-
     ofs << "%    x0_input:       control point for the first input variable \n";
     ofs << "%    x0_time:       time series for the first input variable \n";
     ofs << "%    x1_input:       control point for the second input variable \n";
@@ -1354,33 +1275,18 @@ void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simu
     ofs << "%     \n";
     ofs << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
     ofs << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
-
-
     ofs << "\n \n \n";
-
     ofs << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
     ofs << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
-
     ofs << "\n % initial values for Simulation \n";
-
-    std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
-
-
-    std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
-
-    size_t found = outfilename.find(".");	//extract file-name from extension
-    if (found != string::npos) {
-        outfilename = outfilename.substr (0,found);
-    }
-
-    std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
-
     ofs << "\n %% Putting the Warning Off \n";
     ofs << "\nwarning('off','all'); \n";
 
-    ofs << "\n %% Load the model \n";
-    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
-    ofs << "load_system(mdl); \n" ;
+    std::string model_name = basename_without_ext(simulink_model_filename);
+    // It seems the model name cannot be a path name
+    ofs << "\n %% Load the model\n";
+    ofs << "mdl ='" << model_name << "'; \n" ;
+    ofs << "load_system('" << simulink_model_filename << "'); \n" ;
     ofs << "format shortG; \n" ;
 
     //Todo: obtain from the user-supplied parameters: Type:fixed-step/linear/sin-wave/spline
@@ -1550,12 +1456,12 @@ void simulinkModelConstructor::create_runScript_for_learn_ha_loop_engine(std::st
 	}
 
     ofs << "%% ******** Simulate User Supplied Model ******** \n";
+    ofs << "%% ******** by create_runScript_for_learn_ha_loop_engine ******** \n";
     ofs << "% Run the simulation and generate a txt file containing a result of the simulation. \n";
     ofs << "% run this file with the following variables in the workspace \n";
     ofs << "%    timeFinal:  is the simulation Stop time or the simulation Time-Horizon. Note, .slx must have it set in the Model Settings->Solver menu. \n";
     ofs << "%    timeStepMax: is the Maximum simulation time-step or 'Max step size'. Note, .slx must set it in the Model Settings->Solver menu. \n";
     ofs << "%    a0, a1, and so on...: the initial values for state/output variables should also be loaded in the workspace. \n";
-
     ofs << "%    x0_input:       control point for the first input variable \n";
     ofs << "%    x0_time:       time series for the first input variable \n";
     ofs << "%    x1_input:       control point for the second input variable \n";
@@ -1563,33 +1469,18 @@ void simulinkModelConstructor::create_runScript_for_learn_ha_loop_engine(std::st
     ofs << "%     \n";
     ofs << "% Note: If the .slx model has input variable, then the inport must be labelled as \n";
     ofs << "%   x0In for the first input variable, x1In for the second input variable ..... and so on. \n";
-
-
     ofs << "\n \n \n";
-
     ofs << "timeFinal = " << user->getTimeHorizon() << "; %Simulation Stop time or the simulation Time-Horizon \n";
     ofs << "timeStepMax = "<< user->getSampleTime() <<"; %Maximum simulation time-step \n";
-
     ofs << "\n % initial values for Simulation \n";
 
-    std::string reset_str=""; //Read one of the location and parse through the ODE's varName this contains the prime-variable
+    assert( simulink_model_filename != "" );
 
-
-    std::string outfilename = simulink_model_filename;	//has the .slx extension supplied by the user. //todo maybe also check the absolute-or-relative-path
-
-    size_t found = outfilename.find(".");	//extract file-name from extension
-    if (found != string::npos) {
-        outfilename = outfilename.substr (0,found);
-    }
-
-    std::string simulinkModelName = outfilename; //intermediate->getOutputfilenameWithoutExtension();
-
-    ofs << "\n %% Putting the Warning Off \n";
-    ofs << "\nwarning('off','all'); \n";
-
-    ofs << "\n %% Load the model \n";
-    ofs << "mdl ='" << simulinkModelName << "'; \n" ;
-    ofs << "load_system(mdl); \n" ;
+    std::string model_name = basename_without_ext(simulink_model_filename);
+    // It seems the model name cannot be a path name
+    ofs << "\n %% Load the model\n";
+    ofs << "mdl ='" << model_name << "'; \n" ;
+    ofs << "load_system('" << simulink_model_filename << "'); \n" ;
     ofs << "format shortG; \n" ;
 
 
@@ -1839,18 +1730,14 @@ void simulinkModelConstructor::addFilteringCode(ofstream &ofs) {
 void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 
 	ofstream ofs;
-	std::string filePath = intermediate->getMatlabPathForLearnedModel();
-	std::string filename = "runSmallScript_";
-	filename.append(intermediate->getOutputfilenameWithoutExtension());
+
+	std::string filename = user->getFilenameUnderOutputDirectory("runSmallScript");
 	filename.append(to_string(iteration));
-	//filename.append(to_string(user->getNumberMatlabSimulationExecutedEquivalenceTest()));
 	filename.append(".m");
-	std::string cmd = filePath; //Absolute path
-	cmd.append("/");
-	cmd.append(filename);
-	ofs.open(cmd);
+
+	ofs.open(filename);
 	if (ofs.is_open()) {
-		//std::cout << "\nFile " << cmd << " created for Matlab (helping script for Execution of Simulink Model and generating output-file) ...\n";
+		//std::cout << "\nFile " << filename << " created for Matlab (helping script for Execution of Simulink Model and generating output-file) ...\n";
 		ofs << "%% ******** Simulate Learned Model ******** \n";
 		ofs << "% Run the simulation and generate a txt file containing a result of the simulation using Fixed-step. \n";
 
@@ -1943,7 +1830,7 @@ void simulinkModelConstructor::createSmallScriptFile_ForFixedOutput(){
 		// ***************** Code for creating variables *****************
 
 	} else {
-		std::cout << "Error opening file: " << cmd;
+		std::cout << "Error opening file: " << filename;
 	}
 
 	ofs.close();

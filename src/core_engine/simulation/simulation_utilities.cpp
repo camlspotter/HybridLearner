@@ -534,15 +534,11 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
 	// -----
 
 	// ---------- few Path setting for execution to create the .slx model
-	linux_utilities::ptr linux_util = linux_utilities::ptr (new linux_utilities());
-	std::string current_working_directory = linux_util->getCurrentWorkingDirectoryWithPath();
+	std::string current_working_directory = getcwd();
 	intermediate->setMatlabDefaultPath(current_working_directory);
-	intermediate->setToolRootPath(linux_util->getParentWorkingDirectoryWithPath());
 	std::string  learned_path ="";
 	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
-	learned_path.append(linux_util->getCurrentWorkingDirectoryWithPath());	//either Release or Debug
-//	learned_path.append("/");		Maybe for engine==simu, we donot want to create any folder, just output in the Release folder
-//	learned_path.append(intermediate->getOutputfilenameWithoutExtension());
+	learned_path.append(getcwd()); //either Release or Debug
 	intermediate->setMatlabPathForLearnedModel(learned_path);	//todo: currently for 'simu' engine we will use interface for LearnedModel
 	// ------------------------------------------------------------------------
 
@@ -559,9 +555,9 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
 	//Creating a script file for Running the simulink model just created.
 	std::string script_filename = "run_script_simu_user_model.m", output_filename="result_simu_data.txt";
 	std::string simulink_model_filename = userInputs->getSimulinkModelFilename();
-	std::string filename_withOut_path="", fullpath="";
 
-	filename_withOut_path = getFileName_without_Path(simulink_model_filename, fullpath);
+    std::string fullpath = dirname(simulink_model_filename);
+    std::string filename_withOut_path = basename(simulink_model_filename);
 	if (boost::algorithm::iequals(fullpath, current_working_directory)==false) {
 		//fullpath (including user-supplied path) and $PWD are not equal
 		//user supplied some relative path along with simulink-model filename. So copy model-file it into the current default working directory
@@ -586,10 +582,8 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
     // Once done, we should remove result_simu_data.txt and tmpSimuFile
 
 	// *************** setting up the mergedFile(s) ***************
-	std::string simuFileName = "simu_", tmpSimuFile = "tmp_simu_";
-	simuFileName.append(userInputs->getOutputFilename());
-	//user->setInputFilename(simuFileName);
-	tmpSimuFile.append(userInputs->getOutputFilename());
+	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory("simu.txt");
+    std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("tmp_simu.txt");
 
 	userInputs->setSimulationFilename(simuFileName);
 
