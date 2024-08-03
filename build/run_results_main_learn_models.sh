@@ -7,20 +7,20 @@ set -e
 
 
 
-# **** Switched Oscillator, small size *****
-
-ID=oscillator4/BeforeAnnotation
-echo Executing $ID
-OUTDIR=_result/$ID
-mkdir -p $OUTDIR || true
-
-CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file xxx.txt --simulink-model-file ../src/test_cases/engine/learn_ha_loop/oscillator.slx --variable-category "x:output, y:output"  --simu-init-size 4 --initial-value "x>=0.01 & x<=0.09 & y>=0.01 & y<=0.09" --time-horizon 10 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.1 --segment-relative-fine-error 0.01  --precision-equivalence 100.0 --max-traces 3 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.89 --distance-threshold 1.0   --max-generate-trace-size 1024  --ode-speedup 50 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
-
-# eval required to evaluate variables and quoted arguments correctly
-eval $CMD \
-     > $OUTDIR/log.txt
-
-exit 0
+## # **** Switched Oscillator, small size *****
+## 
+## ID=oscillator4/BeforeAnnotation
+## echo Executing $ID
+## OUTDIR=_result/$ID
+## mkdir -p $OUTDIR || true
+## 
+## CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file xxx.txt --simulink-model-file ../src/test_cases/engine/learn_ha_loop/oscillator.slx --variable-category "x:output, y:output"  --simu-init-size 4 --initial-value "x>=0.01 & x<=0.09 & y>=0.01 & y<=0.09" --time-horizon 10 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.1 --segment-relative-fine-error 0.01  --precision-equivalence 100.0 --max-traces 3 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.89 --distance-threshold 1.0   --max-generate-trace-size 1024  --ode-speedup 50 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
+## 
+## # eval required to evaluate variables and quoted arguments correctly
+## eval $CMD \
+##      > $OUTDIR/log.txt
+## 
+## exit 0
 
 # **** Switched Oscillator *****
 
