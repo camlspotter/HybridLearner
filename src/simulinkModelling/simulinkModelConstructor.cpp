@@ -16,9 +16,6 @@
 
 void simulinkModelConstructor::printSimulinkModelFile() {
 
-//		extern  unsigned int log_set;
-//		std::ofstream log_file("bbc4cps_log_file.txt",  std::ios_base::binary | std::ios_base::app);
-
 	//*****************************************
 
 	// script file that generates the simulink model
@@ -26,7 +23,6 @@ void simulinkModelConstructor::printSimulinkModelFile() {
     std::string script_file_with_path = user->getFilenameUnderOutputDirectory("generateSimulinkModel");
 	script_file_with_path.append(to_string(iteration));
 	script_file_with_path.append(".m");
-	intermediate->setSimulinkScriptFilenameWithPath(script_file_with_path);
     // member variable
 	script_for_simulinkModelName = script_file_with_path;
 
@@ -41,16 +37,7 @@ void simulinkModelConstructor::printSimulinkModelFile() {
     generateSimulinkModelScript(ofs); // uses simulinkModelName
 	ofs.close();
 
-    // simulink model filename
-    // model_file_with_path= simulink_model_0.slx
-    std::string model_file_with_path = user->getFilenameUnderOutputDirectory("simulink_model_");
-    model_file_with_path.append(to_string(iteration));
-	model_file_with_path.append(".slx");
-	intermediate->setSimulinkModelFilenameWithPath(model_file_with_path);
-
-	//*****************************************
-
-    cout << "Script file " << script_file_with_path << " generated" << endl;
+    // cout << "Script file " << script_file_with_path << " generated" << endl;
 }
 
 void simulinkModelConstructor::generateSimulinkModelScript(ofstream &outfile)
@@ -1249,10 +1236,10 @@ void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simu
 	 * Since main function of this engine is to perform simulation and return the accumulated time-serise data
 	 */
 
-    cout << "simulinkModelConstructor::create_runScript_for_simu_engine "
-         << simulink_model_filename << " "
-         << "build: " << script_filename << " "
-         << output_filename << endl;
+    // cout << "simulinkModelConstructor::create_runScript_for_simu_engine "
+    //      << simulink_model_filename << " "
+    //      << "build: " << script_filename << " "
+    //      << output_filename << endl;
 
 	ofstream ofs;
 	ofs.open(script_filename);
@@ -1437,8 +1424,7 @@ void simulinkModelConstructor::create_runScript_for_simu_engine(std::string simu
 
 	ofs.close();
 
-    cout << "Built model file " << script_filename << endl;
-//	std::cout << "\n Script file created for running the User supplied Simulink Model ...\n";
+    // cout << "simulinkModelConstructor::create_runScript_for_simu_engine done: " << script_filename << endl;
 }
 
 void simulinkModelConstructor::create_runScript_for_learn_ha_loop_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename) {

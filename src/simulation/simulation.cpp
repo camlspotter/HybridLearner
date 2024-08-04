@@ -146,7 +146,7 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
     // rm $simuFileName
     {
-        std::string deleteCommand = "rm ";
+        std::string deleteCommand = "rm -f ";
         deleteCommand.append(simuFileName);
         int x = system(deleteCommand.c_str());
         if (x == -1) {
@@ -218,7 +218,7 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
     // rm $simuFileName $tmpSimuFile
     {
-        std::string deleteCommand = "rm ";
+        std::string deleteCommand = "rm -f ";
         deleteCommand.append(simuFileName);
         deleteCommand.append(" ");
         deleteCommand.append(tmpSimuFile);
@@ -761,7 +761,7 @@ void linear_signal(double th, std::vector<double> cps, std::vector<double> &time
 	} else if (nos_cp <= 1) {
 		std::cout << "\nTerminating BBC4CPS, caused due to error in command-line inputs.\n" ;
 		std::cout << "Invalid number-of-control-points. Minimum number of fixed-linear control-points for a variable is 2.\n";
-		exit(0);
+		exit(1);
 	}
 
 	//data [cp1 cp2  cp3]
@@ -792,7 +792,7 @@ void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<dou
 	} else if (nos_cp <= 1) {
 		std::cout << "\nTerminating BBC4CPS, caused due to error in command-line inputs.\n" ;
 		std::cout << "Invalid number-of-control-points. Minimum number of control-points for a variable is 2 for spline signal type.\n";
-		exit(0);
+		exit(1);
 	}
 
 	//data [cp1 cp2  cp3]

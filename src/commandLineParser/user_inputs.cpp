@@ -19,10 +19,9 @@
 #include "../benchmark/model_variable_mapping.h"
 #include <boost/algorithm/string.hpp>	//used for trim()
 #include <fstream>
+#include "../utilities/filesystem.h"
 
 using namespace std;
-
-
 
 double user_inputs::getSampleTime() const {
 	return sample_time;
@@ -149,65 +148,29 @@ const std::string& user_inputs::getClusterAlgorithm() {
 }
 
 
-
-const std::string& user_inputs::getInputFilename() {
-	return input_filename;
-}
-
-void user_inputs::setInputFilename(const std::string& inputFilename) {
-	input_filename = inputFilename;
-}
-
-const std::string& user_inputs::getOutputDirectory() const {
+const fs::path& user_inputs::getOutputDirectory() const {
 	return output_directory;
 }
 
-void user_inputs::setOutputDirectory(const std::string& outputDirectory) {
+void user_inputs::setOutputDirectory(const fs::path& outputDirectory) {
 	output_directory = outputDirectory;
 }
 
-const std::string user_inputs::getFilenameUnderOutputDirectory(const std::string& name) const {
-    std::string s(output_directory);
-    s.append("/"); // XXX use proper directory separator
-    s.append(name);
-    return s;
+const fs::path user_inputs::getFilenameUnderOutputDirectory(const fs::path& name) const
+{
+    return concat_path(output_directory, name);
 }
 
 
-const std::string& user_inputs::getCurrentWorkingDirectory() const {
-	return current_working_directory;
-}
-
-void user_inputs::setCurrentWorkingDirectory(const std::string& abspath) {
-	current_working_directory = abspath;
-}
-
-const std::string& user_inputs::getHybridLearnerRootDirectory() const {
+const fs::path& user_inputs::getHybridLearnerRootDirectory() const {
 	return hybrid_learner_root_directory;
 }
 
-void user_inputs::setHybridLearnerRootDirectory(const std::string& abspath) {
+void user_inputs::setHybridLearnerRootDirectory(const fs::path& abspath) {
 	hybrid_learner_root_directory = abspath;
 }
 
 //*******************************************
-const std::string& user_inputs::getControllerFilename() const {
-	return controller_filename;
-}
-
-void user_inputs::setControllerFilename(const std::string& controllerFilename) {
-	controller_filename = controllerFilename;
-}
-
-const std::string& user_inputs::getConfigFilename() const {
-	return config_filename;
-}
-
-void user_inputs::setConfigFilename(const std::string& configFilename) {
-	config_filename = configFilename;
-
-	std::cout << "\nConfiguration File: parsing Done...\n";
-}
 
 const struct plot_variables& user_inputs::getPlotVars() const {
 	return plot_vars;
@@ -226,19 +189,11 @@ unsigned int user_inputs::getSimuInitSize() const {
 	return simu_init_size;
 }
 
-/*const std::string& user_inputs::getSimuInitPoint() const {
-	return simu_init_point;
-}
-
-void user_inputs::setSimuInitPoint(const std::string &simuInitPoint) {
-	simu_init_point = simuInitPoint;
-}*/
-
 unsigned int user_inputs::getSysDimension() const {
 	return sys_dimension;
 }
 
-const std::string& user_inputs::getSimulationFilename() const {
+const fs::path& user_inputs::getSimulationFilename() const {
 	return simulation_filename;
 }
 
@@ -259,7 +214,8 @@ void user_inputs::setNumberMatlabSimulationExecuted(
 	number_matlab_simulation_executed = numberMatlabSimulationExecuted;
 }
 
-void user_inputs::setSimulationFilename(const std::string& simulationFilename) {
+void user_inputs::setSimulationFilename(const fs::path& simulationFilename) {
+    assert( is_absolute_path(simulationFilename) );
 	simulation_filename = simulationFilename;
 }
 
@@ -593,11 +549,11 @@ void user_inputs::setEngine(const std::string &engine) {
 	Engine = engine;
 }
 
-const std::string& user_inputs::getModelFilename() const {
+const fs::path& user_inputs::getModelFilename() const {
 	return model_filename;
 }
 
-void user_inputs::setModelFilename(const std::string &modelFilename) {
+void user_inputs::setModelFilename(const fs::path &modelFilename) {
 	model_filename = modelFilename;
 }
 
@@ -800,40 +756,40 @@ bool user_inputs::isInputVariable(const std::string variableName) {
 	return isInputVariable;
 }
 
-const std::string& user_inputs::getSimuTraceFilename() const {
+const fs::path& user_inputs::getSimuTraceFilename() const {
 	return simu_trace_filename;
 }
 
-void user_inputs::setSimuTraceFilename(const std::string &simuTraceFilename) {
+void user_inputs::setSimuTraceFilename(const fs::path &simuTraceFilename) {
 	simu_trace_filename = simuTraceFilename;
 }
 
-const std::string& user_inputs::getSimulinkModelFilename() const {
+const fs::path& user_inputs::getSimulinkModelFilename() const {
 	return simulink_model_filename;
 }
 
 void user_inputs::setSimulinkModelFilename(
-		const std::string &simulinkModelFilename) {
+		const fs::path &simulinkModelFilename) {
 	simulink_model_filename = simulinkModelFilename;
 
 }
 
-void user_inputs::setSimulinkModelFiles(const std::string &simulinkModelFiles) {
-	simulink_model_files = simulinkModelFiles;
+// simulinkModelFiles: space separated file names
+void user_inputs::setSimulinkModelFilenames(const std::string &simulinkModelFiles) {
 	//now parse this and populate the list into the variable simulink_model_filenames
-	std::list<std::string> list_filenames;
+	std::list<fs::path> list_filenames;
 
-	std::string input_str = simulinkModelFiles;	//Syntax: "file1.slx file2.slx"
+    std::string input_str = simulinkModelFiles;	//Syntax: "file1.slx file2.slx"
 	typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 	boost::char_separator<char> sep(" ");
 	tokenizer tokens(input_str, sep);
 	std::string tmp_str;
 	for (tokenizer::iterator tok_iter = tokens.begin();
-			tok_iter != tokens.end(); ++tok_iter) {
+         tok_iter != tokens.end(); ++tok_iter) {
 		tmp_str = (std::string) *tok_iter;
 		boost::trim(tmp_str);
 
-		list_filenames.push_back(tmp_str);
+		list_filenames.push_back(fs::path(tmp_str));
 	}
 
 	setSimulinkModelFilenames(list_filenames);
@@ -841,11 +797,11 @@ void user_inputs::setSimulinkModelFiles(const std::string &simulinkModelFiles) {
 
 
 void user_inputs::setSimulinkModelFilenames(
-		const std::list<std::string> &simulinkModelFilenames) {
+		const std::list<fs::path> &simulinkModelFilenames) {
 	simulink_model_filenames = simulinkModelFilenames;
 }
 
-const std::list<std::string>& user_inputs::getSimulinkModelFilenames() const {
+const std::list<fs::path>& user_inputs::getSimulinkModelFilenames() const {
 	return simulink_model_filenames;
 }
 

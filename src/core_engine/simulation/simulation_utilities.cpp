@@ -32,19 +32,20 @@
  */
 void simu_model_file(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, std::list<struct timeseries_input> initial_CE_values,
 		std::vector<double> &initial_output_values, std::string script_filename,
-		std::string output_filename, intermediateResult::ptr &intermediate, hybridAutomata::ptr &ha) {
+		std::string output_filename, intermediateResult::ptr &intermediate, hybridAutomata::ptr &ha)
+{
+
+    // cout << "simu_model_file()..." << endl;
 
 	//Populate data in the Matlab's Workspace
 	for (std::list<struct timeseries_input>::iterator it_values = initial_CE_values.begin(); it_values != initial_CE_values.end(); it_values++) {
 		string varName = it_values->var_detail.var_name;
-//		std::cout <<"Variable Name=" << varName << std::endl;
 		if (user->isInputVariable(varName)) {
 			std::string inputDataValues="", inputTimeValue="";
 			inputDataValues.append(varName);
 			inputDataValues.append("_input");	//Eg.  x0_input
 
 			std::vector<double> cppData = (*it_values).var_values;
-//			std::cout <<"cppData.size =" << cppData.size() << std::endl;
 
 			size_t x=1, y=cppData.size();
 			matlab::data::ArrayFactory factory;
@@ -104,20 +105,16 @@ void simu_model_file(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, 
 
         // cd $path_user_Model_str && rm $output_filename
         {
-            std::string cmd = "cd ";
-            cmd.append(path_user_Model_str);
-            cmd.append(" && rm ");
+            std::string cmd;
+            cmd.append ("rm -f ");
             cmd.append(output_filename);
             int x = system(cmd.c_str());
             if (x == -1) {
                 std::cout <<"Error executing cmd: " << cmd <<std::endl;
             }
         }
-		//std::cout <<"before addpath command"<<std::endl;
 
-		//system("cd ../src/benchmark/nav_inst1 && rm result.tsv");	//most important file is result.tsv others I may see later if need arise
 		{
-            // addpath (genpath('$path_user_Model_str'))
             std::string cmd = "addpath (genpath('";
             cmd.append(path_user_Model_str);
             cmd.append("'))");
@@ -137,6 +134,8 @@ void simu_model_file(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, 
 	//ep->eval(u"run_script_simu_user_model");	//We assume file generated is "run_script_simu_user_model.m"
 	//Extract filename without extension (.m) from script_filename
 	MATLAB_RUN(ep, script_filename);
+
+    // cout << "simu_model_file() done" << endl;
 }
 
 
@@ -156,9 +155,9 @@ void simulate_learned_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep
                                                model_setup::ptr la_setup)
 {
 
-    cout << "simulate_learned_model-from_learn_ha_loop "
-         << "script_filename: " << script_filename << " , " 
-         << "output_filename: " << output_filename << endl;
+    //    cout << "simulate_learned_model-from_learn_ha_loop "
+    //         << "script_filename: " << script_filename << " , " 
+    //         << "output_filename: " << output_filename << endl;
         
 	//std::cout <<"Let us see the control points" << std::endl;
 	//std::cout <<"initial_CE_values.size()=" << initial_CE_values.size() << std::endl;
@@ -259,13 +258,16 @@ void simulate_learned_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep
 
 }
 
-
-
-
-void simulate_original_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, std::list<struct timeseries_input> initial_CE_values,
-		std::vector<double> &initial_output_values, std::string script_filename,
-		std::string output_filename, intermediateResult::ptr &intermediate, hybridAutomata::ptr &ha, model_setup::ptr la_setup) {
-
+void simulate_original_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep,
+                                                user_inputs::ptr &user,
+                                                std::list<struct timeseries_input> initial_CE_values,
+                                                std::vector<double> &initial_output_values,
+                                                std::string script_filename,
+                                                std::string output_filename,
+                                                intermediateResult::ptr &intermediate,
+                                                hybridAutomata::ptr &ha,
+                                                model_setup::ptr la_setup)
+{
 	//std::cout <<"Let us see the control points" << std::endl;
 	//std::cout <<"initial_CE_values.size()=" << initial_CE_values.size() << std::endl;
 	//Populate data in the Matlab's Workspace
@@ -342,11 +344,9 @@ void simulate_original_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &e
 		if (x == -1) {
 			std::cout <<"Error executing cmd: " << cmd <<std::endl;
 		}
-		//system("cd ../src/benchmark/nav_inst1 && rm result.tsv");	//most important file is result.tsv others I may see later if need arise
 		cmd="addpath (genpath('";
 		cmd.append(path_user_Model_str);
 		cmd.append("'))");
-		//engEvalString(ep, "addpath (genpath('../src/benchmark/nav_inst1'))"); //currently it is Release or Debug with absolute path
 		MATLAB_EVAL(ep, cmd);
 	}
 
@@ -355,69 +355,53 @@ void simulate_original_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &e
 	cmd.append("')");
 	//engEvalString(ep, "cd('../src/benchmark/nav_inst1')");
 
-    cout << "MATLAB " << cmd << endl;
 	MATLAB_EVAL(ep, cmd);
 
 	// Now running the script file that will perform simulation.
-	//ep->eval(u"run_script_simu_user_model");	//We assume file generated is "run_script_simu_user_model.m"
-	//Extract filename without extension (.m) from script_filename
-	size_t found = script_filename.find(".");	//extract file-name from extension
-	std::string run_script;
-	if (found != string::npos) {
-		run_script = script_filename.substr (0,found);
-	}
-	MATLAB_EVAL(ep, run_script);
+	MATLAB_RUN(ep, script_filename);
 	std::cout << "Done Calling Matlab's simulation on Original .slx model.\n" << std::endl;
 
 }
-
-
-
 
 /*
  * This function is called from engine:
  * 		simulation: Here MATLAB engine has not yet started
  *
  */
-void generate_input_information(std::list<struct timeseries_all_var> &initial_simulation_timeSeriesData_ret,
-		std::list< std::vector<double> > &initial_output_values_ret, parameters::ptr &params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report){
+void generate_input_information(std::list<struct timeseries_all_var> &initial_simulation_timeSeriesData_ret, // out
+                                std::list< std::vector<double> > &initial_output_values_ret, // out
+                                parameters::ptr &params,
+                                std::unique_ptr<MATLABEngine> &ep, // out
+                                summary::ptr &report)
+{
+    // cout << "generate_input_information()..." << endl;
 
 	user_inputs::ptr userInputs = params->getUserInputs();
 
 	// -------------------    generating input time-serise data   ---------------------
 	unsigned int userSeedValue = userInputs->getSeed();
-	//std::cout <<"Your Seed Value = " << userSeedValue << std::endl;
 	myRandomNumberGenerator::ptr randomGenObject = myRandomNumberGenerator::ptr(new myRandomNumberGenerator(userSeedValue));  // setting 100 as default seed
-
 	params->setRandomGenObj(randomGenObject);
 
+    // XXX Why taking a copy?
 	user_inputs::ptr user_copy = user_inputs::ptr(new user_inputs());
 	user_copy = userInputs;
-	//toolFrame::ptr toolFrame_for_inputSignal = toolFrame::ptr(new toolFrame(ep, H, user_copy, report, intermediate, randomGenObject));	//Opens a MatLab Engine Connection locally from toolFrame
-	std::list<struct timeseries_all_var> initial_simulation_timeSeriesData;
-	boost::timer::cpu_timer matlab_start;
 
-//	std::cout << "\nStarting Matlab Engine ... please wait!!" << std::endl;
-	matlab_start.start();
+	boost::timer::cpu_timer timer;
+	timer.start();
+
 	ep = connectMATLAB();
-	matlab_start.stop();
 
+	timer.stop();
 	double wall_clock;
-	wall_clock = matlab_start.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
+	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
-//	std::cout << "Matlab engine start: Running Time (in Seconds) = " << running_time << std::endl;
-//	temp_report->setRuntimeMatlabStart(running_time);
-//	report = temp_report;
 	report->setRuntimeMatlabStart(running_time);
-	// ---------
 
 	// Creating object of user_inputs_helper class for calling helper functions
 	user_inputs_helper::ptr user_inputs_helper_object = user_inputs_helper::ptr(new user_inputs_helper());
 
-	initial_simulation_timeSeriesData = user_inputs_helper_object->generate_input_signals(ep, params);  //create init_poly in this function
-
-
-//	initial_simulation_timeSeriesData = toolFrame_for_inputSignal->generate_input_signals();  //create init_poly in this function
+	initial_simulation_timeSeriesData_ret = user_inputs_helper_object->generate_input_signals(ep, params);  //create init_poly in this function
 
 /*
 	// Debug call from equi-test -------------
@@ -425,7 +409,6 @@ void generate_input_information(std::list<struct timeseries_all_var> &initial_si
 	cout << "size=" << (*test_it).timeseries_signal.size();
 	// -------------
 */
-
 
 /*
 	//Debug ----
@@ -452,58 +435,26 @@ void generate_input_information(std::list<struct timeseries_all_var> &initial_si
 	// ----------
 */
 
-
 	polytope::ptr initial_poly = params->getInitPoly(); //using init_poly created in the above line. todo: verify if params retains the value of init_poly
 
-//	polytope::ptr initial_poly = toolFrame_for_inputSignal->getInitialPolytope(); //using init_poly created in the above line
+    //	polytope::ptr initial_poly = toolFrame_for_inputSignal->getInitialPolytope(); //using init_poly created in the above line
 
-
-
-
-//	std::list<struct timeseries_all_var>::iterator it_single_simu = initial_simulation_timeSeriesData.begin();
-//	std::list<struct timeseries_input> inputVar_init_point = (*it_single_simu).timeseries_signal;	//here we only have a single simulation, so iteration->begin() is fine.
-
-	unsigned int number_of_traces =1;
-	//if ((user_copy->getEngine()=="simu") || (user_copy->getEngine()=="learn-ha")) {
-	if ((user_copy->getEngine()=="simu") || (user_copy->getEngine()=="learn-ha")) {
+    //	std::list<struct timeseries_all_var>::iterator it_single_simu = initial_simulation_timeSeriesData.begin();
+    //	std::list<struct timeseries_input> inputVar_init_point = (*it_single_simu).timeseries_signal;	//here we only have a single simulation, so iteration->begin() is fine.
+    
+	unsigned int number_of_traces;
+	if ( user_copy->getEngine()=="simu" || user_copy->getEngine()=="learn-ha" ) {
 		number_of_traces = user_copy->getSimuInitSize();
-	} else if ((user_copy->getEngine()=="equi-test")  || (user_copy->getEngine()=="learn-ha-loop")) {
-		unsigned int inti_size = user_copy->getSimuInitSize(), trace_size = user_copy->getMaxTraces();
-		if (inti_size > trace_size)	//taking the maximum of the two
-			number_of_traces = inti_size;
-		else
-			number_of_traces = trace_size;
-		number_of_traces = user_copy->getMaxGenerateTraceSize();	//todo: Remove: used only for taking reproducible reading
+	} else if ( user_copy->getEngine()=="equi-test" || user_copy->getEngine()=="learn-ha-loop" ) {
+		unsigned int init_size = user_copy->getSimuInitSize();
+		number_of_traces = user_copy->getMaxGenerateTraceSize(); //todo: Remove: used only for taking reproducible reading
 	}
-
-
 
 	myRandomNumberGenerator::ptr randomGenObject2 = myRandomNumberGenerator::ptr(new myRandomNumberGenerator(100));  // setting 100 as default seed
-//	cout << "number_of_traces = " << number_of_traces << endl;
-	//std::list< std::vector<double> > initial_points = getInternalPoints(initial_poly, user_copy->getSimuInitSize(), randomGenObject);
-	std::list< std::vector<double> > initial_points = getInternalPoints(initial_poly, number_of_traces, randomGenObject2);
 
-	//-------------------             ---------------------
+	initial_output_values_ret = getInternalPoints(initial_poly, number_of_traces, randomGenObject2);
 
-/*
-	// Debug ------------------
-	std::cout <<"size:" << initial_points.size() << endl;
-
-	for (std::list< std::vector<double> >::iterator it=initial_points.begin(); it != initial_points.end(); it++) {
-		std::vector<double> initial_output_values =  (*it);
-		cout <<"Initial Output_variables values = " ;
-		for (unsigned int i=0; i < initial_output_values.size(); i++) {
-			cout << initial_output_values[i] << "\t";
-		}
-		cout << endl;
-	}
-	// ----------------
-
-*/
-
-
-	initial_simulation_timeSeriesData_ret = initial_simulation_timeSeriesData;
-	initial_output_values_ret = initial_points;
+    // cout << "generate_input_information() done" << endl;
 }
 
 
@@ -532,8 +483,6 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
 	// -----
 
 	// ---------- few Path setting for execution to create the .slx model
-	std::string current_working_directory = getcwd();
-	intermediate->setMatlabDefaultPath(current_working_directory);
 	std::string  learned_path ="";
 	//cout << "pwd = " << linux_util->getCurrentWorkingDirectoryWithPath() << endl;
 	learned_path.append(getcwd()); //either Release or Debug
@@ -556,14 +505,14 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
 
     std::string fullpath = dirname(simulink_model_filename);
     std::string filename_withOut_path = basename(simulink_model_filename);
-	if (boost::algorithm::iequals(fullpath, current_working_directory)==false) {
+	if (boost::algorithm::iequals(fullpath, getcwd().string())==false) {
 		//fullpath (including user-supplied path) and $PWD are not equal
 		//user supplied some relative path along with simulink-model filename. So copy model-file it into the current default working directory
 
         std::string cmd="cp ";
 		cmd.append(simulink_model_filename); //which was stored in the Release folder
 		cmd.append(" ");
-		cmd.append(current_working_directory);
+		cmd.append(getcwd());
 
 		int x = system(cmd.c_str());
 		if (x == -1) {
@@ -587,7 +536,7 @@ void generate_simulation_traces(std::list<struct timeseries_all_var> &initial_si
 
     // rm $simuFileName $tmpSimuFile
 	{
-        std::string deleteCommand = "rm ";
+        std::string deleteCommand = "rm -f ";
         deleteCommand.append(simuFileName);
         deleteCommand.append(" ");
         deleteCommand.append(tmpSimuFile);

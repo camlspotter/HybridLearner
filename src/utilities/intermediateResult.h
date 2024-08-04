@@ -16,30 +16,17 @@
 
 class intermediateResult {
 private:
-	std::string dReach_model_filename_with_path;	//output file that our tool generate
 	std::string dReach_sat_smt2filename_with_path;	//Eg., osci_1_0.smt2
 	std::string dReach_sat_smt2filename_with_path_without_extension;	//Eg., osci_1_0   This is used to identify the correct json file
 
-	std::string simulink_model_filename_with_path;	//output file that our tool generate
-	std::string simulink_script_filename_with_path;	//output file that our tool generate
-
-	std::string matlab_default_path;	//Path when Matlab engine first started for Eg., "/home/amit/workspace/BBC4CPS/Release"
-	std::string tool_root_path;	//Absolute Path for the Tool for Eg., "/home/amit/workspace/BBC4CPS"
 	std::string matlab_path_for_original_model;	//Absolute Path of the benchmark for Eg., "/home/amit/workspace/BBC4CPS/src/benchmark/circle"
 	std::string matlab_path_for_learned_model;	//Absolute Path of the learned model for Eg., "/home/amit/workspace/BBC4CPS/Release/outfilename"
 
 	bool original_model;	//True if previous execution path is the original model ("...../BBC4CPS/src/benchmark/circle"), Otherwise False
 	bool learned_model;	//True if previous execution path is the learned model ("...../BBC4CPS/Release/outfilename"), Otherwise False
 
-    // LearnAlgoDefaultInputfile = HybridLearner/src/learnHA/data
-	std::string learnAlgo_default_inputfile_path;
-
 public:
 	typedef boost::shared_ptr<intermediateResult> ptr;
-
-	const std::string& getDReachModelFilenameWithPath() const;
-	void setDReachModelFilenameWithPath(
-			const std::string &dReachModelFilenameWithPath);
 
 	const std::string& getDReachSatSmt2filenameWithPath() const;
 	void setDReachSatSmt2filenameWithPath(
@@ -48,18 +35,6 @@ public:
 	const std::string& getDReachSatSmt2filenameWithPathWithoutExtension() const;
 	void setDReachSatSmt2filenameWithPathWithoutExtension(
 			const std::string &dReachSatSmt2filenameWithPathWithoutExtension);
-
-	const std::string&  getSimulinkModelFilenameWithPath() const;
-	void setSimulinkModelFilenameWithPath(
-			const std::string &simulinkModelFilenameWithPath);
-
-	const std::string&  getSimulinkScriptFilenameWithPath() const;
-	void setSimulinkScriptFilenameWithPath(
-			const std::string &simulinkScriptFilenameWithPath);
-
-    // Equals to pwd
-	const std::string&  getMatlabDefaultPath() const;
-	void setMatlabDefaultPath(const std::string &matlabDefaultPath);
 
     // Equals to OutputDirectory.  Should be removed
 	const std::string&  getMatlabPathForLearnedModel() const;
@@ -75,10 +50,6 @@ public:
 
 	bool isOriginalModel() const;
 	void setOriginalModel(bool originalModel);
-
-	const std::string&  getLearnAlgoDefaultInputfilePath() const;
-	void setLearnAlgoDefaultInputfilePath(
-			const std::string &learnAlgoDefaultInputfilePath);
 };
 
 #endif /* UTILITIES_INTERMEDIATERESULT_H_ */

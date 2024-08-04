@@ -160,7 +160,11 @@ std::list<struct control_points> user_inputs_helper::getUserInputSignal_paramete
 
 
 
-std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(std::unique_ptr<MATLABEngine> &ep, parameters::ptr params){
+std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(std::unique_ptr<MATLABEngine> &ep,
+                                                                                parameters::ptr params)
+{
+    // cout << "generate_input_signals()..." << endl;
+
 	std::list<struct timeseries_all_var> initial_simulation_timeSeriesData; //For N-simulation
 	user_inputs::ptr user_Inputs = params->getUserInputs();
 
@@ -320,8 +324,10 @@ std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(
 
 	} else {
 		cout << "Supply the number of initial simulations!!" << endl;
-		exit(0);
+		exit(1);
 	}
+
+    // cout << "generate_input_signals() done" << endl;
 
 	return initial_simulation_timeSeriesData;
 }

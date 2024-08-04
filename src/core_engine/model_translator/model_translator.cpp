@@ -106,9 +106,6 @@ void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep,
 	cout << "Done Creating the script file for creating Simulink Model!!!" << endl;
 
 
-    // The absolute path to HybridLearner/build
-	intermediate->setMatlabDefaultPath(getcwd());
-
 	intermediate->setMatlabPathForLearnedModel(userInputs->getOutputDirectory()); //Very important Line for running Matlab script
 
 	std::cout <<"Creating Simulink model file with extension .slx .... please wait..." << std::endl;

@@ -7,6 +7,22 @@
 
 #include "engineSelector.h"
 
+#include <list>
+#include <string>
+#include <vector>
+#include "../simulation/simulation.h"
+#include "../commandLineParser/parameters.h"
+#include "../commandLineParser/user_inputs.h"
+#include "../io_functions/data_structs.h"
+#include "../core_engine/simulation/simulation_utilities.h"
+#include "../core_engine/model_translator/model_translator.h"
+#include "../learningHA/learnHA_caller.h"
+#include <boost/timer/timer.hpp>
+#include "../core_engine/learn_ha/learn_ha_loop.h"
+#include "../core_engine/equivalence_testing/randomEquivalenceTesting.h"
+
+#include "../utilities/filesystem.h"
+
 engineSelector::engineSelector() {
 	// Constructor stub
 }
@@ -90,25 +106,26 @@ void engineSelector::selectMdl2Slx(){
 
 void engineSelector::selectLearn_HA() {
 	//This function is called from the engine "learn-ha"
-//	std::cout << "Running Engine: Learning Hybrid Automaton  ... \n";
+    //	std::cout << "Running Engine: Learning Hybrid Automaton  ... \n";
 
 	parameters::ptr params = parameters::ptr(new parameters());
 	params->setParameters(userInputs, H, intermediate);
 
 	boost::timer::cpu_timer timer;
 	timer.start();
-	initial_setting(params);	//copy the file from user supplied or current folder to "src/pwa/naijun/filename" this being the working directory for the learning algorithm.
-	learnHA_caller(userInputs);	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
+
+    userInputs->setSimulationFilename(abspath(userInputs->getSimuTraceFilename()));
+	learnHA_caller(userInputs);
 
 	timer.stop();
 	double wall_clock;
 	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
 	//std::cout << "\n\n*******Learning Nonlinear Switched Dynamical Systems (specific Hybrid Automata)****\n \t Running Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
-//	std::cout << "\nRunning Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
+    //	std::cout << "\nRunning Time (Boost/Wall clock time) (in Seconds) = " << running_time<<std::endl;
 	report->setRuntimeLearningAlgo(running_time);
 
-//	std::cout << "\nModel Learning Phase completed ........"<<std::endl;
+    //	std::cout << "\nModel Learning Phase completed ........"<<std::endl;
 }
 
 

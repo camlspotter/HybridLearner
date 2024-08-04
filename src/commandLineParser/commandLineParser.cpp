@@ -162,7 +162,6 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	if (vm.count("help")) {
 		std::cout << desc << "\n";
 		exit(0);
-		//return 0; //Just displaying the Help options and terminating the Project
 	}
 
 	//First read engine, so that based on engine, compulsory option check can be performed
@@ -194,7 +193,7 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	if (vm.count("simulink-model-file")) {
 		if (userInputs->getEngine()=="equi-test") {
-			userInputs->setSimulinkModelFiles(abspath(vm["simulink-model-file"].as<std::string>()));
+			userInputs->setSimulinkModelFilenames(abspath(vm["simulink-model-file"].as<std::string>()));
 		} else {	//for simu and learn-ha only single file is supplied
 			userInputs->setSimulinkModelFilename(abspath(vm["simulink-model-file"].as<std::string>()));
 		}
@@ -572,7 +571,6 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	if (vm.count("output-directory")) {
         std::string cwd = getcwd();
-        userInputs->setCurrentWorkingDirectory(cwd);
         userInputs->setHybridLearnerRootDirectory(cwd + "/.."); // XXX fixed
         std::string dir = concat_path(cwd, vm["output-directory"].as<std::string>()); // XXX use proper separator
 		userInputs->setOutputDirectory(dir);

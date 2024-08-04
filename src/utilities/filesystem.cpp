@@ -2,37 +2,37 @@
 
 namespace fs = std::filesystem;
 
-std::string getcwd()
+fs::path getcwd()
 {
-    return fs::current_path().string();
+    return fs::current_path();
 }
 
-std::string concat_path(std::string a, std::string b)
+fs::path concat_path(fs::path a, fs::path b)
 {
-    return (fs::path(a) / fs::path(b)).string();
+    return a / b;
 }
 
-std::string abspath(std::string path)
+fs::path abspath(fs::path path)
 {
     return concat_path(getcwd(), path);
 }
 
-std::string dirname(std::string path)
+fs::path dirname(fs::path path)
 {
-    return fs::path(path).parent_path().string();
+    return path.parent_path();
 }
 
-std::string basename(std::string path)
+fs::path basename(fs::path path)
 {
-    return fs::path(path).filename().string();
+    return path.filename();
 }
 
-std::string basename_without_ext(std::string path)
+fs::path basename_without_ext(fs::path path)
 {
-    return fs::path(path).stem().string();
+    return path.stem();
 }
 
-bool is_absolute_path(std::string path)
+bool is_absolute_path(fs::path path)
 {
-    return fs::path(path).is_absolute();
+    return path.is_absolute();
 }

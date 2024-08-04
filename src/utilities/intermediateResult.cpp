@@ -9,15 +9,6 @@
 #include "intermediateResult.h"
 
 
-const std::string& intermediateResult::getDReachModelFilenameWithPath() const {
-	return dReach_model_filename_with_path;
-}
-
-void intermediateResult::setDReachModelFilenameWithPath(
-		const std::string &dReachModelFilenameWithPath) {
-	dReach_model_filename_with_path = dReachModelFilenameWithPath;
-}
-
 const std::string& intermediateResult::getDReachSatSmt2filenameWithPath() const {
 	return dReach_sat_smt2filename_with_path;
 }
@@ -35,33 +26,6 @@ void intermediateResult::setDReachSatSmt2filenameWithPathWithoutExtension(
 		const std::string &dReachSatSmt2filenameWithPathWithoutExtension) {
 	dReach_sat_smt2filename_with_path_without_extension =
 			dReachSatSmt2filenameWithPathWithoutExtension;
-}
-
-const std::string&  intermediateResult::getSimulinkModelFilenameWithPath() const {
-	return simulink_model_filename_with_path;
-}
-
-void intermediateResult::setSimulinkModelFilenameWithPath(
-		const std::string &simulinkModelFilenameWithPath) {
-	simulink_model_filename_with_path = simulinkModelFilenameWithPath;
-}
-
-const std::string&  intermediateResult::getSimulinkScriptFilenameWithPath() const {
-	return simulink_script_filename_with_path;
-}
-
-void intermediateResult::setSimulinkScriptFilenameWithPath(
-		const std::string &simulinkScriptFilenameWithPath) {
-	simulink_script_filename_with_path = simulinkScriptFilenameWithPath;
-}
-
-const std::string&  intermediateResult::getMatlabDefaultPath() const {
-	return matlab_default_path;
-}
-
-void intermediateResult::setMatlabDefaultPath(
-		const std::string &matlabDefaultPath) {
-	matlab_default_path = matlabDefaultPath;
 }
 
 const std::string&  intermediateResult::getMatlabPathForLearnedModel() const {
@@ -96,13 +60,4 @@ bool intermediateResult::isOriginalModel() const {
 
 void intermediateResult::setOriginalModel(bool originalModel) {
 	original_model = originalModel;
-}
-
-const std::string&  intermediateResult::getLearnAlgoDefaultInputfilePath() const {
-	return learnAlgo_default_inputfile_path;
-}
-
-void intermediateResult::setLearnAlgoDefaultInputfilePath(
-		const std::string &learnAlgoDefaultInputfilePath) {
-	learnAlgo_default_inputfile_path = learnAlgoDefaultInputfilePath;
 }

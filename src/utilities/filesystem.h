@@ -3,13 +3,15 @@
 
 #include <filesystem>
 
-std::string getcwd();
-std::string concat_path(std::string a, std::string b);
-std::string abspath(std::string path);
-std::string dirname(std::string path);
-std::string basename(std::string path);
-std::string basename_without_ext(std::string path);
-bool is_absolute_path(std::string path);
+namespace fs = std::filesystem;
+
+fs::path getcwd();
+fs::path concat_path(fs::path a, fs::path b);
+fs::path abspath(fs::path path);
+fs::path dirname(fs::path path);
+fs::path basename(fs::path path);
+fs::path basename_without_ext(fs::path path);
+bool is_absolute_path(fs::path path);
 
 #endif
 

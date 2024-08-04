@@ -14,6 +14,4 @@
 
 void learnHA_caller(user_inputs::ptr user_Inputs);
 
-void initial_setting(parameters::ptr &params);
-
 #endif /* LEARNINGHA_LEARNHA_CALLER_H_ */

@@ -76,9 +76,9 @@ bool randomEquivalenceTesting::execute_random_equivalence_test(parameters::ptr p
 	generate_input_information(initial_inputValues_timeSeriesData, initial_output_values, params, ep, report);	//initial values
 	// -------------- --------------
 
-	std::list<std::string> model_files = userInputs->getSimulinkModelFilenames();
+	std::list<fs::path> model_files = userInputs->getSimulinkModelFilenames();
 	assert(model_files.size()==2);	//Two model file should be provided to run Equivalence Test
-	std::list<std::string>::iterator it=model_files.begin();
+	std::list<fs::path>::iterator it=model_files.begin();
     std::string path_for_file_one = dirname(*it);
 	std::string model_file_one = basename(*it);
 	it++; //next iterator for next model filename

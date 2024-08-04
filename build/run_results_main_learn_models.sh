@@ -5,8 +5,6 @@ set -e
 # Script file to reproduce the results presented in the paper "Learning nonlinear hybrid automata from input–output time-series data"
 # This file must be executed from the folder HybridLearner/build
 
-
-
 ## # **** Switched Oscillator, small size *****
 ## 
 ## ID=oscillator4/BeforeAnnotation
@@ -22,6 +20,8 @@ set -e
 ## 
 ## exit 0
 
+SIMU_INIT_SIZE=4
+
 # **** Switched Oscillator *****
 
 ID=oscillator/BeforeAnnotation
@@ -29,7 +29,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file xxx.txt --simulink-model-file ../src/test_cases/engine/learn_ha_loop/oscillator.slx --variable-category "x:output, y:output"  --simu-init-size 64 --initial-value "x>=0.01 & x<=0.09 & y>=0.01 & y<=0.09" --time-horizon 10 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.1 --segment-relative-fine-error 0.01  --precision-equivalence 100.0 --max-traces 3 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.89 --distance-threshold 1.0   --max-generate-trace-size 1024  --ode-speedup 50 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
+CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --simulink-model-file ../src/test_cases/engine/learn_ha_loop/oscillator.slx --variable-category "x:output, y:output"  --simu-init-size $SIMU_INIT_SIZE --initial-value "x>=0.01 & x<=0.09 & y>=0.01 & y<=0.09" --time-horizon 10 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.1 --segment-relative-fine-error 0.01  --precision-equivalence 100.0 --max-traces 3 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.89 --distance-threshold 1.0   --max-generate-trace-size 1024  --ode-speedup 50 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
 
 # eval required to evaluate variables and quoted arguments correctly
 eval $CMD \
@@ -51,7 +51,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file xxx.txt --simulink-model-file ../src/test_cases/engine/learn_ha_loop/ex_sldemo_bounce_Input.slx --variable-category "u:input, x:output, v:output"  --simu-init-size 64 --initial-value "u>=-9.5 & u<=-9.9 & x>=10.2 & x<=10.5 & v>=15 & v<=15"  --input-signal-type "u=linear" --numberOf-control-points "u=4"  --time-horizon 13 --sampling-time 0.001 --modes 1 --degree 1 --boundary-degree 1 --segment-relative-error 0.1  --segment-relative-fine-error 0.01 --precision-equivalence 50.0 --max-traces 1 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.8 --distance-threshold 9.0  --fixed-interval-data 0 --filter-last-segment 1  --max-generate-trace-size 1024  --ode-speedup 50 --solver-type fixed --ode-solver FixedStepAuto'
+CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --simulink-model-file ../src/test_cases/engine/learn_ha_loop/ex_sldemo_bounce_Input.slx --variable-category "u:input, x:output, v:output"  --simu-init-size $SIMU_INIT_SIZE --initial-value "u>=-9.5 & u<=-9.9 & x>=10.2 & x<=10.5 & v>=15 & v<=15"  --input-signal-type "u=linear" --numberOf-control-points "u=4"  --time-horizon 13 --sampling-time 0.001 --modes 1 --degree 1 --boundary-degree 1 --segment-relative-error 0.1  --segment-relative-fine-error 0.01 --precision-equivalence 50.0 --max-traces 1 --max-stoptime 20 --invariant 2  --cluster-algo dtw  --correlation-threshold 0.8 --distance-threshold 9.0  --fixed-interval-data 0 --filter-last-segment 1  --max-generate-trace-size 1024  --ode-speedup 50 --solver-type fixed --ode-solver FixedStepAuto'
 
 eval $CMD \
      > $OUTDIR/log.txt
@@ -72,7 +72,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file xxx.txt  --simulink-model-file ../src/test_cases/engine/learn_ha_loop/twoTank.slx --variable-category "u:input, x1:output, x2:output" --simu-init-size 64 --initial-value "u>=-0.1 & u<=0.1 & x1>=1.2 & x1<=1.2 & x2>=1 & x2<=1"  --input-signal-type "u=linear" --numberOf-control-points "u=2"  --time-horizon 9.3 --sampling-time 0.001 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.01 --segment-relative-fine-error 0.01  --precision-equivalence 10.5 --max-traces 1 --max-stoptime 20  --invariant 2 --cluster-algo dtw  --correlation-threshold 0.7 --distance-threshold 1.5  --max-generate-trace-size 1024  --filter-last-segment 1 --ode-speedup 50 --solver-type fixed --ode-solver FixedStepAuto'
+CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --simulink-model-file ../src/test_cases/engine/learn_ha_loop/twoTank.slx --variable-category "u:input, x1:output, x2:output" --simu-init-size $SIMU_INIT_SIZE --initial-value "u>=-0.1 & u<=0.1 & x1>=1.2 & x1<=1.2 & x2>=1 & x2<=1"  --input-signal-type "u=linear" --numberOf-control-points "u=2"  --time-horizon 9.3 --sampling-time 0.001 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.01 --segment-relative-fine-error 0.01  --precision-equivalence 10.5 --max-traces 1 --max-stoptime 20  --invariant 2 --cluster-algo dtw  --correlation-threshold 0.7 --distance-threshold 1.5  --max-generate-trace-size 1024  --filter-last-segment 1 --ode-speedup 50 --solver-type fixed --ode-solver FixedStepAuto'
 
 eval $CMD \
      > $OUTDIR/log.txt
@@ -93,7 +93,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --output-file cellModel_64.txt --simulink-model-file ../src/test_cases/engine/learn_ha_loop/cell/excitable_cell.slx --variable-category "x:output" --simu-init-size 64 --initial-value "x>=-76 & x<=-74" --time-horizon 500 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.01 --segment-relative-fine-error 0.01  --precision-equivalence 500.0 --max-traces 2 --max-stoptime 20  --invariant 2  --cluster-algo dtw  --correlation-threshold 0.92 --distance-threshold 1.0 --ode-speedup 3 --max-generate-trace-size 1024 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
+CMD='./HybridLearner --engine learn-ha-loop --output-directory $OUTDIR --simulink-model-file ../src/test_cases/engine/learn_ha_loop/cell/excitable_cell.slx --variable-category "x:output" --simu-init-size $SIMU_INIT_SIZE --initial-value "x>=-76 & x<=-74" --time-horizon 500 --sampling-time 0.01 --modes 4 --degree 1 --boundary-degree 1 --segment-relative-error 0.01 --segment-relative-fine-error 0.01  --precision-equivalence 500.0 --max-traces 2 --max-stoptime 20  --invariant 2  --cluster-algo dtw  --correlation-threshold 0.92 --distance-threshold 1.0 --ode-speedup 3 --max-generate-trace-size 1024 --filter-last-segment 1 --solver-type fixed --ode-solver FixedStepAuto'
 
 eval $CMD \
      > $OUTDIR/log.txt
@@ -114,7 +114,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-CMD='./HybridLearner --engine learn-ha --output-directory $OUTDIR --output-file engineTiming_64.txt  --simu-trace-file ../src/test_cases/engine/learn_ha/enginetiming/dataBBC/engine_64.txt  --variable-category "throttle:input, torque:input, engineSpeed:output" --modes 20 --degree 1 --boundary-degree 1 --segment-relative-error 0.99  --segment-relative-fine-error 0.01   --invariant 2  --cluster-algo dtw  --correlation-threshold 0.9 --distance-threshold 1000 --ode-speedup 100  --fixed-interval-data 0 --filter-last-segment 0 --lmm-step-size 5'
+CMD='./HybridLearner --engine learn-ha --output-directory $OUTDIR --simu-trace-file ../src/test_cases/engine/learn_ha/enginetiming/dataBBC/engine_64.txt  --variable-category "throttle:input, torque:input, engineSpeed:output" --modes 20 --degree 1 --boundary-degree 1 --segment-relative-error 0.99  --segment-relative-fine-error 0.01   --invariant 2  --cluster-algo dtw  --correlation-threshold 0.9 --distance-threshold 1000 --ode-speedup 100  --fixed-interval-data 0 --filter-last-segment 0 --lmm-step-size 5'
 
 eval $CMD \
      >  $OUTDIR/log.txt

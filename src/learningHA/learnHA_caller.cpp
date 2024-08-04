@@ -32,8 +32,13 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
     // XXX Assumes HybridLearner is executed at build/
 	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";
 	cmd_str.append("--input-filename ");
-    assert( is_absolute_path(user_Inputs->getInputFilename()) );
-	cmd_str.append(user_Inputs->getInputFilename());
+
+    if ( !is_absolute_path(user_Inputs->getSimulationFilename()) ) {
+        cout << "learnHA_caller: simulationFilename: " << user_Inputs->getSimulationFilename() << endl;
+    }
+    
+    assert( is_absolute_path(user_Inputs->getSimulationFilename()) );
+	cmd_str.append(user_Inputs->getSimulationFilename());
 
 	cmd_str.append(" --output-directory ");
     cmd_str.append(user_Inputs->getOutputDirectory());
@@ -119,79 +124,4 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
 		std::cout <<"Error executing cmd: " << cmd_str <<std::endl;
         throw std::runtime_error("Error executing cmd: " + cmd_str);
 	}
-}
-
-
-
-/*
- * This function is invoked from engine:
- * 		learn-ha
-
- * To call learning algorithm implemented in Python we copy the input file(simulation-trace)
- * inside the folder "src/learnHA/data" since at the moment Python project is reading file only within its location (current folder)
- */
-void initial_setting(parameters::ptr &params){
-
-	intermediateResult::ptr intermediate = params->getIntermediate();
-	user_inputs::ptr userInputs = params->getUserInputs();
-
-
-	string commandStr ="cp ";
-	//Todo: in case user input absolute path with filename extract the filename for further process which may be required
-	commandStr.append(userInputs->getSimuTraceFilename()); //absolute path of Release folder from where the project is executed
-	commandStr.append(" ");
-	//commandStr.append(intermediate->getLearnAlgoDefaultInputfilePath()); //absolute path
-	//commandStr.append(" ../src/pwa/naijun"); //relative path from the folder Release ......> OLD implementation
-	commandStr.append(" ../src/learnHA/data"); //-------> NEW implementation
-
-//	cout << "commandStr = "<<commandStr<<endl;
-	//cout <<"Naijun's Inputfile path: "<< intermediate->getLearnAlgoDefaultInputfilePath() << endl;
-
-	//system("cp finalFile.txt ../src/pwa/naijun"); //This is temporary fix as the Learning algorithm required
-	int x = system(commandStr.c_str());
-	if (x == -1) {
-		std::cout <<"Error executing cmd: " << commandStr <<std::endl;
-	}
-
-	// ---------- few Path setting for execution to create the .slx model
-
-	std::string trace_file_user = userInputs->getSimuTraceFilename();	//user can supply: just file name or absolute path from Release folder
-	std::string fileName="", filePath="", userPath="";
-	std::string only_filename_user;
-	std::string original_trace_file_path="", key="/";
-	std::size_t found = trace_file_user.rfind(key);	// locate the last "/" character
-	if (found!=std::string::npos) {
-
-		fileName = trace_file_user.substr(found+1);		// is "bball.slx"
-		unsigned int tot_len = trace_file_user.length(), file_len = fileName.length();
-		file_len += 1; //to exclude the last '/' character in the path
-		userPath = trace_file_user.substr(0, tot_len - file_len);	// is "../src/test_cases/engine/learn_ha/"
-
-		//std::cout <<"file Name=" << fileName <<"   path="<< filePath << std::endl;
-
-		filePath.append(getcwd());  //Release or Debug
-		filePath.append("/");
-		filePath.append(userPath);	// this include the last "/". NOW '/' is EXCLUDED
-
-		//std::cout <<"file Name length=" << file_len <<"   path length="<< tot_len << std::endl;
-
-//		intermediate->setMatlabPathForOriginalModel(filePath);
-
-
-	} else {	//no path is supplied. Only fileName is supplied by the user
-		fileName = trace_file_user;
-	}
-
-    cout << "simuTraceFilename " << userInputs->getSimuTraceFilename() << endl;
-    cout << "fileName " << fileName << endl;
-    
-	string simuFileNameWithPath = "data/";
-	simuFileNameWithPath.append(fileName);
-
-	userInputs->setInputFilename(simuFileNameWithPath);//Now modify the inputfilename since a hard-coded path is specified under folder "naijun/". Now "data/"
-	//***************** End of Step 2 ******************
-	//cout << "Done 1" << endl;
-	params->setUserInputs(userInputs);
-	//params->setIntermediate(intermediate); // --------> NEW modification
-
 }

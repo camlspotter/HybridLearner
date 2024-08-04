@@ -94,7 +94,7 @@ template<typename MATRIX> MATRIX expm_pad(const MATRIX &H,
 // Some error happens, H has elements which are NaN or infinity. 
 		std::cerr << "Null input error in the template expm_pad.\n";
 		std::cout << "Null INPUT : "; // << H <<"\n";
-		exit(0);
+		exit(1);
 	}
 // Scaling, seek s such that || H*2^(-s) || < 1/2, and set scale = 2^(-s)
 	int s = 0;
@@ -131,7 +131,7 @@ template<typename MATRIX> MATRIX expm_pad(const MATRIX &H,
 	int res = lu_factorize(Q, pm);
 	if (res != 0) {
 		std::cerr << "Matrix inversion error in the template expm_pad.\n";
-		exit(0);
+		exit(1);
 	}
 // H2 is not needed anymore, so it is temporary used as identity matrix for substituting.
 	H2.assign(I);

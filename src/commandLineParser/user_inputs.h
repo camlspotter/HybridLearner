@@ -10,12 +10,12 @@
 
 #include "../io_functions/data_structs.h"
 #include "../benchmark/model_variable_mapping.h"
+#include "../utilities/filesystem.h"
 
 class user_inputs {
 private:
 
 	int isAbstractHS_model; //1 for Yes and 0 for No (meaning model has separate input and output variables)
-	std::list<std::string> simulink_model_filenames;	//list (two) of file names supplied by the user for equivalence testing as a list
 	std::list< std::vector<double> > random_initial_points_EquivalenceTest;	//storing to avoid generating multiple times for Equivalence Test
 
 	unsigned int guard;	//either 0 or 1 as user's input to decide to modify/or not from the equality guard to range (+/- epsilon)
@@ -25,10 +25,6 @@ private:
 	//********** To be removed**********
 	double DTW_simu_time;		//used in the DTW Clustering algorithm for internal simulation for similarity check
 	unsigned int DTW_sample_size;		//used in the DTW Clustering algorithm for internal simulation for similarity check
-	//std::string simu_init_point;	//string containing the simulation points to start the simulations
-
-	std::string controller_filename;
-	std::string config_filename;	//output file for future use
 	unsigned int sys_dimension; //dimension of the system under test (SUT)
 	unsigned int simulation_check; //Enable or Disable Safety-violation check during initial simulations. 0:disable and 1:enable
 
@@ -64,17 +60,18 @@ private:
 	double distance_threshold;		//used in the DTW Clustering algorithm
 
 	std::string Engine; // The Engine options learn-ha(default), simu, mdl2SLX, equi-test
-	std::string model_filename;  //filename supplied by user as .txt for tranlation to .slx model
-	std::string simulink_model_filename;  //filename supplied by user as .slx model
-	std::string simu_trace_filename;  //filename supplied by user containing simulation traces of the system under learning
-	std::string simulink_model_files;  //two file names supplied by the users as a string for equivalence testing
+    fs::path model_filename;  //filename supplied by user as .txt for tranlation to .slx model
+	std::list<fs::path> simulink_model_filenames;	//list (two) of file names supplied by the user for equivalence testing as a list
+    fs::path simulink_model_filename;  //filename supplied by user as .slx model
+    fs::path simu_trace_filename;  //filename supplied by user containing simulation traces of the system under learning
 	int max_degree;		//Degree of the Polynomial ODEs
 	int boundary_degree; 		//Degree of the Polynomial Guard
-	std::string output_directory;
+
+    fs::path output_directory; // --output-directory $OUTDIR
+
 	std::string current_working_directory;
-	std::string hybrid_learner_root_directory;
-	std::string input_filename;
-	std::string simulation_filename; //internally generated file
+    fs::path hybrid_learner_root_directory;
+    fs::path simulation_filename; //internally generated file
 	std::string ODESolver;	//stores user's choice of ODE Solver for .slx model creation
 	std::string ODESolverType; //stores user's choice for the ODE Solver Type (variable or fixed)
 	int fixed_interval_data;	//store user's choice to extract data as fixed timestep from simulation to be pass for the learning algorithm
@@ -198,21 +195,15 @@ public:
 	int getPolyDegree() const;
 	void setPolyDegree(int degree);
 
-	const std::string& getInputFilename();
-	void setInputFilename(const std::string& inputFilename);
-
     // The absolute path $OUTDIR specified by --output-directory
-	const std::string& getOutputDirectory() const;
-	void setOutputDirectory(const std::string& outputDirectory);
+	const fs::path& getOutputDirectory() const;
+	void setOutputDirectory(const fs::path& outputDirectory);
 
-	const std::string& getCurrentWorkingDirectory() const;
-	void setCurrentWorkingDirectory(const std::string& abspath);
-
-	const std::string& getHybridLearnerRootDirectory() const;
-	void setHybridLearnerRootDirectory(const std::string& abspath);
+	const fs::path& getHybridLearnerRootDirectory() const;
+	void setHybridLearnerRootDirectory(const fs::path& abspath);
 
     // Returns an absolute path of the given path under the output directory: $OUTDIR/$name
-    const std::string getFilenameUnderOutputDirectory(const std::string& name) const;
+    const fs::path getFilenameUnderOutputDirectory(const fs::path& name) const;
 
 	const struct plot_variables& getPlotVars() const;
 	void setPlotVars(const struct plot_variables &plotVars);
@@ -223,8 +214,8 @@ public:
 	unsigned int getSimuInitSize() const;
 	void setSimuInitSize(unsigned int simuInitSize);
 
-	const std::string& getSimulationFilename() const;
-	void setSimulationFilename(const std::string& simulationFilename);
+	const fs::path& getSimulationFilename() const;
+	void setSimulationFilename(const fs::path& simulationFilename);
 
 	int getBoundaryDegree() const;
 	void setBoundaryDegree(int boundaryDegree);
@@ -264,8 +255,9 @@ public:
 	const std::string& getEngine() const;
 	void setEngine(const std::string &engine);
 
-	const std::string& getModelFilename() const;
-	void setModelFilename(const std::string &modelFilename);
+    // --model-file
+	const fs::path& getModelFilename() const;
+	void setModelFilename(const fs::path &modelFilename);
 
 	unsigned int getGuard() const;
 	void setGuard(unsigned int guard);
@@ -282,17 +274,18 @@ public:
 	const std::map<std::string, std::pair<double, double> >& getInputVariableSinewaveParameterMapping() const;
 	void setInputVariableSinewaveParameterMapping(const std::map<std::string, std::pair<double, double> > &inputVariableSinewaveParameterMapping);
 
-	const std::string& getSimuTraceFilename() const;
-	void setSimuTraceFilename(const std::string &simuTraceFilename);
+	const fs::path& getSimuTraceFilename() const;
+	void setSimuTraceFilename(const fs::path &simuTraceFilename);
 
     // --simulink-model-file
-	const std::string& getSimulinkModelFilename() const;
-	void setSimulinkModelFilename(const std::string &simulinkModelFilename);
+	const fs::path& getSimulinkModelFilename() const;
+	void setSimulinkModelFilename(const fs::path &simulinkModelFilename);
 
-	void setSimulinkModelFiles(const std::string &simulinkModelFiles);
-	const std::list<std::string>& getSimulinkModelFilenames() const;
-	void setSimulinkModelFilenames(
-			const std::list<std::string> &simulinkModelFilenames);
+	const std::list<fs::path>& getSimulinkModelFilenames() const;
+	void setSimulinkModelFilenames(const std::list<fs::path> &simulinkModelFilenames);
+    // simulinkModelFiles: space separated file names
+	void setSimulinkModelFilenames(const std::string &simulinkModelFiles);
+
 	double getDbScanEpsDist() const;
 	void setDbScanEpsDist(double dbScanEpsDist);
 	unsigned int getDbScanMinSamples() const;
@@ -369,10 +362,13 @@ public:
 	const std::string& getSimuInitPoint() const;	//to be removed after verifying code in engine=HybridLearner
 	void setSimuInitPoint(const std::string &simuInitPoint);
 	std::list< std::vector<double> > getSimulationInitialPoints();
-	const std::string& getControllerFilename() const;
-	void setControllerFilename(const std::string& controllerFilename);
-	const std::string& getConfigFilename() const;
-	void setConfigFilename(const std::string& configFilename);
+
+	const fs::path& getControllerFilename() const;
+	void setControllerFilename(const fs::path& controllerFilename);
+
+	const fs::path& getConfigFilename() const;
+	void setConfigFilename(const fs::path& configFilename);
+
 	int getFilterLastSegment() const;
 	void setFilterLastSegment(int filterLastSegment);
 	double getSegmentationFineError() const;

@@ -5,31 +5,16 @@
  *      Author: amit
  */
 
-
-#include <list>
-#include <string>
-#include <vector>
-#include "../utilities/matlab.h"
-#include "../simulation/simulation.h"
-#include "../commandLineParser/parameters.h"
-#include "../commandLineParser/user_inputs.h"
-#include "../io_functions/summary.h"
-#include "../hybridautomata/hybridAutomata.h"
-#include "../utilities/intermediateResult.h"
-#include "../io_functions/data_structs.h"
-#include "../core_engine/simulation/simulation_utilities.h"
-#include "../core_engine/model_translator/model_translator.h"
-#include "../learningHA/learnHA_caller.h"
-#include <boost/timer/timer.hpp>
-#include "../core_engine/learn_ha/learn_ha_loop.h"
-#include "../core_engine/equivalence_testing/randomEquivalenceTesting.h"
-#include "../utilities/myRandomNumberGenerator.h"
-
-
-
 #ifndef APPLICATION_ENGINESELECTOR_H_
 #define APPLICATION_ENGINESELECTOR_H_
 
+#include "../utilities/matlab.h"
+#include "../io_functions/summary.h"
+#include "../hybridautomata/hybridAutomata.h"
+#include "../utilities/myRandomNumberGenerator.h"
+#include "../commandLineParser/user_inputs.h"
+#include "../utilities/intermediateResult.h"
+#include "../utilities/polytope/polytope.h"
 
 using namespace std;
 using namespace matlab::engine;

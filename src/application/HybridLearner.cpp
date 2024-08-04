@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "\nTerminating due to error in command-line inputs.\n" ;
 		std::cout << "Try HybridLearner --help to see valid command-line options\n";
 
-		exit(0);
+		exit(1);
 	}
 
 
