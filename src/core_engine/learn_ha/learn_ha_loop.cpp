@@ -13,7 +13,6 @@
 #include "../../modelParser/modelParser.h"
 #include "../../commandLineParser/parameters.h"
 #include "../../io_functions/summary.h"
-#include "../../utilities/linux_utilities.h"
 #include "../../utilities/intermediateResult.h"
 #include "../../simulinkModelling/simulinkModelConstructor.h"
 #include "../simulation/simulation_utilities.h"
@@ -22,7 +21,7 @@
 #include "../equivalence_testing/equivalence_test_utils.h"
 #include "../../utilities/system.h"
 #include "../../utilities/matlab.h"
-#include "../../utilities/string_operations.h"
+#include "../../utilities/filesystem.h"
 
 void initial_processing_for_InputFileName(parameters::ptr params);
 void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_var> &list_input_variable_values,
@@ -336,7 +335,7 @@ void updateTraceFile(//unsigned int iteration, (unused)
 void call_LearnHA(parameters::ptr params, summary::ptr &report) {
 
 	user_inputs::ptr userInputs = params->getUserInputs();
-//	hybridAutomata::ptr H = params->getH();
+    //	hybridAutomata::ptr H = params->getH();
 
 	//This function is called from the engine "learn-ha-loop"
 	//std::cout << "Running Engine: Learning Hybrid Automaton  ... \n";

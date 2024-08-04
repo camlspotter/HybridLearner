@@ -9,8 +9,8 @@
 //#include <string>
 #include <boost/timer/timer.hpp>
 #include "../commandLineParser/parameters.h"
-#include "../utilities/linux_utilities.h"
 #include "../utilities/intermediateResult.h"
+#include "../utilities/filesystem.h"
 
 /*
  * This function is called from engine:
@@ -32,7 +32,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
     // XXX Assumes HybridLearner is executed at build/
 	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";
 	cmd_str.append("--input-filename ");
-    assert( user_Inputs->getInputFilename().is_absolute() );
+    assert( is_absolute_path(user_Inputs->getInputFilename()) );
 	cmd_str.append(user_Inputs->getInputFilename());
 
 	cmd_str.append(" --output-directory ");

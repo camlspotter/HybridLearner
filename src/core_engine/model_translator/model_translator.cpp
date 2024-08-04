@@ -9,7 +9,7 @@
 #include "../../simulinkModelling/simulinkModelConstructor.h"
 #include "../../modelParser/modelParser.h"
 #include "../../commandLineParser/parameters.h"
-#include "../../utilities/linux_utilities.h"
+#include "../../utilities/filesystem.h"
 #include "../../utilities/intermediateResult.h"
 #include "../../commandLineParser/user_inputs_helper.h"
 #include "../../io_functions/summary.h"

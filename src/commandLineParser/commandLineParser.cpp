@@ -18,8 +18,7 @@
 #include "../io_functions/data_structs.h"
 #include "../hybridautomata/variable_to_index_mapping.h"
 #include "../utilities/polytope/polytope.h"
-#include "../utilities/linux_utilities.h" // getcwd
-#include "../utilities/string_operations.h" // concat_path
+#include "../utilities/filesystem.h"
 
 #include <fstream>
 #include <limits.h>

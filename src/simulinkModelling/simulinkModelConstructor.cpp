@@ -11,7 +11,7 @@
 #include <string>
 #include <sys/stat.h>
 #include "../utilities/system.h"
-#include "../utilities/string_operations.h"
+#include "../utilities/filesystem.h"
 #include <boost/tokenizer.hpp>
 
 void simulinkModelConstructor::printSimulinkModelFile() {

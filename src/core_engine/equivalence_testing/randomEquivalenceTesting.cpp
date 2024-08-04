@@ -6,7 +6,7 @@
  */
 
 #include "randomEquivalenceTesting.h"
-#include "../../utilities/string_operations.h"
+#include "../../utilities/filesystem.h"
 
 randomEquivalenceTesting::randomEquivalenceTesting() {
 	// TODO Auto-generated constructor stub

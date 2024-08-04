@@ -17,12 +17,10 @@
 #include "../../io_functions/data_structs.h"
 #include <boost/timer/timer.hpp>
 #include "../learn_ha/model_setup.h"
-#include "../../utilities/linux_utilities.h"
 #include "../../utilities/myRandomNumberGenerator.h"
 #include "../../utilities/polytope/polytope.h"
 #include "../../simulation/simulation.h"
-
-#include "../../utilities/string_operations.h"
+#include "../../utilities/filesystem.h"
 
 
 /*
