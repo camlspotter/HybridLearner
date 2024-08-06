@@ -116,10 +116,8 @@ bool randomEquivalenceTesting::execute_random_equivalence_test(parameters::ptr p
 	output_filename_two.append(result_extension);
 
 	// -------------- create script files for running the simulink model --------------
-	intermediate->setMatlabPathForLearnedModel(path_for_file_one);
 	generate_run_script_file(model_file_one, params);	// ----- Create first run_script from .slx model
 
-	intermediate->setMatlabPathForLearnedModel(path_for_file_two);
 	generate_run_script_file(model_file_two, params);	// ----- Create second run_script from .slx model
 
 	// ------------------------------------------
@@ -141,10 +139,8 @@ bool randomEquivalenceTesting::execute_random_equivalence_test(parameters::ptr p
 		std::vector<double> output_variable_init_values = (*it_out_val);
 
 		// ***************  --------------------------------- ***************
-		intermediate->setMatlabPathForLearnedModel(path_for_file_one);
 		simu_model_file(ep, userInputs, init_point, output_variable_init_values, script_filename_one, output_filename_one, intermediate, H); //Populate initial data in Matlab's Workspace and then run the script file
 
-		intermediate->setMatlabPathForLearnedModel(path_for_file_two);
 		simu_model_file(ep, userInputs, init_point, output_variable_init_values, script_filename_two, output_filename_two, intermediate, H); //Populate initial data in Matlab's Workspace and then run the script file
 		// ***************  --------------------------------- ***************
 

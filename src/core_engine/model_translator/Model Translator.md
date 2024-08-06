@@ -2,7 +2,7 @@
 About the txt2slx Engine
 -----------------------------------------------------
     The engine takes input a Text file (.txt) describing a hybrid automaton (whose format
-    is described below) and creates a Simulink Model file (.slx) that represnts 
+    is described below) and creates a Simulink Model file (.slx) that represents 
     the model described in the .txt file.
     In addition, the engine also creates a script file (.m) that can be directly 
     excuted in MatLab based on the parameters supplied along with the .txt file.

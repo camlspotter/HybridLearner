@@ -39,7 +39,7 @@ class simulinkModelConstructor {
 
 	// script file that generates the simulink model
     // "$OUTDIR/generateSimulinkModel0.m", "$OUTDIR/generateSimulinkModel1.m", etc
-    std::string script_for_simulinkModelName;
+    string simulinkModelScriptFilename() const;
 
 	//Printing an identity mapping for reset equations
 	std::string resetPrinter();
@@ -58,9 +58,9 @@ class simulinkModelConstructor {
 
 	void addFilteringCode(ofstream &modelfile);
 
-	void generateSimulinkModelScript(ofstream &outfile);
-
+	void generateSimulinkModelScript_sub(ofstream &outfile);
 	void printDefinition(ofstream &outfile);
+
 	void addMatlabFunction(ofstream &outfile);	//Adds a MATLAB Function inside StateFlow.Chart to generate a Random number for non-deterministic transitions
 	void addLocations(ofstream &outfile);
 //	void invariantPrinter(); Could not learned Invariant
@@ -88,11 +88,9 @@ class simulinkModelConstructor {
 
 	unsigned int getIteration() const;
 
-	const string& getSimulinkModelName() const;
-
 	const string& getScriptForSimulinkModelName() const;
-	void setScriptForSimulinkModelName(
-			const string &scriptForSimulinkModelName);
+
+	void setScriptForSimulinkModelName(const string &scriptForSimulinkModelName);
 
 	void createSmallScriptFile_ForFixedOutput();
 
@@ -119,21 +117,26 @@ public:
 		iteration = 0;
 	};
 
+    // Generate generateSimulinkModel[0..].m
+	void generateSimulinkModelScript();
+
+    // Execute generateSimulinkModel[0..].m
 	int executeSimulinkModelConstructor(std::unique_ptr<MATLABEngine> &ep);
 
-	void printSimulinkModelFile();
+    // Generate script_filename which writes the result to output_filename
+	// This is specific to the engine="simu"
+    // Not for learned model
+	void generateRunModelScript(fs::path simulink_model_filename, fs::path script_filename, fs::path output_filename);
 
-	//This is specific to the engine="simu"
-	void create_runScript_for_simu_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename);
-
+    // Generate script_filename which writes the result to output_filename
 	//This has similar function like create_runScript_for_simu_engine() but differs in the path
-	void create_runScript_for_learn_ha_loop_engine(std::string simulink_model_filename, std::string script_filename, std::string output_filename);
+	void generateRunLearnedModelScript(fs::path simulink_model_filename, fs::path script_filename, fs::path output_filename);
+
+    // Generate $OUTDIR/run_model_by_txt2slx[0..].m
+	void generateRunModelByTxt2slxScript(std::list<struct timeseries_input> init_point, std::vector<double> initial_output_values);
 
 	//The keeps track of the number of times Equivalence Test is executed and so it the .slx model files created.
 	void setIteration(unsigned int iteration);
-
-	void createSetupScriptFile(std::list<struct timeseries_input> init_point, std::vector<double> initial_output_values);
-
 };
 
 

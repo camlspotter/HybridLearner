@@ -36,7 +36,7 @@ void equivalence_testing::generate_run_script_file(std::string model_filename, p
 	// ---------- Create run_script from .slx model
     std::string script_filename = userInputs->getFilenameUnderOutputDirectory("equivalance_test.m"); // XXX constant
     std::string output_filename = userInputs->getFilenameUnderOutputDirectory("equivalence_test_result.txt"); // XXX constant
-	model->create_runScript_for_simu_engine(model_filename, script_filename, output_filename);
+	model->generateRunModelScript(model_filename, script_filename, output_filename);
 	// ------------------------------------------------------------------------
 }
 

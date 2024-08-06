@@ -19,17 +19,18 @@ mkfifo $FIFO
 echo Launching MATLAB...
 tail -f $FIFO | matlab -nodisplay -r "matlab.engine.shareEngine" &
 PID=$!
-echo Launched MATLAB PID=$PID
+echo Launched MATLAB FIFO=$FIFO PID=$PID
 
 close_matlab ()
 {
     if [ -e $FIFO ]; then
 	echo Closing MATLAB...
+	echo Sending quit to $FIFO
 	echo quit > $FIFO
-	echo Closed MATLAB
-	rm -rf $FIFODIR
     fi
-    kill -INT $PID
+    echo Killing MATLAB $PID
+    kill -KILL $PID
+    rm -rf $FIFODIR
 }
 
 trap close_matlab ERR INT
@@ -46,8 +47,6 @@ echo "Done Learning Models"
 matlab -nodisplay -nosplash -batch "run('../examples/ball/BeforeAnnotation/call_run_ball.m')"
 # matlab -nodisplay -nosplash -r "cd('../examples'); run('run_main.m'); exit;"
 echo "Done generating output Trajectories"
-
-close_matlab; exit 0
 
 # Before executing this, we assume the scripts (1) run_results_main_learn_models and (2) run_main.m
 # have already been excuted and models are learned and output trajectories are generated and copied in the respective folders.

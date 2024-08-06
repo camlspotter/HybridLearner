@@ -28,24 +28,6 @@ void intermediateResult::setDReachSatSmt2filenameWithPathWithoutExtension(
 			dReachSatSmt2filenameWithPathWithoutExtension;
 }
 
-const std::string&  intermediateResult::getMatlabPathForLearnedModel() const {
-	return matlab_path_for_learned_model;
-}
-
-void intermediateResult::setMatlabPathForLearnedModel(
-		const std::string &matlabPathForLearnedModel) {
-	matlab_path_for_learned_model = matlabPathForLearnedModel;
-}
-
-const std::string&  intermediateResult::getMatlabPathForOriginalModel() const {
-	return matlab_path_for_original_model;
-}
-
-void intermediateResult::setMatlabPathForOriginalModel(
-		const std::string &matlabPathForOriginalModel) {
-	matlab_path_for_original_model = matlabPathForOriginalModel;
-}
-
 bool intermediateResult::isLearnedModel() const {
 	return learned_model;
 }

@@ -18,7 +18,7 @@
 
 void run_script_generator(simulinkModelConstructor::ptr &model, parameters::ptr params, std::unique_ptr<MATLABEngine> &ep);
 
-//Performs the actual model parsing and creating .slx model
+// Performs the actual model parsing and creating .slx model
 void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep, summary::ptr &report) {
 	/*
 	 * Step-1 parse the txt model file and create an object of hybrid-automaton class
@@ -30,6 +30,8 @@ void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep,
 	intermediateResult::ptr intermediate = params->getIntermediate();
 	user_inputs::ptr userInputs = params->getUserInputs();
 	hybridAutomata::ptr H = params->getH();
+
+	assert (userInputs->getEngine() == "txt2slx");
 
 	//Ask user if convert equality guard to range (+/- epsilon) constraints.
 	ha_model_parser(H, userInputs /*, intermediate*/); //locations (invariant and ode) followed by transitions (guard and reset)
@@ -85,35 +87,21 @@ void model_translator(parameters::ptr params, std::unique_ptr<MATLABEngine> &ep,
 
 	//Step-2: Obtain .slx model from object H
 	//--- Starting Matlab engine only when required ---- For engine HybridLearner
-	boost::timer::cpu_timer matlab_start;
-
-	std::cout << "\nStarting Matlab Engine ... please wait!!" << std::endl;
-	matlab_start.start();
 	ep = connectMATLAB();
-	matlab_start.stop();
 
-	double wall_clock;
-	wall_clock = matlab_start.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
-	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
-	std::cout << "Matlab engine start: Running Time (in Seconds) = " << running_time << std::endl;
-	report->setRuntimeMatlabStart(running_time);
 	// ---------
 
 	simulinkModelConstructor::ptr model = simulinkModelConstructor::ptr(new simulinkModelConstructor(H, userInputs, intermediate));
 	unsigned int iterations_count = 0; // just a label for the first model creation
 	model->setIteration(iterations_count);
-	model->printSimulinkModelFile();
+	model->generateSimulinkModelScript();
 	cout << "Done Creating the script file for creating Simulink Model!!!" << endl;
-
-
-	intermediate->setMatlabPathForLearnedModel(userInputs->getOutputDirectory()); //Very important Line for running Matlab script
 
 	std::cout <<"Creating Simulink model file with extension .slx .... please wait..." << std::endl;
 	model->executeSimulinkModelConstructor(ep);
 	std::cout << "Model .slx file created successfully!!" << std::endl;
 
 	run_script_generator(model, params, ep);
-
 }
 
 //Performs the actual running-script creation tasks
@@ -152,10 +140,11 @@ void run_script_generator(simulinkModelConstructor::ptr &model, parameters::ptr 
 
 	//Todo: better use this for the above lines, but fix for single simulation : generate_input_information(inputVar_init_point, initial_output_values);
 
-	if (user_copy->getEngine()=="txt2slx") {
-			//model->createSmallScriptFile_ForFixedOutput();	// Now creating script file for later running the simulation and obtaining output-file having fixed time-step
-		//Creating a script file for Running the simulink model just created.
-		model->createSetupScriptFile(inputVar_init_point, initial_output_values);
-	}
+    //model->createSmallScriptFile_ForFixedOutput();	// Now creating script file for later running the simulation and obtaining output-file having fixed time-step
 
+    // Creating a script file for Running the simulink model just created.
+    //
+    // In addition, the engine also creates a script file (.m) that can be directly 
+    // excuted in MatLab based on the parameters supplied along with the .txt file.
+    model->generateRunModelByTxt2slxScript(inputVar_init_point, initial_output_values);
 }
