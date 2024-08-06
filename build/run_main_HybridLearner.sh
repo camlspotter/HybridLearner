@@ -29,9 +29,12 @@ close_matlab ()
 	echo Closed MATLAB
 	rm -rf $FIFODIR
     fi
+    kill -INT $PID
 }
 
 trap close_matlab ERR INT
+
+sleep 5
 
 # Execute the shell script for learning the benchmark models
 # This took approximately 2 hours on Intel i9 CPU 2.4 GHz with 32 GB RAM
@@ -40,7 +43,8 @@ trap close_matlab ERR INT
 echo "Done Learning Models"
 
 # Before executing this, we assume the script run_results_main_learn_models is already executed and models are learned and copied in the respective folders.
-matlab -nodisplay -nosplash -r "cd('../examples'); run('run_main.m'); exit;"
+matlab -nodisplay -nosplash -batch "run('../examples/ball/BeforeAnnotation/call_run_ball.m')"
+# matlab -nodisplay -nosplash -r "cd('../examples'); run('run_main.m'); exit;"
 echo "Done generating output Trajectories"
 
 close_matlab; exit 0

@@ -20,6 +20,7 @@ set -e
 ## 
 ## exit 0
 
+# SIMU_INIT_SIZE=64
 SIMU_INIT_SIZE=4
 
 # **** Switched Oscillator *****
