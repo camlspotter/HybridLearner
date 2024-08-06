@@ -22,24 +22,28 @@ class hybridAutomata : public var_mapping {
 
 public:
 	typedef boost::shared_ptr<hybridAutomata> ptr;
+
 	hybridAutomata();
+
 	//hybridAutomata(std::map<int, location::ptr>& list_locs, location::ptr init_loc, int dim);
-	void addInitial_Location(location::ptr& initLoc);
-	location::ptr& getInitial_Location();
+
+	void setInitialLocation(location::ptr& initLoc);
+
+	location::ptr& getInitialLocation();
 
 	//returns the location from the list of locations with location_ID as the input parameter
 	location::ptr getLocation(int Loc_ID);
 
-
-
 	void addLocation(location::ptr& loc);	//inserts location into its correctly mapped key
+
 	int getDimension() const;
+
 	void setDimension(int dimension);
 
 	//This function replaces the list_locations map. Note adding duplicate location in the map is not allowed by stl::map.
-	void addMapped_Locations_List(std::map<int, location::ptr>& mapped_location_list);
+	void setLocations(std::map<int, location::ptr>& mapped_location_list);
 
-	std::map<int, location::ptr> getLocation_List();
+	std::map<int, location::ptr> getLocations();
 
 	/*
 	 * Returns the total number of Locations in the hybrid automata with ID = 1 to returned size
@@ -47,6 +51,7 @@ public:
 	int getTotalLocations(){
 		return list_locations.size();
 	}
+
 	/*
 	 * Returns the total number of Transitions in the hybrid automata
 	 */
@@ -60,6 +65,7 @@ public:
 	}
 
 	unsigned int getInitialId() const;
+
 	void setInitialId(unsigned int initialId);
 };
 

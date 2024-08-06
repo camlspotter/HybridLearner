@@ -137,7 +137,7 @@ void simulinkModelConstructor::addLocations(ofstream &outfile){
 	outfile << " \n \n %% Adding Locations or States with ODE \n";
 
 	std::map<int, location::ptr> list_locations;
-	list_locations = ha->getLocation_List();
+	list_locations = ha->getLocations();
 
 	unsigned int pos_x=30, pos_y=30, width=90, height=60, state_gap = 100;
 
@@ -204,7 +204,7 @@ void simulinkModelConstructor::addTransitions(ofstream &outfile) {
 	outfile << " \n \n %% Adding Transition for each Locations or States \n";
 
 	std::map<int, location::ptr> list_locations;
-	list_locations = ha->getLocation_List();
+	list_locations = ha->getLocations();
 	unsigned int pos_x=30, width=90, state_gap = 100;
 	unsigned int x_pos = pos_x + width + state_gap * 0.5, y_pos=0, next_height = 16;
 	unsigned int sourceLoc = 0;

@@ -959,7 +959,7 @@ between two modes.
 
         // ***********************************************
     }
-    H->addMapped_Locations_List(map_location_list1);
+    H->setLocations(map_location_list1);
 
     location::ptr my_location = location::ptr(new location());
     //my_location = map_location_list1[loc_id];	//accessing from the map data structure to create a new location with same ID and name
@@ -1091,7 +1091,7 @@ between two modes.
     if (tot_modes >= 1 && all_transitions.size() >= 1) {
 
         std::map<int, location::ptr> list_locations;
-        list_locations = H->getLocation_List();
+        list_locations = H->getLocations();
 
         //Iterate through all the modes get the mode-id and create list-of-Transitions and add as outGoingTransitions
         for (std::map<int, location::ptr>::iterator i= list_locations.begin(); i != list_locations.end(); i++) {
@@ -1110,7 +1110,7 @@ between two modes.
 
     if (tot_modes >= 1 && all_transitions.size() >= 1) { //Modification of Transition is required only for modes > 1
         //cout<<"Total number of Locations (2) ="<<H->getTotalLocations() <<endl;
-        H->addMapped_Locations_List(map_location_list2);	//This line is important to update the transitions
+        H->setLocations(map_location_list2);	//This line is important to update the transitions
     }
     // ***********************************************
 	//cout << "Hybrid Automata Object Created ..."<<endl;
@@ -1319,7 +1319,7 @@ void verifyHA_output(hybridAutomata::ptr &H) {
 	cout<< "Initial Location ID: "<< H->getInitialId() <<endl;
 
 	std::map<int, location::ptr> list_locations;
-	list_locations = H->getLocation_List();
+	list_locations = H->getLocations();
 
 	for (std::map<int, location::ptr>::iterator i= list_locations.begin(); i != list_locations.end(); i++) {
 		location::ptr loc = (*i).second;	//since our location starts from 0

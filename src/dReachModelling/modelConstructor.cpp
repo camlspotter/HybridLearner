@@ -64,7 +64,7 @@ void modelConstructor::locationPrinter(hybridAutomata::ptr &H, ofstream &outfile
 	//int tot_locs = H->getTotalLocations();
 
 	std::map<int, location::ptr> list_locations;
-	list_locations = H->getLocation_List();
+	list_locations = H->getLocations();
 
 	for (std::map<int, location::ptr>::iterator i= list_locations.begin(); i != list_locations.end(); i++) {
 
