@@ -15,7 +15,7 @@
 using namespace std;
 
 class hybridAutomata : public var_mapping {
-	std::map<int, location::ptr> list_locations;		//mapping a list of locations based on the key=loc_id
+	std::map<int, location::ptr> locations; // loc-id -> location map
 	location::ptr initial_loc;	//May be  I will prefer to use just the ID, since initial-set is already in the user_inputs class
 	unsigned int initial_id;
 	int dimension;
@@ -40,7 +40,7 @@ public:
 
 	void setDimension(int dimension);
 
-	//This function replaces the list_locations map. Note adding duplicate location in the map is not allowed by stl::map.
+	//This function replaces the locations map. Note adding duplicate location in the map is not allowed by stl::map.
 	void setLocations(std::map<int, location::ptr>& mapped_location_list);
 
 	std::map<int, location::ptr> getLocations();
@@ -49,7 +49,7 @@ public:
 	 * Returns the total number of Locations in the hybrid automata with ID = 1 to returned size
 	 */
 	int getTotalLocations(){
-		return list_locations.size();
+		return locations.size();
 	}
 
 	/*
@@ -57,7 +57,7 @@ public:
 	 */
 	unsigned int getTotalTransitions(){
 		unsigned int totTrans=0;
-		for (std::map<int, location::ptr>::iterator it=list_locations.begin(); it != list_locations.end(); it++){
+		for (std::map<int, location::ptr>::iterator it=locations.begin(); it != locations.end(); it++){
 			location::ptr loc = it->second;
 			totTrans= totTrans + loc->getOutGoingTransitions().size();
 		}

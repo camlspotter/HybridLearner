@@ -35,7 +35,6 @@ public:
 	const list<flow_equation>& getDerivatives() const;
 	void setDerivatives(const list<flow_equation>& derivatives);
 
-
 	const list<string>& getInvariant() const;
 	void setInvariant(const list<string>& invariant);
 	int getLocId() const;
@@ -44,7 +43,6 @@ public:
 	void setName(const string& name);
 	const std::list<transition::ptr>& getOutGoingTransitions() const;
 	void setOutGoingTransitions(const std::list<transition::ptr>& outGoingTransitions);
-
 };
 
 
