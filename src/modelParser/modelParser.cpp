@@ -66,7 +66,7 @@ between two modes.
 	 */
 	//Has ODE parsing as common code
 
-    string model_filename = user->getFilenameUnderOutputDirectory("learnHA_out.txt"); // XXX define a constant
+    string model_filename = user->getFilenameUnderOutputDirectory(LEARNED_HYBRID_AUTOMATON);
 
 	string eng_selected = user->getEngine();
 
