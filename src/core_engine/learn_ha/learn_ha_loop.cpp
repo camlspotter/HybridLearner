@@ -94,13 +94,8 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
     // Need to copy ORIGINAL_MODEL_TRACES ORIGINAL_MODEL_TRACES_FOR_LERANING
     // since ORIGINAL_MODEL_TRACES will be overwritten by equivalenceTesting_for_learn_ha_loop
-	{
-        std::string cmd= "cp ";
-        cmd.append(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES));
-        cmd.append(" ");
-        cmd.append(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));
-        system_must_succeed(cmd);
-    }
+	system_copy_file(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES),
+                     userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));
 
     // Loop stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 	while (true) {
@@ -296,27 +291,7 @@ void updateTraceFile(parameters::ptr params)
 	std::string resultFileName = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
 	cout << "original Simulation TraceFile = "<< resultFileName << endl;
 
-	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("update_tmp_simulation.txt");
-	/*
-	 * cat $previousSimulationTraceFile $resultFileName > $tmpSimuFile   //from 2nd iteration onwards
-	 * cp $tmpSimuFile $preivious_SimulationTraceFile
-     *
-     * XXX can be simplified to  cat $resultFilename >> $previous_SimulationTraceFile
-	 */
-	std::string cmd="cat ";
-	cmd.append(previous_SimulationTraceFile);
-	cmd.append(" ");
-	cmd.append(resultFileName);
-	cmd.append(" > ");
-	cmd.append(tmpSimuFile);
-	//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-	system_must_succeed(cmd);
-
-	cmd="cp ";
-	cmd.append(tmpSimuFile);
-	cmd.append(" ");
-	cmd.append(previous_SimulationTraceFile);
-	system_must_succeed(cmd);
+    system_append_file(resultFileName, previous_SimulationTraceFile);
 }
 
 /*
@@ -488,19 +463,9 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 
 	// *************** setting up the mergedFile(s) ***************
 	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
-	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_TMP2);
 
     // rm $simuFileName $tmpSimuFile
-	{
-        std::string deleteCommand = "rm -f ";
-        deleteCommand.append(simuFileName);
-        deleteCommand.append(" ");
-        deleteCommand.append(tmpSimuFile);
-        int x = system(deleteCommand.c_str());	//Deleting simu_modelFile.txt and tmp_simu_modelFile.txt. Todo: check if exists before delete
-        if (x == -1) {
-            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-        }
-    }
+    fs::remove(simuFileName);
 	// *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
@@ -559,49 +524,7 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 
 		// ***************  --------------------------------- ***************
 
-        // XXX These are simply $(cat $output_filename >> $simuFileName)
-
-		if (matlab_execution_count==0){	//1st iteration
-            // cat $output_filename > $tmpSimuFile
-            std::string cmd;
-			cmd="cat ";
-			cmd.append(output_filename);
-			cmd.append(" > ");
-			cmd.append(tmpSimuFile);
-			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			int x = system(cmd.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << cmd <<std::endl;
-			}
-		} else {	//2nd iterations onwards
-            // cat $simuFileName $output_filename > $tmpSimuFile
-            std::string cmd;
-			cmd="cat ";
-			cmd.append(simuFileName);
-			cmd.append(" ");
-			cmd.append(output_filename);
-			cmd.append(" > ");
-			cmd.append(tmpSimuFile);
-			//cout <<"Iteration "<< matlab_execution_count <<"  Cmd: " << cmd <<endl;
-			int x = system(cmd.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << cmd <<std::endl;
-			}
-		}
-
-        // cp $tmpSimuFile $simuFileName
-        {
-            std::string cmd;
-            cmd="cp ";
-            cmd.append(tmpSimuFile);
-            cmd.append(" ");
-            cmd.append(simuFileName);
-            //cout << "  Cmd: " << cmd <<endl;
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-        }
+        system_append_file(output_filename, simuFileName);
 
 		matlab_execution_count++;
 		userInputs->setNumberMatlabSimulationExecuted(matlab_execution_count);

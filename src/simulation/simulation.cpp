@@ -17,6 +17,7 @@
 #include "../utilities/intermediateResult.h"
 #include "simulation_trace_testing.h"
 #include "../utilities/myRandomNumberGenerator.h"
+#include "../utilities/system.h"
 
 
 #include "../benchmark/circle/runCircle.h"
@@ -140,17 +141,8 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		intermediateResult::ptr &intermediate) {
 
 	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
-    std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
 
-    // rm $simuFileName
-    {
-        std::string deleteCommand = "rm -f ";
-        deleteCommand.append(simuFileName);
-        int x = system(deleteCommand.c_str());
-        if (x == -1) {
-            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-        }
-    }
+    fs::remove(simuFileName);
 	// *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
@@ -162,42 +154,8 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
 		std::string resultFileName = user->getFilenameUnderOutputDirectory("result.txt");
 
-        if (matlab_execution_count==0) {	//1st iteration
-            // cat $resultFileName > $tmpSimuFile
-            std::string cmd = "cat ";
-            cmd.append(resultFileName);
-            cmd.append(" > ");
-            cmd.append(tmpSimuFile);
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-        } else {	//2nd iterations onwards
-            // cat $simuFileName $resultFileName > $tmpSimuFile
-            std::string cmd = "cat ";
-            cmd.append(simuFileName);
-            cmd.append(" ");
-            cmd.append(resultFileName);
-            cmd.append(" > ");
-            cmd.append(tmpSimuFile);
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-        }
+        system_append_file(resultFileName, simuFileName);
 
-        // cp $tmpSimuFile $simuFileName
-        {
-            std::string cmd = "cp ";
-            cmd.append(tmpSimuFile);
-            cmd.append(" ");
-            cmd.append(simuFileName);
-            //cout << "  Cmd: " << cmd <<endl;
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-        }
         matlab_execution_count++;
         user->setNumberMatlabSimulationExecuted(matlab_execution_count);
     }
@@ -211,19 +169,8 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		intermediateResult::ptr &intermediate, struct simu_dataStruct &violation_result) {
 
 	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
-    std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
 
-    // rm $simuFileName $tmpSimuFile
-    {
-        std::string deleteCommand = "rm -f ";
-        deleteCommand.append(simuFileName);
-        deleteCommand.append(" ");
-        deleteCommand.append(tmpSimuFile);
-        int x = system(deleteCommand.c_str());
-        if (x == -1) {
-            std::cout <<"Error executing cmd: " << deleteCommand <<std::endl;
-        }
-    }
+    fs::remove(simuFileName);
     // *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
@@ -245,41 +192,7 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 
 		std::string resultFileName = user->getFilenameUnderOutputDirectory("result.txt");
 
-		if (matlab_execution_count==0){	//1st iteration
-            // cat $resultFileName > $tmpSimuFile
-            std::string cmd="cat ";
-            cmd.append(resultFileName);
-            cmd.append(" > ");
-            cmd.append(tmpSimuFile);
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-		} else {	//2nd iterations onwards
-            // cat $simuFileName $resultFileName > $tmpSimuFile
-            std::string cmd="cat ";
-			cmd.append(simuFileName);
-			cmd.append(" ");
-			cmd.append(resultFileName);
-			cmd.append(" > ");
-			cmd.append(tmpSimuFile);
-			int x = system(cmd.c_str());
-			if (x == -1) {
-				std::cout <<"Error executing cmd: " << cmd <<std::endl;
-			}
-		}
-
-        {
-            // cp $tmpSimuFile $simuFileName
-            std::string cmd="cp ";
-            cmd.append(tmpSimuFile);
-            cmd.append(" ");
-            cmd.append(simuFileName);
-            int x = system(cmd.c_str());
-            if (x == -1) {
-                std::cout <<"Error executing cmd: " << cmd <<std::endl;
-            }
-        }
+        system_append_file(resultFileName, simuFileName);
 
 		matlab_execution_count++;
 		user->setNumberMatlabSimulationExecuted(matlab_execution_count);
