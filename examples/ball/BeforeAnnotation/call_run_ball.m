@@ -4,11 +4,11 @@ warning('off','all');
 total_test_trace = 32;
 learnedModel = 64;      % just modify this with the model learned using number of training traces
 
-outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/testData_Output/"; % mkdir required
+outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/testData_Output"; 
+mkdir(outputTrace_path);
 benchmarkName = "bball_";
     
-% XXX cwd is not at build/
-mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/simulink_model0.slx'
+mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/learned_model0.slx'
 
 model = benchmarkName + num2str(learnedModel);  % Learned model
 
@@ -37,7 +37,7 @@ for test_id = 1 : total_test_trace
 
     % Load the model 
            
-    mdl = 'simulink_model0'
+    mdl = 'learned_model0'
 
     load_system(mdlfile); 
     format long

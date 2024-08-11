@@ -9,17 +9,17 @@ current_dir = pwd();
 % Construct the full path to the file
 % filename = fullfile(current_dir, 'xyz', 'abc.txt');
 
-copyfile("../../../results/bball/AfterAnnotation/bball_64_Type.slx", current_dir);
-
-outputTrace_path =  "../../../results/bball/AfterAnnotation/testData_Output";
+outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/testData_Output";
+mkdir(outputTrace_path);
 benchmarkName = "bball_";
     
+mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/learned_model0.slx'
+
 model = benchmarkName + num2str(learnedModel);  % Learned model
 
 for test_id = 1 : total_test_trace
     fileName = benchmarkName + num2str(test_id) + ".csv"; % testing trace file
-    inputFileName = fullfile(current_dir, '../TestSet', fileName);
-%   inputFileName = "testdata/" + benchmarkName + num2str(test_id) + ".csv"; % testing trace file
+    inputFileName = fullfile('/home/jun/hal/HybridLearner/examples/ball/TestSet', fileName);
     input_data = load(inputFileName);
     %%%%% 
     x0_input = input_data(:,2);  % time series input
@@ -39,19 +39,16 @@ for test_id = 1 : total_test_trace
 
     %%
     outFileName = model + "_Trace_" + num2str(test_id) + ".txt"; % output from Leanred model for test traces
-    outfile = fullfile(current_dir, outputTrace_path, outFileName); 
+    outfile = fullfile(outputTrace_path, outFileName); 
 
 %     run_bball(modelFile_withPath, outfile, timeFinal, timeStepMax);
     
     
      %% Load the model 
-%     learnedModel_path = "/home/amit/eclipse-workspace/HybridLearner/results/bball/BeforeAnnotation"
-%     addpath(learnedModel_path)
-%      mdl = "/home/amit/eclipse-workspace/HybridLearner/results/bball/BeforeAnnotation/bball_64"
      
-    mdl = "bball_64_Type";    
-    load_system(mdl); 
-    
+    mdl = 'learned_model0';
+
+    load_system(mdlfile); 
     format long
     %format shortG; 
 

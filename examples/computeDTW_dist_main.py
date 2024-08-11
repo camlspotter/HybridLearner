@@ -16,7 +16,7 @@ from twoTanks.AfterAnnotation.compute_cost import compute_cost_result as compute
 
 
 # define the filename for the output CSV file
-filename = '../results/summary_results.csv'
+filename = '../build/_result/summary_results.csv'
 
 total_training_traces = 64
 total_test_traces = 32
