@@ -121,7 +121,7 @@ eval $CMD \
      >  $OUTDIR/log.txt
 
 # I beleve it fails since there is no engineTiming_64.txt
-CMD2='./HybridLearner --engine txt2slx --variable-category "x0:input, x1:input, x2:output" --model-file engineTiming_64.txt --time-horizon 10 --sampling-time 0.01 --invariant 2 --input-signal-type "x0=fixed-step & x1=fixed-step" --degree 1 --ode-solver ode45 --fixed-interval-data 0  --numberOf-control-points "x0=3 & x1=3"  --initial-value "x0>=2 & x0<=2 & x1>=24 & x1<=24 & x2=2000" # we do not actually use this parameters for Testing instead use the Test Set input signal'
+CMD2='./HybridLearner --engine txt2slx --output-directory $OUTDIR --variable-category "x0:input, x1:input, x2:output" --model-file _result/$ID/learned_HA.txt --time-horizon 10 --sampling-time 0.01 --invariant 2 --input-signal-type "x0=fixed-step & x1=fixed-step" --degree 1 --ode-solver ode45 --fixed-interval-data 0  --numberOf-control-points "x0=3 & x1=3"  --initial-value "x0>=2 & x0<=2 & x1>=24 & x1<=24 & x2=2000" # we do not actually use this parameters for Testing instead use the Test Set input signal'
 
 eval $CMD2 \
      >> $OUTDIR/log.txt
