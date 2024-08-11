@@ -10,6 +10,8 @@
 
 
 #include "../utilities/matlab.h"
+#include "../utilities/filenames.h"
+#include "../utilities/misc.h"
 
 #include <iomanip>
 #include <sstream>
@@ -94,10 +96,10 @@ class simulinkModelConstructor {
 
 	void createSmallScriptFile_ForFixedOutput();
 
-    // simulink_model0, etc
+    // 
     std::string simulinkModelName() const
     {
-        return "simulink_model" + std::to_string(iteration);
+        return formatString(LEARNED_MODEL_FMT, iteration);
     }
 
 public:

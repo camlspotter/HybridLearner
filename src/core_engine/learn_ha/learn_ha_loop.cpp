@@ -22,6 +22,8 @@
 #include "../../utilities/system.h"
 #include "../../utilities/matlab.h"
 #include "../../utilities/filesystem.h"
+#include "../../utilities/filenames.h"
+#include "../../utilities/misc.h"
 
 void initial_processing_for_InputFileName(parameters::ptr params);
 void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_var> &list_input_variable_values,
@@ -60,9 +62,6 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 	 * Note: path for original and learn model can be/is stored in the class intermediate.
 	 */
 
-	std::list<struct timeseries_all_var>  list_inputs;
-	std::list<std::vector<double> > list_outputs;
-
     // Step 2: Generate simulation traces based on user's inputs.
     // User will provide variable name present in the original model M and not in M'
     // 
@@ -79,6 +78,9 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
     cout << "generating initial traces" << endl;
 
     // ep is initialized in this function
+    // list_inputs and list_outputs are initial data for the equivalence test
+	std::list<struct timeseries_all_var>  list_inputs;
+	std::list<std::vector<double> > list_outputs;
 	generate_initial_traces_for_learn_ha_loop(list_inputs, list_outputs, params, ep, report);
 
 	unsigned int tot_count=0;
@@ -90,12 +92,23 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
     cout << "entering learn_ha loop..." << endl;
 
+    // Need to copy ORIGINAL_MODEL_TRACES ORIGINAL_MODEL_TRACES_FOR_LERANING
+    // since ORIGINAL_MODEL_TRACES will be overwritten by equivalenceTesting_for_learn_ha_loop
+	{
+        std::string cmd= "cp ";
+        cmd.append(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES));
+        cmd.append(" ");
+        cmd.append(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));
+        system_must_succeed(cmd);
+    }
+
     // Loop stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 	while (true) {
 
 		//Efficient Learning Loop
 		if (tot_count != 0) { //skip on the initial iteration
-			updateTraceFile(/* tot_count, CE_output_var, CE_input_var, */ params);	//adds new time-serise data to the initial trace-file
+            // XXX This function must append ORIGINAL_MODEL_TRACES to ORIGINAL_MODEL_TRACES_FOR_LEARNING
+			updateTraceFile(params);	//adds new time-serise data to the initial trace-file
 		}
 
         // Step 3: Using the traces Learn an HA and create a model file M' (Abstract).
@@ -215,46 +228,50 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
 
 	std::list<std::vector<double> > initial_output_values;
 	std::list<struct timeseries_all_var> initial_inputValues_timeSeriesData;
-	std::list<std::vector<double> > initial_simu_output_values;
-	std::list<struct timeseries_all_var> initial_simu_inputValues_timeSeriesData;
 
+    // Generate inputs of size max(initial-simu-size, max-traces).
     // core_engine/simulation/simualtion_utilities.cpp
-	generate_input_information(initial_inputValues_timeSeriesData, initial_output_values, params, ep, report);	//initial values: This function has the random-generation SEED
+	generate_input_information(initial_inputValues_timeSeriesData, initial_output_values, params, ep, report);
 
-	// Note: inputs are generated for max(initial-simu-size, max-traces). But for initial traces only use initial-simu-size
-	std::list<std::vector<double> >::iterator it_out = initial_output_values.begin();
-	std::list<struct timeseries_all_var>::iterator it_in = initial_inputValues_timeSeriesData.begin();
-	for (unsigned int i=0; i < userInputs->getSimuInitSize(); i++) {	//copying only the first few inputs for generating initial traces
-		initial_simu_output_values.push_back((*it_out));
-		initial_simu_inputValues_timeSeriesData.push_back((*it_in));
+    // Simulate the original model using only getSimuInitSize() samples.
+	{
+        // But for initial traces only use initial-simu-size
+        std::list<std::vector<double> > initial_simu_output_values;
+        std::list<struct timeseries_all_var> initial_simu_inputValues_timeSeriesData;
+        std::list<std::vector<double> >::iterator it_out = initial_output_values.begin();
+        std::list<struct timeseries_all_var>::iterator it_in = initial_inputValues_timeSeriesData.begin();
+        for (unsigned int i=0; i < userInputs->getSimuInitSize(); i++) {	//copying only the first few inputs for generating initial traces
+            initial_simu_output_values.push_back((*it_out));
+            initial_simu_inputValues_timeSeriesData.push_back((*it_in));
+            
+            it_out++;	it_in++;
+        }
 
-		it_out++;	it_in++;
-	}
+        // Following files are created:
+        // run_script_simu_user_model.m
+        // simu.txt
+        // slprj/
+        // oscillator.slxc
+        // result_simu_data.txt
+        // tmp_simu.txt
+        generate_simulation_traces_original_model_to_learn(initial_simu_inputValues_timeSeriesData, initial_simu_output_values, params, ep, report);
+    }
 
-	// Following files are created:
-    // run_script_simu_user_model.m
-    // simu.txt
-    // slprj/
-    // oscillator.slxc
-    // result_simu_data.txt
-    // tmp_simu.txt
-    generate_simulation_traces_original_model_to_learn(initial_simu_inputValues_timeSeriesData, initial_simu_output_values, params, ep, report);
-
-	std::list<std::vector<double> > initial_output_for_equivalence;
-	std::list<struct timeseries_all_var> initial_input_timeseries_for_equivalence;
-	it_in = initial_inputValues_timeSeriesData.begin();
-	it_out = initial_output_values.begin();
-	for (unsigned int i=0; i < userInputs->getMaxTraces(); i++) {	//copying only the first few inputs for generating initial traces for Equivalence Testing
-		initial_output_for_equivalence.push_back(*it_out);
-		initial_input_timeseries_for_equivalence.push_back(*it_in);
-		it_out++;
-        it_in++;
-	}
-
-	list_input_variable_values = initial_input_timeseries_for_equivalence;
-	list_output_variable_values = initial_output_for_equivalence;
-
-    // cout << "generate_initial_traces_for_learn_ha_loop() done" << endl;
+    // The entire inputs are used for the equivalence test
+    {
+        std::list<std::vector<double> > initial_output_for_equivalence;
+        std::list<struct timeseries_all_var> initial_input_timeseries_for_equivalence;
+        std::list<struct timeseries_all_var>::iterator it_in = initial_inputValues_timeSeriesData.begin();
+        std::list<std::vector<double> >::iterator it_out = initial_output_values.begin();
+        for (unsigned int i=0; i < userInputs->getMaxTraces(); i++) {	//copying only the first few inputs for generating initial traces for Equivalence Testing
+            initial_output_for_equivalence.push_back(*it_out);
+            initial_input_timeseries_for_equivalence.push_back(*it_in);
+            it_out++;
+            it_in++;
+        }
+        list_input_variable_values = initial_input_timeseries_for_equivalence;
+        list_output_variable_values = initial_output_for_equivalence;
+    }
 }
 
 
@@ -272,15 +289,14 @@ void updateTraceFile(parameters::ptr params)
 
 	// ***** Trace file result.txt generated by Simulink *************
 	// *** Now append the trace into the simulation_model.txt file
-	string previous_SimulationTraceFile = userInputs->getSimulationFilename();
+	string previous_SimulationTraceFile = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING);
 	cout << "previous_SimulationTraceFile = "<< previous_SimulationTraceFile << endl;
 	//Now get result-file name from the original-running-path
 
-	std::string resultFileName = userInputs->getFilenameUnderOutputDirectory("original_model_simulation.txt");
+	std::string resultFileName = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
 	cout << "original Simulation TraceFile = "<< resultFileName << endl;
 
 	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("update_tmp_simulation.txt");
-
 	/*
 	 * cat $previousSimulationTraceFile $resultFileName > $tmpSimuFile   //from 2nd iteration onwards
 	 * cp $tmpSimuFile $preivious_SimulationTraceFile
@@ -301,17 +317,6 @@ void updateTraceFile(parameters::ptr params)
 	cmd.append(" ");
 	cmd.append(previous_SimulationTraceFile);
 	system_must_succeed(cmd);
-
-    // XXX We won't!
-	// //Now copy the simulation-Trace file in the Learning Algorithm's folder
-	// string commandStr ="cp ";
-	// commandStr.append(getcwd());
-	// commandStr.append("/");
-	// commandStr.append(userInputs->getSimulationFilename());
-	// commandStr.append(" ");
-	// commandStr.append(intermediate->getLearnAlgoDefaultInputfilePath()); //absolute path
-    // 
-	// system_must_succeed(commandStr);
 }
 
 /*
@@ -328,7 +333,7 @@ void call_LearnHA(parameters::ptr params, summary::ptr &report) {
 
 	boost::timer::cpu_timer timer;
 	timer.start();
-	learnHA_caller(userInputs);	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
+	learnHA_caller(userInputs, userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));	//Make is Simple and call it from everywhere. This invokes our "HA learning Algorithm".
 	timer.stop();
 	double wall_clock;
 	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
@@ -360,9 +365,9 @@ void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<
 	// ----------------------run script generator-----------------------------
 
     // Must be as same as the one of model->executeSimulinkModelConstructor(ep)
-    std::string simulink_model_filename = userInputs->getFilenameUnderOutputDirectory("simulink_model" + to_string(count) + ".slx");
-    std::string script_filename = userInputs->getFilenameUnderOutputDirectory("learned_model_run" + to_string(count) + ".m");
-    std::string output_filename = userInputs->getFilenameUnderOutputDirectory("learned_model_simulation" + to_string(count) + ".txt");
+    std::string simulink_model_filename = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_SLX_FMT, count));
+    std::string script_filename = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_SIMULATE_M_FMT, count));
+    std::string output_filename = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_TRACES_FMT, count));
 	model->generateRunLearnedModelScript(simulink_model_filename, script_filename, output_filename);
 
 	// ----------------------------------------------------------------------------
@@ -391,29 +396,13 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration,
 	 * 3) Here list_inputs and list_outputs have variable-names as original-names
 	 */
 
-    // --simulink-model-file
 	std::string model_file_orig = userInputs->getSimulinkModelFilename();
-	std::string script_filename_orig = "original_model_run.m";
-    std::string output_filename_orig = "original_model_simulaiton.txt";
+	std::string script_filename_orig = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_SIMULATE_M);
+    std::string output_filename_orig = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
 
-    // $OUTDIR/model0.txt
-	std::string model_file_learned;
-    {
-        model_file_learned = "simulink_model";
-        model_file_learned.append(to_string(iteration));	// iteration number appended
-        model_file_learned.append(".slx");
-        model_file_learned = userInputs->getFilenameUnderOutputDirectory(model_file_learned);
-    }
-
-    // eqtest_run_script0.m
-	std::string script_filename_learned = userInputs->getFilenameUnderOutputDirectory("learned_model_run");
-	script_filename_learned.append(to_string(iteration));
-	script_filename_learned.append(".m");
-
-    // $OUTDIR/eqresult0.txt
-    std::string output_filename_learned = userInputs->getFilenameUnderOutputDirectory("learned_model_simulation");
-	output_filename_learned.append(to_string(iteration));
-	output_filename_learned.append(".txt");
+	std::string model_file_learned = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_SLX_FMT, iteration));
+	std::string script_filename_learned = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_SIMULATE_M_FMT, iteration));
+    std::string output_filename_learned = userInputs->getFilenameUnderOutputDirectory(formatString(LEARNED_MODEL_TRACES_FMT, iteration));
 
     //-----------------------------------------------------------------------------------------------------
 
@@ -435,25 +424,16 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration,
 		simulate_learned_model_from_learn_ha_loop(ep, userInputs, init_point, output_variable_init_values, script_filename_learned, output_filename_learned, intermediate, H, la_setup); //Populate initial data in Matlab's Workspace and then run the script file
 
 		cout <<"********* Running Original model ***************** "<< endl;
-        // XXX Do we need to run the original model each time?
 		la_setup->setup_for_original_model(H, userInputs); //setting up to run the original model
 		simulate_original_model_from_learn_ha_loop(ep, userInputs, init_point, output_variable_init_values, script_filename_orig, output_filename_orig, intermediate, H, la_setup); //Populate initial data in Matlab's Workspace and then run the script file
 
 		// ***************  --------------------------------- ***************
 
 		// -------------- Read the two files and compare --------------
-		string file_original_with_path="";
-		file_original_with_path = getcwd();
-		file_original_with_path.append("/");
-		file_original_with_path.append(output_filename_orig);
+		string file_original_with_path = output_filename_orig;
 
-        string file_learned_with_path="";
-		file_learned_with_path = getcwd();
-		file_learned_with_path.append("/");
-		file_learned_with_path.append(output_filename_learned);
-		//cout <<"file_original_with_path = " << file_original_with_path <<"    file_learned_with_path = " <<file_learned_with_path << endl;
+        string file_learned_with_path = output_filename_learned;
 
-		//flagEquivalent = equivalence_testing(file_original_with_path, file_learned_with_path, maxDistance); //interface modified
 		flagEquivalent = compute_trace_equivalence(file_original_with_path, file_learned_with_path, maxDistance, params);
 
 //		cout <<"Maximum Euclidean Distance=" << maxDistance << endl;
@@ -461,7 +441,8 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration,
 
 		// -------------- --------------
 
-		if (flagEquivalent==false)	{ //found a counter-example
+        //found a counter-example
+		if (!flagEquivalent) {
 			CE_output_var = output_variable_init_values;
 			CE_input_var = init_point;
 			break;
@@ -498,17 +479,16 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
 	// We assume file generated is "run_script_simu_user_model.m"
 	// Now creating script file for later running the simulation and obtaining output-file having fixed time-step
 	// Creating a script file for Running the simulink model just created.
-	std::string script_filename = userInputs->getFilenameUnderOutputDirectory("original_model_run.m");
-    std::string output_filename = userInputs->getFilenameUnderOutputDirectory("original_model_simulation_step.txt");
+	std::string script_filename = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_SIMULATE_M);
+    std::string output_filename = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_TMP);
 	std::string simulink_model_filename = userInputs->getSimulinkModelFilename();
 
     // It builds script_filename="$OUTDIR/run_original_model.m"
 	model->generateRunModelScript(simulink_model_filename, script_filename, output_filename);
 
 	// *************** setting up the mergedFile(s) ***************
-	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory("original_model_simulation.txt");
-	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory("original_model_simulation.tmp");
-	userInputs->setSimulationFilename(simuFileName);
+	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
+	std::string tmpSimuFile = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_TMP2);
 
     // rm $simuFileName $tmpSimuFile
 	{

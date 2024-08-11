@@ -25,10 +25,10 @@ user_inputs_helper::~user_inputs_helper() {
 }
 
 
-void user_inputs_helper::setVariable_CP_Size(std::list<struct control_points> &res, string variableName, double cp_size) {
+void user_inputs_helper::setVariable_CP_Size(std::list<struct control_points> &res, string variableName, unsigned int cp_size) {
 	for (std::list<struct control_points>::iterator it = res.begin(); it != res.end(); it++) {
-		if ((*it).var_name == variableName) {
-			(*it).numberOf_cp = cp_size;
+		if (it->var_name == variableName) {
+			it->numberOf_cp = cp_size;
 			break;
 		}
 	}
@@ -36,15 +36,15 @@ void user_inputs_helper::setVariable_CP_Size(std::list<struct control_points> &r
 
 void user_inputs_helper::setVariableType(std::list<struct control_points> &res, string variableName, string variableType) {
 	for (std::list<struct control_points>::iterator it = res.begin(); it != res.end(); it++) {
-		if ((*it).var_name == variableName) {
-			(*it).var_type = variableType;
+		if (it->var_name == variableName) {
+			it->var_type = variableType;
 			break;
 		}
 	}
 }
 
-
-std::list<struct control_points> user_inputs_helper::getUserInputSignal_parameter(user_inputs::ptr user_Inputs){	//parameters::ptr params){
+std::list<struct control_points> user_inputs_helper::getUserInputSignal_parameter(user_inputs::ptr user_Inputs)
+{
 	/*
 	 * Initialize the res with default Type and other details for all system-variables
 	 *
@@ -52,7 +52,6 @@ std::list<struct control_points> user_inputs_helper::getUserInputSignal_paramete
 	 * 2) Parse numberOf_control_points to obtain the number of control-points for each variable
 	 *
 	 */
-//	user_inputs::ptr user_Inputs = params->getUserInputs();
 
 	std::list<struct control_points> res;
 
@@ -78,9 +77,12 @@ std::list<struct control_points> user_inputs_helper::getUserInputSignal_paramete
 
 			res.push_back(sys_variable);
 		}
-	} else if ((user_Inputs->getEngine()=="txt2slx") || (user_Inputs->getEngine()=="simu") ||
-			(user_Inputs->getEngine()=="equi-test") || (user_Inputs->getEngine()=="learn-ha")
-			|| (user_Inputs->getEngine()=="learn-ha-loop") || (user_Inputs->getEngine()=="bbc") ) {
+	} else if (user_Inputs->getEngine()=="txt2slx"
+               || user_Inputs->getEngine()=="simu"
+               || user_Inputs->getEngine()=="equi-test"
+               || user_Inputs->getEngine()=="learn-ha"
+               || user_Inputs->getEngine()=="learn-ha-loop"
+               || user_Inputs->getEngine()=="bbc" ) {
 		std::list<std::string> inputVariables = user_Inputs->getListInputVariables();
 		int i=0;	//Todo: here we assume indices of input variables are first in the hybrid-automata
 		for (list<std::string>::iterator it = inputVariables.begin(); it != inputVariables.end(); it++) {

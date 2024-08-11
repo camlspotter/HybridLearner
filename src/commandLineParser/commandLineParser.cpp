@@ -154,8 +154,15 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	("output-directory", po::value<std::string>(), "output directory");
 
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    } catch ( po::error& e ) {
+        std::cout << e.what() << endl;
+		std::cout << "\nTerminating due to error in command-line inputs.\n" ;
+		std::cout << "Try HybridLearner --help to see valid command-line options\n";
+        exit(1);
+    }
 
 	std::string fileName;
 
@@ -182,7 +189,7 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	}
 
 	if (vm.count("model-file")) {
-		userInputs->setModelFilename(vm["model-file"].as<std::string>());
+		userInputs->setModelFilename(abspath(vm["model-file"].as<std::string>()));
 	} else {
 		if(boost::iequals(userInputs->getEngine(),"txt2slx")==true){
 			std::cout << "No model file supplied, please input a Model file name using --model-file option.\n";
@@ -208,7 +215,7 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 
 	if (vm.count("simu-trace-file")) {
-		userInputs->setSimuTraceFilename(vm["simu-trace-file"].as<std::string>());
+		userInputs->setSimuTraceFilename(abspath(vm["simu-trace-file"].as<std::string>()));
 	} else {
 		if(boost::iequals(userInputs->getEngine(),"learn-ha")==true){
 			std::cout << "No simulation trace file supplied, please input a trace file name using --simu-trace-file option.\n";

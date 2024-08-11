@@ -140,8 +140,6 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		intermediateResult::ptr &intermediate) {
 
 	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
-	user->setSimulationFilename(simuFileName);
-
     std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
 
     // rm $simuFileName
@@ -213,7 +211,6 @@ void simulate(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user,
 		intermediateResult::ptr &intermediate, struct simu_dataStruct &violation_result) {
 
 	std::string simuFileName = user->getFilenameUnderOutputDirectory("simulation.txt");
-	user->setSimulationFilename(simuFileName);
     std::string tmpSimuFile = user->getFilenameUnderOutputDirectory("tmp_simulation.txt");
 
     // rm $simuFileName $tmpSimuFile

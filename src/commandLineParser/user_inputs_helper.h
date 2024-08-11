@@ -20,7 +20,7 @@ public:
 	user_inputs_helper();
 	virtual ~user_inputs_helper();
 
-	void setVariable_CP_Size(std::list<struct control_points> &res, string variableName, double cp_size);
+	void setVariable_CP_Size(std::list<struct control_points> &res, string variableName, unsigned int cp_size);
 	void setVariableType(std::list<struct control_points> &res, string variableName, string variableType);
 	std::list<struct control_points> getUserInputSignal_parameter(user_inputs::ptr user_Inputs);	//parameters::ptr params);
 

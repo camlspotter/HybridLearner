@@ -12,6 +12,7 @@
 #include "../utilities/intermediateResult.h"
 #include "../io_functions/summary.h"
 #include <boost/algorithm/string.hpp>	//used for trim()
+#include "../utilities/filenames.h"
 
 #include <fstream>
 #include <iomanip>

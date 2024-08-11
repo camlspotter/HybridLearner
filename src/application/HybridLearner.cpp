@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
 	} catch (...) {
 		std::cout << "\nTerminating due to error in command-line inputs.\n" ;
 		std::cout << "Try HybridLearner --help to see valid command-line options\n";
-
 		exit(1);
 	}
 

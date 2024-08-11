@@ -17,10 +17,7 @@
 string simulinkModelConstructor::simulinkModelScriptFilename() const
 {
     // $OUTDIR/generateSimulinkModel0.m
-    std::string filename = user->getFilenameUnderOutputDirectory("generateSimulinkModel");
-	filename.append(to_string(iteration));
-	filename.append(".m");
-	return filename;
+    return user->getFilenameUnderOutputDirectory(formatString(GENERATE_LEARNED_MODEL_SLX_M_FMT, iteration));
 }
 
 

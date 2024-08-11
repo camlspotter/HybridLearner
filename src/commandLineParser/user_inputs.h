@@ -214,9 +214,6 @@ public:
 	unsigned int getSimuInitSize() const;
 	void setSimuInitSize(unsigned int simuInitSize);
 
-	const fs::path& getSimulationFilename() const;
-	void setSimulationFilename(const fs::path& simulationFilename);
-
 	int getBoundaryDegree() const;
 	void setBoundaryDegree(int boundaryDegree);
 

@@ -11,6 +11,7 @@
 #include "../commandLineParser/parameters.h"
 #include "../utilities/intermediateResult.h"
 #include "../utilities/filesystem.h"
+#include "../utilities/filenames.h"
 
 /*
  * This function is called from engine:
@@ -18,7 +19,7 @@
  *		learn-ha-loop
  */
 
-void learnHA_caller(user_inputs::ptr user_Inputs){
+void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename){
 
 	/*
 	 * The InputDataFileName it requires the 1st column to be time-serise values and remaining columns hold y-data
@@ -33,12 +34,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs){
 	cmd_str = "cd ../src/learnHA && pipenv run python3 run.py ";
 	cmd_str.append("--input-filename ");
 
-    if ( !is_absolute_path(user_Inputs->getSimulationFilename()) ) {
-        cout << "learnHA_caller: simulationFilename: " << user_Inputs->getSimulationFilename() << endl;
-    }
-    
-    assert( is_absolute_path(user_Inputs->getSimulationFilename()) );
-	cmd_str.append(user_Inputs->getSimulationFilename());
+	cmd_str.append(trace_filename); // user_Inputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));
 
 	cmd_str.append(" --output-directory ");
     cmd_str.append(user_Inputs->getOutputDirectory());

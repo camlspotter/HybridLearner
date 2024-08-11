@@ -104,7 +104,8 @@ void engineSelector::selectMdl2Slx(){
 
 /* Creates an Hybrid Automaton model (.txt file) from user supplied simulation trajectories */
 
-void engineSelector::selectLearn_HA() {
+void engineSelector::selectLearn_HA()
+{
 	//This function is called from the engine "learn-ha"
     //	std::cout << "Running Engine: Learning Hybrid Automaton  ... \n";
 
@@ -114,8 +115,7 @@ void engineSelector::selectLearn_HA() {
 	boost::timer::cpu_timer timer;
 	timer.start();
 
-    userInputs->setSimulationFilename(abspath(userInputs->getSimuTraceFilename()));
-	learnHA_caller(userInputs);
+	learnHA_caller(userInputs, userInputs->getSimuTraceFilename());
 
 	timer.stop();
 	double wall_clock;

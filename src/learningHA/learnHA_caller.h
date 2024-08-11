@@ -11,7 +11,6 @@
 #ifndef LEARNINGHA_LEARNHA_CALLER_H_
 #define LEARNINGHA_LEARNHA_CALLER_H_
 
-
-void learnHA_caller(user_inputs::ptr user_Inputs);
+void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename);
 
 #endif /* LEARNINGHA_LEARNHA_CALLER_H_ */

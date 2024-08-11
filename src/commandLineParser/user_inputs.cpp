@@ -193,10 +193,6 @@ unsigned int user_inputs::getSysDimension() const {
 	return sys_dimension;
 }
 
-const fs::path& user_inputs::getSimulationFilename() const {
-	return simulation_filename;
-}
-
 unsigned int user_inputs::getNumberMatlabSimulationExecuted() const {
 	return number_matlab_simulation_executed;
 }
@@ -212,11 +208,6 @@ void user_inputs::setBoundaryDegree(int boundaryDegree) {
 void user_inputs::setNumberMatlabSimulationExecuted(
 		unsigned int numberMatlabSimulationExecuted) {
 	number_matlab_simulation_executed = numberMatlabSimulationExecuted;
-}
-
-void user_inputs::setSimulationFilename(const fs::path& simulationFilename) {
-    assert( is_absolute_path(simulationFilename) );
-	simulation_filename = simulationFilename;
 }
 
 void user_inputs::setSysDimension(unsigned int sysDimension) {
