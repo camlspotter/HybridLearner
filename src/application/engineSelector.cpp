@@ -23,11 +23,13 @@
 
 #include "../utilities/filesystem.h"
 
-engineSelector::engineSelector() {
+engineSelector::engineSelector()
+{
 	// Constructor stub
 }
 
-engineSelector::engineSelector(user_inputs::ptr user_Inputs) {
+engineSelector::engineSelector(user_inputs::ptr user_Inputs)
+{
 	userInputs = user_Inputs;
 	intermediate  = intermediateResult::ptr(new intermediateResult());
 	H = hybridAutomata::ptr (new hybridAutomata());
@@ -36,7 +38,8 @@ engineSelector::engineSelector(user_inputs::ptr user_Inputs) {
 }
 
 /* selects the Simulation engine */
-void engineSelector::selectSimu() {
+void engineSelector::selectSimu()
+{
 
 	std::cout << "Running Engine: trajectory simulation ... \n";
 	/*
@@ -166,32 +169,32 @@ void engineSelector::select() {
     cout << "engineSelector::select " << userInputs->getEngine() << endl;
 
 	// ----Selects trajectory simulation engine: Generates simulation trace file for a given .slx or .mdl simulink-model file (with input specifications)
-	if (boost::algorithm::iequals(userInputs->getEngine(),"simu")==true) {
+	if (boost::algorithm::iequals(userInputs->getEngine(),"simu")) {
 		selectSimu();
 		return;
 	}
 
 	// Selects model translator engine: Converts a model from .txt to .slx
-	if(boost::algorithm::iequals(userInputs->getEngine(),"txt2slx")==true) {
+	if(boost::algorithm::iequals(userInputs->getEngine(),"txt2slx")) {
 		selectMdl2Slx();
 		return;
 	}
 
 	// Selects the engine learn-ha: learns an HA in a single iteration using a given simulation traces file
-	if(boost::algorithm::iequals(userInputs->getEngine(),"learn-ha")==true) {
+	if(boost::algorithm::iequals(userInputs->getEngine(),"learn-ha")) {
 		selectLearn_HA();
 		return;
 	}
 
 	// Select the engine learn-ha-loop: learns an HA in a loop using a simulink model (and input specifications) as input
-	if(boost::algorithm::iequals(userInputs->getEngine(),"learn-ha-loop")==true) {
+	if(boost::algorithm::iequals(userInputs->getEngine(),"learn-ha-loop")) {
 		selectLearn_HA_loop();
         // report->printSummary();
 		return;
 	}
 
 	//select the engine equi-test: performs equivalence testing of two user provided compatible simulink model files.
-	if(boost::algorithm::iequals(userInputs->getEngine(),"equi-test")==true) {
+	if(boost::algorithm::iequals(userInputs->getEngine(),"equi-test")) {
 		selectEquiTest();
 		return;
 	}
@@ -204,10 +207,10 @@ engineSelector::~engineSelector() {
 	// Destructor stub
 }
 
-const summary::ptr& engineSelector::getReport() const {
+const summary::ptr engineSelector::getReport() const {
 	return report;
 }
 
-void engineSelector::setReport(const summary::ptr &report) {
+void engineSelector::setReport(const summary::ptr report) {
 	this->report = report;
 }
