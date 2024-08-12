@@ -13,7 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include "../../hybridautomata/variable_to_index_mapping.h"
 
-class hyperbox: public var_mapping{
+class hyperbox {
 	typedef std::pair<double, double> bounds;
 	std::vector <bounds>	intervals;
 	unsigned int dimension;
