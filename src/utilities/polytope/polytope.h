@@ -22,7 +22,6 @@
 #include "../math/basic_functions.h"
 
 #include "../vector_operations.h"
-#include "../math/2dGeometry.h"
 #include <fstream>
 #include "stringParser.h"
 #include "../../commandLineParser/user_inputs.h"
