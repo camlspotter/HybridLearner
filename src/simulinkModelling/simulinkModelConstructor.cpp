@@ -20,12 +20,8 @@ string simulinkModelConstructor::simulinkModelScriptFilename() const
 }
 
 
-// Build $OUTDIR/generateSimulinkModel0.m
 void simulinkModelConstructor::generateSimulinkModelScript() {
 
-	//*****************************************
-
-	// script file that generates the simulink model
     std::string script_filename = simulinkModelScriptFilename();
 
 	ofstream outfile;
@@ -38,8 +34,6 @@ void simulinkModelConstructor::generateSimulinkModelScript() {
     outfile << "\n";
     generateSimulinkModelScript_sub(outfile); // uses simulinkModelName
 	outfile.close();
-
-    // cout << "Script file " << script_file_with_path << " generated" << endl;
 }
 
 void simulinkModelConstructor::generateSimulinkModelScript_sub(ofstream &outfile)

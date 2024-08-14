@@ -165,7 +165,7 @@ std::list<struct control_points> user_inputs_helper::getUserInputSignal_paramete
 std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(std::unique_ptr<MATLABEngine> &ep,
                                                                                 parameters::ptr params)
 {
-    // cout << "generate_input_signals()..." << endl;
+    cout << "generate_input_signals()..." << endl;
 
 	std::list<struct timeseries_all_var> initial_simulation_timeSeriesData; //For N-simulation
 	user_inputs::ptr user_Inputs = params->getUserInputs();
@@ -184,152 +184,90 @@ std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(
 
 	std::list<std::list<struct control_points>> N_list_control_points; //N-list of list-of control-points for each variable.
 	std::list<struct control_points> list_control_points = getUserInputSignal_parameter(user_Inputs); 	//get this value from user_Inputs_helper
-	unsigned int number_initial_points = 1;
 	//Method-1: randomly generate simulation-trace based on the user's input for option: simu-init-size
-	number_initial_points = user_Inputs->getSimuInitSize();
 
-	if (number_initial_points > 0) {
-		polytope::ptr init_poly_usersInput = polytope::ptr(new polytope());
-		//string_list_to_polytope(user_Inputs->getInitialSet(), init_poly);	//	Error p->getVar(index) inside this function is not set yet
+    polytope::ptr init_poly_usersInput = polytope::ptr(new polytope());
 
-		if (user_Inputs->getEngine()=="bbc-old-code") {	//Required for --engine="bbc". Now variable mapping to H is done before call to this function
-			mapsVariable_to_Polytope(user_Inputs, init_poly_usersInput); //init_poly now has variableName-Index mapping
-		} // For "txt2slx": variableName-Index mapping is already done in the main function
+    if (user_Inputs->getEngine()=="bbc-old-code") {	//Required for --engine="bbc". Now variable mapping to H is done before call to this function
+        mapsVariable_to_Polytope(user_Inputs, init_poly_usersInput); //init_poly now has variableName-Index mapping
+    } // For "txt2slx": variableName-Index mapping is already done in the main function
 
-		// Debug ----
-		//H->print_var_mapping();
-		//init_poly_usersInput->print_var_mapping();
-		/*cout <<"user inputs initial set . size() = " << user_Inputs->getInitialSet().size() << endl;
-		std::list<std::string> uinputs = user_Inputs->getInitialSet();
-		for (std::list<std::string>::iterator ui = uinputs.begin(); ui != uinputs.end(); ui++) {
-			cout <<"input =" << (*ui) << endl;
-		}*/
-		//  ----
+    string_list_to_polytope(user_Inputs->getInitialSet(), init_poly_usersInput); //Note: when the parsing model do not have ODE for the input variable, but variable mapping done from user's supplied information.
+    // so, the init_poly has both input and output variables.
+    //init_poly = init_poly_usersInput; //This init_poly is used elsewhere
 
-		string_list_to_polytope(user_Inputs->getInitialSet(), init_poly_usersInput); //Note: when the parsing model do not have ODE for the input variable, but variable mapping done from user's supplied information.
-		// so, the init_poly has both input and output variables.
-		//init_poly = init_poly_usersInput; //This init_poly is used elsewhere
+    params->setInitPoly(init_poly_usersInput);
 
-		params->setInitPoly(init_poly_usersInput);
+    unsigned int number_initial_points;
+    if (user_Inputs->getEngine()=="learn-ha-loop") {
+        number_initial_points = user_Inputs->getMaxGenerateTraceSize();	//todo: Remove: used only for taking reproducible reading
+    } else if  (user_Inputs->getEngine()=="bbc") {
+        number_initial_points = max(user_Inputs->getMaxTraces(), user_Inputs->getSimuInitSize());
+    } else {
+        number_initial_points = user_Inputs->getSimuInitSize();
+    }
+    assert(number_initial_points > 0);
+    
+    myRandomNumberGenerator::ptr randomGenObject = params->getRandomGenObj();
 
+    // `number_initial_points` random points inside the polyope specified by `init_poly_usersInput`
+    // Actually, the polytope is simply a hyperbox.
+    N_list_control_points = getInternalControlPoints(init_poly_usersInput, number_initial_points, list_control_points, randomGenObject);
 
-/*
-		//Debug ---------------
-		std::cout << "Going to generate desired N-random control-point for initial simulation" << std::endl;
-		std::cout << "Size of list struct contorl_points = "<< list_control_points.size() << std::endl;
-		std::list<struct control_points>::iterator it = list_control_points.begin();
-		std::cout << "Variable Name = "<< (*it).var_name << std::endl;
-		std::cout << "Variable Type = "<< (*it).var_type << std::endl;
-//		std::cout << "A matrix of init_poly = "<< init_poly->getCoeffMatrix() <<std::endl;
-//		for (int i=0;i<init_poly->getColumnVector().size(); i++) {
-//			std::cout <<init_poly->getColumnVector()[i]<<std::endl;
-//		}
-		//Debug ----
-*/
+    double amplitude, zero_offset;
 
+    cout << "N_list_control_points: " << N_list_control_points.size() << endl;
 
-		if (user_Inputs->getEngine()=="learn-ha-loop") {
-			number_initial_points = user_Inputs->getMaxTraces();
-			number_initial_points = user_Inputs->getMaxGenerateTraceSize();	//todo: Remove: used only for taking reproducible reading
-		} else if  (user_Inputs->getEngine()=="bbc") {
-			unsigned int max_traces = user_Inputs->getMaxTraces();
-			if (user_Inputs->getSimuInitSize() > max_traces)
-				max_traces = user_Inputs->getSimuInitSize();
-			number_initial_points = max_traces;
-		}
+    for (std::list<std::list<struct control_points>>::iterator it_n = N_list_control_points.begin(); it_n != N_list_control_points.end(); it_n++) {
+        struct timeseries_all_var all_variable_set;
 
-		myRandomNumberGenerator::ptr randomGenObject = params->getRandomGenObj();
-		//N_list_control_points = getInternalControlPoints(init_poly, number_initial_points, list_control_points); //Have 2 options: Purely Random or Pseudo Random control-points for each N simulation signals
-		N_list_control_points = getInternalControlPoints(init_poly_usersInput, number_initial_points, list_control_points, randomGenObject); //Have 2 options: Purely Random or Pseudo Random control-points for each N simulation signals
+        std::list<struct timeseries_input> each_data_set;		//For all variables
 
+        std::list<struct control_points> cp_set = (*it_n); //total random signals
+        for (std::list<struct control_points>::iterator it_var= cp_set.begin(); it_var != cp_set.end(); it_var++) {
 
-/*
-		//Debug ---------------
-		std::cout << "Debug Output:" << std::endl;
-		int count=0;
-		for (std::list<std::list<struct control_points>>::iterator it_n = N_list_control_points.begin(); it_n != N_list_control_points.end(); it_n++) {
-			std::list<struct control_points> cp_set = (*it_n); //total random signals
-			cout <<"Simulation Set = "<<count<<endl;
-			for (std::list<struct control_points>::iterator it_var= cp_set.begin(); it_var != cp_set.end(); it_var++) {
-				struct timeseries_input value1;
-				vector<double> time_vector;
-				vector<double> var_vector;
-				cout << endl <<"Variable Name=" <<(*it_var).var_name << endl;
-				cout <<"Variable Index=" <<(*it_var).var_index << endl;
-				cout <<"Variable Type=" <<(*it_var).var_type << endl;
-				cout <<"Number of CPs=" <<(*it_var).numberOf_cp << endl;
-				for (int i=0; i<(*it_var).cps.size(); i++){
-					cout <<(*it_var).cps[i] << "  ";
-				}
-			}
-			count++;
-			cout<<endl;
-		}
-		//exit(1);
-		//Debug ----
-*/
+            struct timeseries_input value1;
+            vector<double> time_vector;
+            vector<double> var_vector;
 
+            cout << "Var " << it_var->var_name << " : " << it_var->var_type << endl;
 
+            // var_type is either fixed-step, var-step, linear, spline, or sine-wave
+            if ((*it_var).var_type == "fixed-step" || (*it_var).var_type == "var-step") { //Todo: work on variable-STEP constant-piecewise signal
+                fixed_step_signal(user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
+            } else if ((*it_var).var_type == "linear") {
+                linear_signal(user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
+            } else if ((*it_var).var_type == "spline") {
+                spline_signal(ep, user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
+            } else if ((*it_var).var_type == "sine-wave") {
+                std::map<std::string, std::pair<double, double>> sine_parameter = user_Inputs->getInputVariableSinewaveParameterMapping();
+                std::pair<double, double> param_values ;
+                try{
+                    param_values = sine_parameter.at((*it_var).var_name);	//if item is present finds with no error
+                    amplitude = param_values.first;
+                    zero_offset = param_values.second;
+                }
+                catch (std::out_of_range&) {	//when item is absent returns this error
+                    std::cout<< "User selected Input variable " << (*it_var).var_name << " as a sine-wave signal but missing parameters!!" << std::endl;
+                    std::cout<< "Please enter values for the option --sine-wave-parameter . For menu help type ./BBC4CPS --help" << std::endl;
+                    exit(1);	//Terminating the Project here
+                }
 
-		double amplitude, zero_offset;
+                sine_wave_signal(user_Inputs->getTimeHorizon(), amplitude, zero_offset, time_vector, var_vector);
 
-		for (std::list<std::list<struct control_points>>::iterator it_n = N_list_control_points.begin(); it_n != N_list_control_points.end(); it_n++) {
-			struct timeseries_all_var all_variable_set;
+            }
 
-			std::list<struct timeseries_input> each_data_set;		//For all variables
+            value1.var_detail = (*it_var);
+            value1.time_values = time_vector;
+            value1.var_values = var_vector;
 
-			std::list<struct control_points> cp_set = (*it_n); //total random signals
-			for (std::list<struct control_points>::iterator it_var= cp_set.begin(); it_var != cp_set.end(); it_var++) {
+            each_data_set.push_back(value1);
+        }
+        all_variable_set.timeseries_signal = each_data_set;
+        initial_simulation_timeSeriesData.push_back(all_variable_set);
+    }
 
-				struct timeseries_input value1;
-				vector<double> time_vector;
-				vector<double> var_vector;
-
-				//(*it_var).var_type can be of the following type: fixed-step, var-step and linear. 'fixed-step' and 'var-step' are constant-piecewise- STEP signals whereas linear
-				// signal are formed by joining the control-points linearly.
-
-				//cout <<"Variable Name=" <<(*it_var).var_name << endl;
-				//cout <<"Variable Type=" <<(*it_var).var_type << endl;
-				if ((*it_var).var_type == "fixed-step" || (*it_var).var_type == "var-step") { //Todo: work on variable-STEP constant-piecewise signal
-					fixed_step_signal(user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
-				} else if ((*it_var).var_type == "linear") {
-					linear_signal(user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
-				} else if ((*it_var).var_type == "spline") {
-					spline_signal(ep, user_Inputs->getTimeHorizon(), (*it_var).cps, time_vector, var_vector);
-				} else if ((*it_var).var_type == "sine-wave") {
-					std::map<std::string, std::pair<double, double>> sine_parameter = user_Inputs->getInputVariableSinewaveParameterMapping();
-					std::pair<double, double> param_values ;
-					try{
-						param_values = sine_parameter.at((*it_var).var_name);	//if item is present finds with no error
-						amplitude = param_values.first;
-						zero_offset = param_values.second;
-					}
-					catch (std::out_of_range&) {	//when item is absent returns this error
-						std::cout<< "User selected Input variable " << (*it_var).var_name << " as a sine-wave signal but missing parameters!!" << std::endl;
-						std::cout<< "Please enter values for the option --sine-wave-parameter . For menu help type ./BBC4CPS --help" << std::endl;
-						exit(1);	//Terminating the Project here
-					}
-
-					sine_wave_signal(user_Inputs->getTimeHorizon(), amplitude, zero_offset, time_vector, var_vector);
-
-				}
-
-				value1.var_detail = (*it_var);
-				value1.time_values = time_vector;
-				value1.var_values = var_vector;
-
-				each_data_set.push_back(value1);
-			}
-			all_variable_set.timeseries_signal = each_data_set;
-			initial_simulation_timeSeriesData.push_back(all_variable_set);
-		}
-
-	} else {
-		cout << "Supply the number of initial simulations!!" << endl;
-		exit(1);
-	}
-
-    // cout << "generate_input_signals() done" << endl;
+    cout << "generate_input_signals() done" << endl;
 
 	return initial_simulation_timeSeriesData;
 }

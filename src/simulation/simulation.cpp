@@ -48,8 +48,6 @@ std::list< std::vector<double> > getInternalPoints(polytope::ptr &poly, unsigned
 
 std::list<std::list<struct control_points>> getInternalControlPoints(polytope::ptr &poly, unsigned int n_simulations, list<struct control_points> list_var_cps, myRandomNumberGenerator::ptr &randomGenObj);
 
-std::list<std::list<struct control_points>> getInternalControlPoints_PureRandom(polytope::ptr &poly, unsigned int n_simulations, list<struct control_points> list_var_cps);
-
 void fixed_step_signal(double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector);
 
 
@@ -229,6 +227,9 @@ std::list< std::vector<double> > getInternalPoints(polytope::ptr &poly, unsigned
 	math::matrix<double> A = poly->getCoeffMatrix();
 	std::vector<double> bounds = poly->getColumnVector();
 
+    std::cout << "poly" << endl;
+    poly->printPoly();
+
 	unsigned int rows, cols, dim;
 	rows = A.size1();
 	cols = A.size2();
@@ -292,8 +293,18 @@ std::list< std::vector<double> > getInternalPoints(polytope::ptr &poly, unsigned
  * Outputs: is a purely random control-points for each variable for generating input-signals for each simulations
  * By using a seed
  */
-std::list<std::list<struct control_points> > getInternalControlPoints(polytope::ptr &poly, unsigned int nos_simulations,
-		list<struct control_points> list_var_cps, myRandomNumberGenerator::ptr &randomGenObj) {
+// list_var_cps is the specification of variables:
+//   { var_index : int; var_name : string; var_type : string; numberOf_cp : uint }
+//   Note that vector<double> cps is NOT used here!
+//
+// It generates `nos_simulations` of simulation points.
+// Each simulation point is a list of `control_points`.
+// Each `control_points` has `numberOf_cp` `doubles`.
+std::list<std::list<struct control_points> > getInternalControlPoints(polytope::ptr &poly,
+                                                                      unsigned int nos_simulations,
+                                                                      list<struct control_points> list_var_cps,
+                                                                      myRandomNumberGenerator::ptr &randomGenObj)
+{
 	std::list<std::list<struct control_points>> res_data;
 	std::list< std::vector<double> > res;
 
@@ -305,7 +316,7 @@ std::list<std::list<struct control_points> > getInternalControlPoints(polytope::
 	cols = A.size2();
 	dim = cols;
 
-//	cout <<"rows =" <<rows << "   and cols =" << cols << endl;
+    //	cout <<"rows =" <<rows << "   and cols =" << cols << endl;
 	assert(rows == 2 * cols);	//For hyperbox number of constraints should be bounded (lower and upper)
 
 	//For each dimension of the hyperbox generating a list of bounded values, which can be used as points
@@ -346,14 +357,8 @@ std::list<std::list<struct control_points> > getInternalControlPoints(polytope::
 				}
 				hyperbox_poly->setDimensionBounds(j, l_bound, u_bound);
 
-				//cout <<"l_bound:" << l_bound <<"   u_bound:"<< u_bound <<endl;
-//				hyperbox_dimension_points[j] = getPureRandom(l_bound, u_bound, hyperbox_dimension_points[j].size());
+                // hyperbox_dimension_points[j].size() random numbers in [l_bound,u_bound] 
 				hyperbox_dimension_points[j] = randomGenObj->getRandomNumbers(l_bound, u_bound, hyperbox_dimension_points[j].size());
-				//cout <<"Checking out the Pure-Random numbers" << endl;
-				//for (int x=0; x < hyperbox_dimension_points[j].size(); x++) {
-				//	cout << hyperbox_dimension_points[j][x] << "\t";
-				//}
-
 			}
 			i +=2;
 			j++;
@@ -379,118 +384,24 @@ std::list<std::list<struct control_points> > getInternalControlPoints(polytope::
 	return res_data;
 }
 
-/*
- * nos_simulations: the total number of simulation points
- * list_var_cps: number of control-points for each variable
- * polytope::ptr &poly: is the initial input polytope which has linear-constraints having bounds on the variables
- * Outputs: is a pseudo random control-points for each variable for generating input-signals for each simulations
- */
-std::list<std::list<struct control_points>> getInternalControlPoints(polytope::ptr &poly, unsigned int nos_simulations, list<struct control_points> list_var_cps) {
-	std::list<std::list<struct control_points>> res_data;
-	std::list< std::vector<double> > res;
-
-	math::matrix<double> A = poly->getCoeffMatrix();
-	std::vector<double> bounds = poly->getColumnVector();
-
-	unsigned int rows, cols, dim;
-	rows = A.size1();
-	cols = A.size2();
-	dim = cols;
-	assert(rows == 2 * cols);	//For hyperbox number of constraints should be bounded (lower and upper)
-
-	//For each dimension of the hyperbox (with bounded values), generate N x CP-points
-	std::vector<std::vector<double> > hyperbox_dimension_N_controlPoints(dim);
-
-
-	unsigned int index=0;
-	for (std::list<struct control_points>::iterator it = list_var_cps.begin();it != list_var_cps.end();it++){ //each-variable will have N-control-points
-		int numberOf_cp = (*it).numberOf_cp;
-
-		//hyperbox_dimension_points[index].resize(numberOf_cp);	//each dimensions will have n values for generating control-points
-		hyperbox_dimension_N_controlPoints[index].resize(nos_simulations * numberOf_cp);	//each dimensions will have (N x cp) number of control-points
-
-		index++;
-	}
-
-	hyperbox::ptr hyperbox_poly = hyperbox::ptr(new hyperbox(dim));
-	unsigned int i=0, j=0;
-	double rowFirst, rowSecond, l_bound, u_bound;
-	//Creating a hyperbox from initial input_poly
-	while (j < cols) {	//reading the none-zero dimensions
-		if (A(i,j) != 0) {	//j is the dimension we are working on
-			rowFirst = j * 2;	//
-			rowSecond = j * 2 + 1;
-
-			// found the dimension with non-zero value, which should be 1
-			//cout  << "  " << A(rowFirst,j) << " and Next is  " << A(rowSecond,j);
-			//One of these will be -1 and the other 1. Find and accordingly create lower and upper bounds on the dimension
-			if (A(rowFirst, j) < A(rowSecond, j)) {
-				l_bound = -1 * bounds[rowFirst];
-				u_bound = bounds[rowSecond];
-			} else {
-				l_bound = -1 * bounds[rowSecond];
-				u_bound = bounds[rowFirst];
-			}
-			hyperbox_poly->setDimensionBounds(j, l_bound, u_bound);
-
-			hyperbox_dimension_N_controlPoints[j] = getRandom(l_bound, u_bound, hyperbox_dimension_N_controlPoints[j].size());
-			/*cout <<"\nChecking out the Random numbers" << endl;
-			for (int x=0; x < hyperbox_dimension_N_controlPoints[j].size(); x++) {
-				cout << hyperbox_dimension_N_controlPoints[j][x] << "\t";
-			}*/
-
-		}
-		i +=2;
-		j++;
-	}
-
-//Now use hyperbox_dimension_N_controlPoints containing N * cp control-points for each variable we assign it into hyperbox_dimension_points containing only cp control-points for each variable
-
-	std::vector<unsigned int> indLoc_start(cols, 0);	//For each variable this indices should be maintained. Here cols=system-dimension
-	std::vector<unsigned int> indLoc_end(cols, 0);	//For each variable this indices should be maintained
-
-	for (unsigned int simu_id=0; simu_id < nos_simulations; simu_id++) { 	//repeated for nos_simulations times
-		index=0;
-		//For each dimension of the hyperbox generating a list of bounded values, which can be used as points
-		std::vector<std::vector<double> > hyperbox_dimension_points(dim);
-
-		std::list<struct control_points> list_cp;
-		for (std::list<struct control_points>::iterator it = list_var_cps.begin();it != list_var_cps.end();it++) { //each-variable will have N-control-points
-			struct control_points cp_data;
-			cp_data.numberOf_cp = (*it).numberOf_cp;
-			cp_data.var_name = (*it).var_name;
-			cp_data.var_type = (*it).var_type;
-			cp_data.var_index = (*it).var_index;
-			indLoc_end[index] = indLoc_start[index] + (*it).numberOf_cp; //extract [indLoc_start to indLoc_end) values from hyperbox_dimension_N_controlPoints for index
-			for (unsigned int i = indLoc_start[index]; i < indLoc_end[index]; i++) {
-				hyperbox_dimension_points[index].push_back(hyperbox_dimension_N_controlPoints[index][i]);
-			}
-			cp_data.cps = hyperbox_dimension_points[index];
-
-			indLoc_start[index] = indLoc_end[index];
-
-			list_cp.push_back(cp_data);
-			index++;
-		}
-		res_data.push_back(list_cp);
-	}
-
-	return res_data;
-}
-
+// fixed_step_signal(timeHorizon, control_points, time_vector, data_vector)
+//   [( [t_i, t_{i+1}), p_i )]_{i in [0..n-1]} 
+//   or [ (t_i, p_i), (t_{i+1} - epsilon, p_i) ]_{i in [0..n-1]} 
+//   where
+//      t_i = timeHorizon * i / n   (not / (n+1) somehow)
 void fixed_step_signal(double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector) {
-// **** This code is for ONE variable *********
-	//double th=50;
+    // **** This code is for ONE variable *********
 	int nos_cp= cps.size();
 	double hold_time_dur = th/nos_cp, small_value=1e-7;	//0.0000001; //1e-5;
-	//data [cp1 cp1  cp2  cp2  cp3  cp3]
-	//timeVector[0 hold_time_dur   hold_time_dur+small_value  Next-hold_time_dur  etc]
 	std::vector<double> timeVector(nos_cp * 2);
 	std::vector<double> dataVector(nos_cp * 2);
-	//std::vector<double> cps(nos_cp);  //This is to be generated Randomly using user's input bounds
-//	cps.resize(nos_cp);
-//	cps[0]=40;
-//	cps[1]=60;
+
+    cout << "fixed_step_signal timehorizon:" << th << endl;
+    cout << "  cps: "; 
+    for (auto it = cps.begin(); it != cps.end(); it++){
+        cout << *it << " ";
+    }
+    cout << endl;
 
 	double sum_holdtime=0, start_val=0;
 	unsigned int index=0;
@@ -510,25 +421,24 @@ void fixed_step_signal(double th, std::vector<double> cps, std::vector<double> &
 		index++;
 
 	}
-// **** Code for ONE variable *********
-
-	time_vector = timeVector;
-	data_vector = dataVector;
 }
 
 //Function to generate constant-piecewise-linear signal, where the hold-time is fixed/uniform for each control-points
+//   [( t_i, p_i )]_{i in [0..n-1]} 
+//   where
+//      t_i = timeHorizon * i / (n-1)
 void linear_signal(double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector) {
+
 	// **** This code is only for a single variable *********
-	//double th=50;
 	unsigned int nos_cp= cps.size();
-	double hold_time_dur=0.0;
-	if (nos_cp > 1) {
-		hold_time_dur = th/(nos_cp-1);
-	} else if (nos_cp <= 1) {
+
+    if (nos_cp <= 1) {
 		std::cout << "\nTerminating BBC4CPS, caused due to error in command-line inputs.\n" ;
 		std::cout << "Invalid number-of-control-points. Minimum number of fixed-linear control-points for a variable is 2.\n";
 		exit(1);
 	}
+
+	double hold_time_dur = th / (nos_cp-1);
 
 	//data [cp1 cp2  cp3]
 	//timeVector[0 hold_time_dur*1   hold_time_dur*2]
@@ -547,19 +457,18 @@ void linear_signal(double th, std::vector<double> cps, std::vector<double> &time
 }
 
 //Function to generate spline signal, where the hold-time is fixed/uniform for each control-points
+//  execute line_signal, then spline intepolate the result with period 0.5
 void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector) {
 	// **** This code is only for a single variable *********
-	//double th=50;
-    // XXX Possibly duped
 	unsigned int nos_cp= cps.size();
-	double hold_time_dur=0.0;
-	if (nos_cp > 1) {
-		hold_time_dur = th/(nos_cp-1);
-	} else if (nos_cp <= 1) {
+
+    if (nos_cp <= 1) {
 		std::cout << "\nTerminating BBC4CPS, caused due to error in command-line inputs.\n" ;
 		std::cout << "Invalid number-of-control-points. Minimum number of control-points for a variable is 2 for spline signal type.\n";
 		exit(1);
 	}
+
+	double hold_time_dur = hold_time_dur = th/(nos_cp-1);
 
 	//data [cp1 cp2  cp3]
 	//timeVector[0 hold_time_dur*1   hold_time_dur*2]
@@ -571,15 +480,13 @@ void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<dou
 		dataVector[i] = cps[i];
 	}
 	timeVector[(nos_cp - 1)] = th;	//to replace with the time-horizon value for the last CP since (i*hold_time_dur) may be less than 'th' due to numerical error
-	// **** Code for ONE variable *********
 
-//	time_vector = timeVector;
-//	data_vector = dataVector;
+    // Same as linear upto here
 
 	//**** code above this is same as linear. Now for the above timeVector (=x) and dataVector(y) we compute sp_y = spline(x,y,query_x) *****
 	/*
 	 * Matlab code will be
-	 * query_x = 0:time_step:time_horizon     or any value (eg 0.5) instead of time_step
+	 * query_time = 0:time_step:time_horizon     or any value (eg 0.5) instead of time_step
 	 * sp_y = spline(x,y, query_time)
 	 * time_vector = query_time
 	 * data_vector = sp_y
@@ -589,7 +496,6 @@ void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<dou
 	cmd1.append(to_string(th));
 	cmd1.append(";");
 	ep->eval(convertUTF8StringToUTF16String(cmd1));
-
 
 	std::vector<double> cppData = dataVector;
 	size_t x=1, y=cppData.size();
@@ -626,18 +532,18 @@ void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<dou
 
 	time_vector = query_time_values;
 	data_vector = sp_values;
-
 }
 
-
+// [ (t_i, p_i) ] for i in [0,10]
+//   where
+//     t_i = timeHorizon * i / 11
+//     p_i = amplitude * sin( 2pi / 11 * i) + zero_offset
 void sine_wave_signal(double timeHorizon, double amplitude, double zero_offset, std::vector<double> &time_vector, std::vector<double> &data_vector) {
-// **** This code is for ONE variable. It generate a full cycle sine wave for the given amplitude with starting from zero_offset *********
+    // **** This code is for ONE variable. It generate a full cycle sine wave for the given amplitude with starting from zero_offset *********
 
 	unsigned int number_of_samples = 10; //a higher value gives better sine wave and more possibilities of covering full timeHorizon
 								// Best value is number_of_samples = timeHorizon. so that per unit time a sampling is done.
 	double value=0;
-
-
 
 	float rads = M_PI/180;  //angle in radian, where M_PI is the pi value
 	double step_size = 360 / timeHorizon; //for one full cycle
@@ -646,7 +552,8 @@ void sine_wave_signal(double timeHorizon, double amplitude, double zero_offset, 
 	std::vector<double> dataVector(number_of_samples + 1);
 
 	unsigned int iteration_size = timeHorizon / (number_of_samples - 1); //to obtain less number of iterations i.e., higher iteration_size
-			// rather than more iterations which will have issue on index out of bound while storing values in variables timeVector and dataVector
+
+    // rather than more iterations which will have issue on index out of bound while storing values in variables timeVector and dataVector
 	unsigned int index=0;
 	for(int i=0; i<=timeHorizon; i+=iteration_size)
 	{
@@ -662,8 +569,7 @@ void sine_wave_signal(double timeHorizon, double amplitude, double zero_offset, 
 	dataVector[number_of_samples] = value;	//last index as per zero-based indexing
 	timeVector[number_of_samples] = timeHorizon;
 
-
-// **** Code for ONE variable *********
+    // **** Code for ONE variable *********
 
 	time_vector = timeVector;
 	data_vector = dataVector;

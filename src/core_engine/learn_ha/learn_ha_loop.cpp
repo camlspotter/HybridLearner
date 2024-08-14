@@ -320,8 +320,8 @@ void constructModel(unsigned int count, parameters::ptr params, std::unique_ptr<
 
 	simulinkModelConstructor::ptr model = simulinkModelConstructor::ptr(new simulinkModelConstructor(H, userInputs, intermediate));
 	model->setIteration(count);
-	model->generateSimulinkModelScript(); // generateSimulinkModel[0..].m
-	model->executeSimulinkModelConstructor(ep); // simulink_model[0..].slx
+	model->generateSimulinkModelScript();
+	model->executeSimulinkModelConstructor(ep);
 
 	//running script file generated for learned model with just the input variable name
 	// ----------------------run script generator-----------------------------
@@ -396,10 +396,7 @@ bool equivalenceTesting_for_learn_ha_loop(unsigned int iteration,
 
         string file_learned_with_path = output_filename_learned;
 
-		flagEquivalent = compute_trace_equivalence(file_original_with_path, file_learned_with_path, maxDistance, params);
-
-//		cout <<"Maximum Euclidean Distance=" << maxDistance << endl;
-//		cout <<"Maximum Average Absolute difference between traces=" << maxDistance << endl;
+		flagEquivalent = compute_trace_equivalence(output_filename_orig, output_filename_learned, maxDistance, params);
 
 		// -------------- --------------
 
@@ -448,84 +445,40 @@ void generate_simulation_traces_original_model_to_learn(std::list<struct timeser
     // It builds script_filename="$OUTDIR/run_original_model.m"
 	model->generateRunModelScript(simulink_model_filename, script_filename, output_filename);
 
-	// *************** setting up the mergedFile(s) ***************
 	std::string simuFileName = userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES);
-
     // rm $simuFileName $tmpSimuFile
     fs::remove(simuFileName);
-	// *************** mergedFile deleted if exists ***************
 
 	unsigned int matlab_execution_count=0;
-	/*
-	//std::ofstream finalFile("finalFile.txt",  std::ios_base::binary | std::ios_base::app);
-	std::ofstream finalFile(simuFileName,  std::ios_base::binary | std::ios_base::app);
-
-	 for(std::list < std::vector<double> >::iterator it=list_initial_points.begin(); it !=list_initial_points.end(); it++) {
-		std::vector<double> init_point = (*it);
-
-
-		simulate(ep, user, init_point, intermediate); //this will generate the file "result.tsv" for this init_point
-
-		matlab_execution_count++;
-		user->setNumberMatlabSimulationExecuted(matlab_execution_count);
-
-		std::string resultFileName = getSimulationOutputFileName(user, intermediate);
-
-		std::ifstream file_a (resultFileName, std::ios_base::binary);
-
-		finalFile.seekp(0, std::ios_base::end);	//seek the record point to end_of_file
-		finalFile << file_a.rdbuf();	//append the file_a in the previous file
-
-	}*/
-	/*
-	 * The above approach gave error while running in our Google Cloud setup but did not show any issues in my Personal Desktop
-	 *
-	 * So, trying to use simple system command to concate two files into a third file. This will avoid the use of stream operation of C++
-	 * ************ cat /home/amit/3dplot.plt /home/amit/amit.java > /home/amit/raj.txt	 ************************
-	 */
-
-	//simulation_trace_testing::ptr simu_test = simulation_trace_testing::ptr(new simulation_trace_testing());;
 
     boost::timer::cpu_timer timer;
     timer.start();
 
 	unsigned int counting=1;
 
-	//std::cout <<"initial_simulation_timeSeriesData.size()=" << initial_simulation_timeSeriesData.size() << std::endl;
 	std::list<std::vector<double> >::iterator it_out_val = initial_output_values.begin(); //iterator for the output variables
-	for (std::list<struct timeseries_all_var>::iterator it =initial_simulation_timeSeriesData.begin(); it != initial_simulation_timeSeriesData.end(); it++, it_out_val++) {
-
-//		cout <<"counting = " << counting <<endl;
+	for ( std::list<struct timeseries_all_var>::iterator it =initial_simulation_timeSeriesData.begin();
+         it != initial_simulation_timeSeriesData.end();
+         it++, it_out_val++)
+    {
 		std::list<struct timeseries_input> init_point = (*it).timeseries_signal;
-
 		std::vector<double> output_variable_init_values = (*it_out_val);
-
-		//if (counting >= 31) { //because upto 32 I have already generated tracefiles
-
-		// ***************  --------------------------------- ***************
 
         // This builds the following files:
         // slprj/
         // result_simu_data.txt
 		simu_model_file(ep, userInputs, init_point, output_variable_init_values, script_filename, output_filename, intermediate, H); //Populate initial data in Matlab's Workspace and then run the script file
 
-		// ***************  --------------------------------- ***************
-
         system_append_file(output_filename, simuFileName);
 
 		matlab_execution_count++;
 		userInputs->setNumberMatlabSimulationExecuted(matlab_execution_count);
 		counting++;
-	} //End of all simulation traces
+	}
 
 	timer.stop();
 	double wall_clock;
 	wall_clock = timer.elapsed().wall / 1000000; //convert nanoseconds to milliseconds
 	double running_time = wall_clock / (double) 1000;	//convert milliseconds to seconds
-//	std::cout << "Matlab Simulation and Trace File generation: Running Time (in Seconds) = " << running_time << std::endl;
 	report->setRuntimeMatlabInitialSimulation(running_time);
-
-    // cout << "generate_simulation_traces_original_model_to_learn() done" << endl;
 }
-
-

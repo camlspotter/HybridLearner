@@ -20,10 +20,14 @@ using namespace std;
 using namespace matlab::engine;
 
 //simulate_model(ep, userInputs, init_point, intermediate);
-void simu_model_file(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &userInput,
-		std::list<struct timeseries_input> initial_CE_values, std::vector<double> &initial_output_values,
-		std::string script_filename, std::string output_filename, intermediateResult::ptr &inter, hybridAutomata::ptr &ha);
-
+void simu_model_file(std::unique_ptr<MATLABEngine> &ep,
+                     user_inputs::ptr userInput,
+                     std::list<struct timeseries_input> initial_CE_values,
+                     std::vector<double> initial_output_values,
+                     std::string script_filename,
+                     std::string output_filename,
+                     intermediateResult::ptr inter,
+                     hybridAutomata::ptr ha);
 
 void simulate_learned_model_from_learn_ha_loop(std::unique_ptr<MATLABEngine> &ep, user_inputs::ptr &user, std::list<struct timeseries_input> initial_CE_values,
 		std::vector<double> &initial_output_values, std::string script_filename,

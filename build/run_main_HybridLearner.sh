@@ -37,14 +37,14 @@ trap close_matlab ERR INT
 
 sleep 5
 
-#XXX # Execute the shell script for learning the benchmark models
-#XXX # This took approximately 2 hours on Intel i9 CPU 2.4 GHz with 32 GB RAM
-#XXX ./run_results_main_learn_models.sh
-#XXX 
-#XXX echo "Done Learning Models"
+# Execute the shell script for learning the benchmark models
+# This took approximately 2 hours on Intel i9 CPU 2.4 GHz with 32 GB RAM
+./run_results_main_learn_models.sh
+
+echo "Done Learning Models"
 
 # Before executing this, we assume the script run_results_main_learn_models is already executed and models are learned and copied in the respective folders.
-#XXX matlab -nodisplay -nosplash -batch "run('../examples/ball/BeforeAnnotation/call_run_ball.m')"
+matlab -nodisplay -nosplash -batch "run('../examples/ball/BeforeAnnotation/call_run_ball.m')"
 matlab -nodisplay -nosplash -batch "run('../examples/ball/AfterAnnotation/call_run_ball.m')"
 # matlab -nodisplay -nosplash -r "cd('../examples'); run('run_main.m'); exit;"
 echo "Done generating output Trajectories"
