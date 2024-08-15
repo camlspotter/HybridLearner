@@ -495,27 +495,27 @@ void spline_signal(std::unique_ptr<MATLABEngine> &ep, double th, std::vector<dou
 	std::string cmd1 = "thorizon = ";
 	cmd1.append(to_string(th));
 	cmd1.append(";");
-	ep->eval(convertUTF8StringToUTF16String(cmd1));
+	MATLAB_EVAL(ep, cmd1);
 
 	std::vector<double> cppData = dataVector;
 	size_t x=1, y=cppData.size();
 	matlab::data::ArrayFactory factory;
 	auto inputArray = factory.createArray({ x, y }, cppData.cbegin(), cppData.cend());
-	ep->setVariable(u"myDataVector", inputArray);
+	MATLAB_SETVAR(ep, "myDataVector", inputArray);
 
 	std::vector<double> cppTime = timeVector;
 	assert(y == cppTime.size());
 	matlab::data::ArrayFactory factory1;
 	auto inputArray1 = factory1.createArray({ x, y }, cppTime.cbegin(), cppTime.cend());
-	ep->setVariable(u"myTimeVector", inputArray1);
+	MATLAB_SETVAR(ep, "myTimeVector", inputArray1);
 
 	std::string cmd2 = "query_time = 0:0.5:";
 	cmd2.append(to_string(th));
 	cmd2.append(";");
-	ep->eval(convertUTF8StringToUTF16String(cmd2));
+	MATLAB_EVAL(ep, cmd2);
 
 	std::string cmd3 = "sp_y = spline(myTimeVector, myDataVector, query_time);";
-	ep->eval(convertUTF8StringToUTF16String(cmd3));
+	MATLAB_EVAL(ep, cmd3);
 
 	matlab::data::TypedArray<double> query_time = ep->getVariable(u"query_time");
 	std::vector<double> query_time_values(query_time.begin(), query_time.end());

@@ -42,25 +42,23 @@ void simu_model_file(std::unique_ptr<MATLABEngine> &ep,
 	for (std::list<struct timeseries_input>::iterator it_values = initial_CE_values.begin(); it_values != initial_CE_values.end(); it_values++) {
 		string varName = it_values->var_detail.var_name;
 		if (user->isInputVariable(varName)) {
-			std::string inputDataValues="", inputTimeValue="";
-
 			std::vector<double> cppData = it_values->var_values;
 			std::vector<double> cppTime = it_values->time_values;
 			assert(cppData.size() == cppTime.size());
 			size_t x=1, y=cppData.size(); // array dimensions
 
             {
-                std::string inputDataValues = formatString("%s_input", varName); //Eg.  x0_input
+                std::string inputDataValues = formatString("%s_input", varName.c_str()); //Eg.  x0_input
                 matlab::data::ArrayFactory factory;
                 auto inputArray = factory.createArray({ x, y }, cppData.cbegin(), cppData.cend());
                 MATLAB_SETVAR(ep, inputDataValues, inputArray);
             }
 
 			{
-                std::string inputTimeValues = formatString("%s_time", varName); // Eg.  x0_input
+                std::string inputTimeValues = formatString("%s_time", varName.c_str()); // Eg.  x0_input
                 matlab::data::ArrayFactory factory;
                 auto inputArray = factory.createArray({ x, y }, cppTime.cbegin(), cppTime.cend());
-                MATLAB_SETVAR(ep, inputTimeValue, inputArray);
+                MATLAB_SETVAR(ep, inputTimeValues, inputArray);
             }
 
 		}
@@ -72,7 +70,7 @@ void simu_model_file(std::unique_ptr<MATLABEngine> &ep,
 	for (unsigned int index=0; index < ha->map_size(); index++) {
         std::string varName = ha->get_varname(index);
 		if (!(user->isInputVariable(varName))) {
-            MATLAB_EVAL(ep, formatString("a%d = %s;", index, to_string(initial_output_values[index])));
+            MATLAB_EVAL(ep, formatString("a%d = %.12g;", index, initial_output_values[index]));
 		}
 	}
 

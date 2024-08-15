@@ -236,7 +236,9 @@ void generate_initial_traces_for_learn_ha_loop(std::list<struct timeseries_all_v
         // oscillator.slxc
         // result_simu_data.txt
         // tmp_simu.txt
+        cout << "generate_simulation_traces_original_model_to_learn..." << endl;
         generate_simulation_traces_original_model_to_learn(initial_simu_inputValues_timeSeriesData, initial_simu_output_values, params, ep, report);
+        cout << "generate_simulation_traces_original_model_to_learn done" << endl;
     }
 
     // The entire inputs are used for the equivalence test
