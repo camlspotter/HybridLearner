@@ -8,7 +8,7 @@ outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnot
 mkdir(outputTrace_path);
 benchmarkName = "bball_";
     
-mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/learned_model0.slx'
+mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/BeforeAnnotation/learned_model0.slx';
 
 model = benchmarkName + num2str(learnedModel);  % Learned model
 
@@ -37,7 +37,7 @@ for test_id = 1 : total_test_trace
 
     % Load the model 
            
-    mdl = 'learned_model0'
+    mdl = 'learned_model0';
 
     load_system(mdlfile); 
     format long

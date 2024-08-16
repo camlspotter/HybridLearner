@@ -13,7 +13,7 @@ outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnota
 mkdir(outputTrace_path);
 benchmarkName = "bball_";
     
-mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/learned_model0.slx'
+mdlfile = '/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/learned_model0.slx';
 
 model = benchmarkName + num2str(learnedModel);  % Learned model
 
