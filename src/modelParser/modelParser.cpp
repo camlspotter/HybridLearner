@@ -23,13 +23,17 @@
 
 std::list<std::string> correctGuard(std::string line1);
 
+#ifdef NOT_USED
 std::list<std::string> modify_guard_forNonDeterminism(std::list<std::string> guard, double epsilon, unsigned int sign);
 std::list<std::string> modify_guard(std::list<std::string> gurad, unsigned int less_or_greater);
 std::list<std::string> modify_guard_asRange(std::list<std::string> gurad, double epsilon);
+#endif
 
 std::list<std::string> modify_guard_asHalfspace(std::list<std::string> guard, double epsilon);
 
+#ifdef NOT_USED
 list<transition::ptr> getAllTrans(unsigned int src, std::vector<transition::ptr> forward, std::vector<transition::ptr> backward);
+#endif
 
 list<transition::ptr> getAllTrans(unsigned int src, list<transition::ptr>& all_trans);
 
@@ -308,6 +312,7 @@ between two modes.
 
             //Trying to modify guard into halfspace instead of inequality-with-range from hyperplane.
             //Practical observation showed data having src(+1) => dest(-1); gives guard-condition <= 0
+            // XXX epsilon is printed as 0
             guard_modified = modify_guard_asHalfspace(guard, epsilon);		//converting " = 0" to "<= epsilon". Decision based on SVM's output observation
 
             trans->setGuardModified(guard_modified);
@@ -425,6 +430,8 @@ std::list<std::string> correctGuard(std::string line1){
 }
 
 
+#ifdef NOT_USED
+
 //Take a list<string> of guard and returns list<string> of modified guard and argument a double epsilon value
 //Assuming the list of string has only a single string and not a list. TODO: if the guard is not a polynomial equation
 std::list<std::string> modify_guard_asRange(std::list<std::string> guard, double epsilon) {
@@ -464,6 +471,8 @@ std::list<std::string> modify_guard_asRange(std::list<std::string> guard, double
 	return changed_guard;
 }
 
+#endif
+
 //Takes a string of guard with "=" symbol and convert it into "<=". This decision is made due to the SVM's output observation
 std::list<std::string> modify_guard_asHalfspace(std::list<std::string> guard, double epsilon) {
 	std::list<std::string> changed_guard;
@@ -487,6 +496,8 @@ std::list<std::string> modify_guard_asHalfspace(std::list<std::string> guard, do
 
 	return changed_guard;
 }
+
+#ifdef NOT_USED
 
 //Take a list<string> of guard and returns list<string> of modified guard as epsilon-range value Also ANDing with randomization for non-deterministic transitions
 std::list<std::string> modify_guard_forNonDeterminism(std::list<std::string> guard, double epsilon, unsigned int sign) {
@@ -539,6 +550,10 @@ std::list<std::string> modify_guard(std::list<std::string> gurad, unsigned int l
 	return changed_guard;
 }
 
+#endif
+
+
+#ifdef NOT_USED
 
 list<transition::ptr> getAllTrans(unsigned int src, std::vector<transition::ptr> forward, std::vector<transition::ptr> backward) {
 	list<transition::ptr> trans;
@@ -554,6 +569,8 @@ list<transition::ptr> getAllTrans(unsigned int src, std::vector<transition::ptr>
 	}
 	return trans;
 }
+
+#endif
 
 list<transition::ptr> getAllTrans(unsigned int src, list<transition::ptr>& all_trans) {
 	list<transition::ptr> sublist_trans;
