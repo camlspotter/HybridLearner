@@ -111,7 +111,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append("' --ode-speedup ");
 	cmd_str.append(std::to_string(user_Inputs->getOdeSpeedup())); // a Maximum integer number/size after which segments are pruned for ODE computation
 	cmd_str.append(" --is-invariant ");
-	cmd_str.append(std::to_string(user_Inputs->getInvariant())); // a integer number: 0 and 1 for computing Invariant or 2 for ignoring computation
+	cmd_str.append(user_Inputs->getInvariant() != 2 ? "True" : "False"); // a integer number: 0 and 1 for computing Invariant or 2 for ignoring computation
 
 	std::cout << "Command: "<< cmd_str << std::endl;
 

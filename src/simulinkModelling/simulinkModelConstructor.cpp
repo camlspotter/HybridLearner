@@ -315,7 +315,10 @@ void simulinkModelConstructor::addTransitions(ofstream &outfile) {
 			std::string condition_str="";
 			std::list<std::string> inv_list = (*i).second->getInvariant();
 			unsigned int inv_count = inv_list.size(), cnt=0;
-			if (user->getInvariant() == 0) {	//include both input and output constraints as invariant
+
+            switch(user->getInvariant()){
+            case 0:
+                //include both input and output constraints as invariant
 				for (std::list<std::string>::iterator it_guard_inv = inv_list.begin(); it_guard_inv != inv_list.end(); it_guard_inv++) {
 					condition_str.append((*it_guard_inv));
 					//cout << "condition_str = " <<condition_str << endl;
@@ -324,16 +327,18 @@ void simulinkModelConstructor::addTransitions(ofstream &outfile) {
 					}
 					cnt++;	//since all condition are included so count increments for each loop
 				}
-			} else if (user->getInvariant() == 1) {	//include only output constraints and remove input constraints as invariant
+				outfile << "cb" << sourceLoc << "_" << number_of_loop_trans << ".LabelString = '[" << condition_str << "]" << reset_statement_identity<<"'; \n";
+                break;
+
+            case 1:
+                //include only output constraints and remove input constraints as invariant
 				/*
 				 * check the constraint, I assume all constraints is of the form "left op val", where left is the variable involving the constraint, op is the operator
 				 * valid operators are  >=, <= etc and val is the numeric value
 				 * So, just check if the left is in input-variable list in the variable-mapping then discard this constraint, otherwise include it.
 				 */
-				std::string variableName;
 				for (std::list<std::string>::iterator it_guard_inv = inv_list.begin(); it_guard_inv != inv_list.end(); it_guard_inv++) {
-
-					variableName = getVariableComponent((*it_guard_inv));
+                    std::string variableName = getVariableComponent((*it_guard_inv));
 
 					if (!(user->isInputVariable(variableName))) {
 						if ((cnt>=1) && (inv_count > 1) && (cnt <= (inv_count - 1))) {
@@ -344,25 +349,17 @@ void simulinkModelConstructor::addTransitions(ofstream &outfile) {
 
 						cnt++;
 					}
-
-
-
 				}
-			}
-
-
-			//Here checking is done to either remove or include the invariant constraints
-			if (user->getInvariant() == 0 || user->getInvariant() == 1) {
 				outfile << "cb" << sourceLoc << "_" << number_of_loop_trans << ".LabelString = '[" << condition_str << "]" << reset_statement_identity<<"'; \n";
-			} else if (user->getInvariant() == 2) {
+                break;
+
+            case 2:
 				outfile << "cb" << sourceLoc << "_" << number_of_loop_trans << ".LabelString = '" << reset_statement_identity<<"'; \n";
+                break;
+
+            default:
+                throw std::runtime_error("invalid getInvariant");
 			}
-
-			// ------------------------------------
-
-
-
-
 
 
 			/* Old code: used simple conjunction of other guards with their negation
