@@ -71,7 +71,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append(std::to_string(user_Inputs->getLmmStepSize()));
 
 	cmd_str.append(" --filter-last-segment ");
-	cmd_str.append(std::to_string(user_Inputs->getFilterLastSegment()));
+	cmd_str.append(user_Inputs->getFilterLastSegment() ? "True" : "False");
 
 
 	if (user_Inputs->getClusterAlgorithm()=="dbscan") {

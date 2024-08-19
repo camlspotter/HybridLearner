@@ -19,7 +19,7 @@ private:
 	std::list< std::vector<double> > random_initial_points_EquivalenceTest;	//storing to avoid generating multiple times for Equivalence Test
 
 	unsigned int guard;	//either 0 or 1 as user's input to decide to modify/or not from the equality guard to range (+/- epsilon)
-	unsigned int invariant;	//either 0, 1 or 2 as user's input to decide to include (input/output), remove input or remove both invariants
+	bool invariant;	//either t to decide to include (input/output), remove input or remove both invariants
 	unsigned int max_generateTrace_size; //variable use to store value which is greater then max_traces and simu_init_size. used for debug and getting reproducible reading
 
 	//********** To be removed**********
@@ -44,7 +44,7 @@ private:
 	double time_horizon;		//total time bound
 	double cluster_error_tol;		//used to store the relative-difference-error tolerated during segmentation to detect the boundary in the Learning Algorithm
 	double segmentation_fine_error; //used to store the relative-difference-fine-error tolerated during segmentation near the boundary in the Learning Algorithm
-	int filter_last_segment;	//user choice for option disable(0) or enable(1) for removing last segment in each trajecotry during segmentation.
+	bool filter_last_segment;	//user choice for option disable(0) or enable(1) for removing last segment in each trajecotry during segmentation.
 	int lmm_step_size;	// user choice for Linear Multi-step Method's step size M (default is set to 5)
 	double precision_equivalence;	//used to store for precision value used for Equivalence Testing algorithm. Eg. distance between two points
 	double precision_guard_range;	//store an epsilon value used for converting the equality-guard condition to range-guard condition (+/- epsilon) for Simulink simulation
@@ -366,8 +366,8 @@ public:
 	const fs::path& getConfigFilename() const;
 	void setConfigFilename(const fs::path& configFilename);
 
-	int getFilterLastSegment() const;
-	void setFilterLastSegment(int filterLastSegment);
+	bool getFilterLastSegment() const;
+	void setFilterLastSegment(bool filterLastSegment);
 	double getSegmentationFineError() const;
 	void setSegmentationFineError(double segmentationFineError);
 

@@ -884,7 +884,7 @@ void user_inputs::setDbScanMinSamples(unsigned int dbScanMinSamples) {
 	DBScan_min_samples = dbScanMinSamples;
 }
 
-int user_inputs::getFilterLastSegment() const {
+bool user_inputs::getFilterLastSegment() const {
 	return filter_last_segment;
 }
 
@@ -912,6 +912,6 @@ void user_inputs::setSegmentationFineError(double segmentationFineError) {
 	segmentation_fine_error = segmentationFineError;
 }
 
-void user_inputs::setFilterLastSegment(int filterLastSegment) {
+void user_inputs::setFilterLastSegment(bool filterLastSegment) {
 	filter_last_segment = filterLastSegment;
 }
