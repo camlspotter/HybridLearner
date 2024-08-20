@@ -4,12 +4,7 @@ warning('off','all');
 total_test_trace = 32;
 learnedModel = 64;      % just modify this with the model learned using number of training traces
 
-% Get the current directory
-current_dir = pwd();
-% Construct the full path to the file
-% filename = fullfile(current_dir, 'xyz', 'abc.txt');
-
-outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/testData_Output";
+outputTrace_path =  "/home/jun/hal/HybridLearner/build/_result/bball/AfterAnnotation/testData_Output"; 
 mkdir(outputTrace_path);
 benchmarkName = "bball_";
     
@@ -19,7 +14,7 @@ model = benchmarkName + num2str(learnedModel);  % Learned model
 
 for test_id = 1 : total_test_trace
     fileName = benchmarkName + num2str(test_id) + ".csv"; % testing trace file
-    inputFileName = fullfile('/home/jun/hal/HybridLearner/examples/ball/TestSet', fileName);
+    inputFileName = fullfile("/home/jun/hal/HybridLearner/examples/ball/TestSet", fileName);
     input_data = load(inputFileName);
     %%%%% 
     x0_input = input_data(:,2);  % time series input
@@ -37,15 +32,11 @@ for test_id = 1 : total_test_trace
     timeseries_x0_input = timeseries(x0_input, x0_time); 
     ds = ds.addElement(timeseries_x0_input, 'x0In'); 
 
-    %%
     outFileName = model + "_Trace_" + num2str(test_id) + ".txt"; % output from Leanred model for test traces
     outfile = fullfile(outputTrace_path, outFileName); 
 
-%     run_bball(modelFile_withPath, outfile, timeFinal, timeStepMax);
-    
-    
-     %% Load the model 
-     
+    % Load the model 
+           
     mdl = 'learned_model0';
 
     load_system(mdlfile); 
@@ -72,10 +63,10 @@ for test_id = 1 : total_test_trace
             
     %Write the simulation result to the txt file 
     result_matrix = [t, y( : , 3), y( : , 1), y( : , 2)]; 
-    %result_filename = 'learned_prune_j.txt'; 
     result_filename = outfile;  
     writematrix(result_matrix, result_filename, 'Delimiter', 'tab'); 
 
 end
+
 % Close the Simulink model without saving
 close_system('bball_64_Type', 0);

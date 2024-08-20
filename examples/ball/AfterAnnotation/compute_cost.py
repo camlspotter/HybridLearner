@@ -74,7 +74,11 @@ def compute_dtw_cost(file1, file2, inputVar_size, outputVar_size):
         signal1 = data1[:, i]
         signal2 = data2[:, i]
         dataSize = 5
-        distance, path = fastdtw(signal1, signal2, radius=dataSize, dist=euclidean)
+
+        # https://stackoverflow.com/questions/77277096/error-in-calculating-dynamic-time-warping
+        # distance, path = fastdtw(signal1, signal2, radius=dataSize, dist=euclidean) # now fails
+        distance, path = fastdtw(signal1, signal2, radius=dataSize, dist=2)
+
         correlValue, maximum_deviation = compute_correlation(path, signal1, signal2)
         if i == startFrom:      # First output variable: position
             dist1 = distance
@@ -91,7 +95,7 @@ def compute_dtw_cost(file1, file2, inputVar_size, outputVar_size):
     return max_dev1, dist1, corr1, max_dev2, dist2, corr2
 
 
-def compute_cost_result(learned_model_with_traces, tot_traces) :
+def compute_cost_result(learned_model_with_traces, tot_traces):
     '''
     1) Read trajectories from the folder TestSet containing test trajectories, and
     2) Read trajectories from the folder testData_Output containing trajectories obtained by simulating the learned
@@ -106,16 +110,16 @@ def compute_cost_result(learned_model_with_traces, tot_traces) :
     # learned_model_with_traces = int(sys.argv[1])    # total number of training traces used to learn the model, 64 in our case
     # tot_traces = int(sys.argv[2])    # total number of traces to test, 32 in our case
 
-    # learnedModel_path = "../../../results/bball/BeforeAnnotation/testData_Output/"  # running from current folder
-    learnedModel_path = "../results/bball/AfterAnnotation/testData_Output/"  # running from build folder
+    # learnedModel_path = "../../../results/bball/AfterAnnotation/testData_Output/"  # running from current folder
+    learnedModel_path = "_result/bball/AfterAnnotation/testData_Output/"  # running from build folder
     testFolder_path = "../examples/ball/TestSet/"
-    csv_output_path = "../results/bball/AfterAnnotation/"
+    csv_output_path = "_result/bball/AfterAnnotation/"
 
     # ****** writing results to a .csv file  ******
     outFile = csv_output_path + "bball" + "_traces_" + str(learned_model_with_traces) + ".csv"
     # if os.path.exists(outFile):
     #     os.remove(outFile)
-    outputFile = open(outFile, "a")
+    outputFile = open(outFile, "w")
     # tableHeader = "Traces" + "\t" + "max_deviation_position" + "\t" + "DTW_distance_position" + "\t" + "correlValue" \
     #               + "\t" + "max_deviation_velocity" + "\t" + "DTW_distance_velocity" + "\t" + "correlValue" + "\n"
     tableHeader = "Traces" + "\t" + "DTW_distance_position" + "\t" + "DTW_distance_velocity" + "\n"
@@ -190,10 +194,9 @@ def compute_cost_result(learned_model_with_traces, tot_traces) :
     return benchmark_min_output1, benchmark_max_output1, benchmark_avg_output1, benchmark_std_output1, benchmark_min_output2, benchmark_max_output2, benchmark_avg_output2, benchmark_std_output2
 
 
-
 if __name__ == '__main__':
+    learned_model_with_traces = int(
+        sys.argv[1])  # total number of training traces used to learn the model, 64 in our case
+    tot_traces = int(sys.argv[2])  # total number of traces to test, 32 in our case
 
-    learned_model_with_traces = int(sys.argv[1])    # total number of training traces used to learn the model, 64 in our case
-    tot_traces = int(sys.argv[2])    # total number of traces to test, 32 in our case
-
-    compute_cost_result(learned_model_with_traces, tot_traces)    # This function is executed
+    compute_cost_result(learned_model_with_traces, tot_traces)  # This function is executed
