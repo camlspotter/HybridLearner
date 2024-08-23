@@ -12,25 +12,19 @@ export PATH=$PATH:/usr/lib/x86_64-linux-gnu/glib-2.0/:$MATLAB_ROOT/bin
 export DISPLAY=
 export LANG=en
 
-FIFODIR=$(mktemp -d)
-FIFO=$FIFODIR/fifo
-mkfifo $FIFO
+TEMP_DIR=$(mktemp -d)
 
 echo Launching MATLAB...
-tail -f $FIFO | matlab -nodisplay -r "matlab.engine.shareEngine" &
+# stdin must be connected to some file not to quit immediately after executing shareEngine
+(tail -f /dev/null & echo $! > $TEMP_DIR/tail_pid) | matlab -nodisplay -r "matlab.engine.shareEngine" &
 PID=$!
-echo Launched MATLAB FIFO=$FIFO PID=$PID
+echo Launched MATLAB PID=$PID
 
 close_matlab ()
 {
-    if [ -e $FIFO ]; then
-	echo Closing MATLAB...
-	echo Sending quit to $FIFO
-	echo quit > $FIFO
-    fi
     echo Killing MATLAB $PID
     kill -KILL $PID
-    rm -rf $FIFODIR
+    kill -KILL $(cat $TEMP_DIR/tail_pid)
 }
 
 trap close_matlab ERR INT
