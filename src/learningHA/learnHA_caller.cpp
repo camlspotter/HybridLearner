@@ -8,6 +8,7 @@
 #include "../commandLineParser/user_inputs.h"
 //#include <string>
 #include <boost/timer/timer.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include "../commandLineParser/parameters.h"
 #include "../utilities/intermediateResult.h"
 #include "../utilities/filesystem.h"
@@ -98,6 +99,17 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append(std::to_string(user_Inputs->getListInputVariables().size()));	// total size of input variables
 	cmd_str.append(" --size-output-variable ");
 	cmd_str.append(std::to_string(user_Inputs->getListOutputVariables().size())); // total size of output variables
+
+	cmd_str.append(" --input-variables ");
+	cmd_str.append(std::to_string(user_Inputs->getListInputVariables().size()));	// total size of input variables
+	cmd_str.append(" --output-variables ");
+	cmd_str.append(std::to_string(user_Inputs->getListOutputVariables().size())); // total size of output variables
+
+	cmd_str.append(" --input-variables ");
+	cmd_str.append("\"" + boost::algorithm::join(user_Inputs->getListInputVariables(), ",") + "\"");
+	cmd_str.append(" --output-variables ");
+	cmd_str.append("\"" + boost::algorithm::join(user_Inputs->getListOutputVariables(), ",") + "\"");
+
 	// **************
 
 	// Two more options for human-annotations are added-up. --variable-type and --pool-values for variable-type=t2
