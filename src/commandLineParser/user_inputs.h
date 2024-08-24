@@ -19,7 +19,7 @@ private:
 	std::list< std::vector<double> > random_initial_points_EquivalenceTest;	//storing to avoid generating multiple times for Equivalence Test
 
 	unsigned int guard;	//either 0 or 1 as user's input to decide to modify/or not from the equality guard to range (+/- epsilon)
-	bool invariant;	//either t to decide to include (input/output), remove input or remove both invariants
+	unsigned int invariant;	//either t to decide to include (input/output), remove input or remove both invariants
 	unsigned int max_generateTrace_size; //variable use to store value which is greater then max_traces and simu_init_size. used for debug and getting reproducible reading
 
 	//********** To be removed**********
