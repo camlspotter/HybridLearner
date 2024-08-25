@@ -13,6 +13,7 @@
 #include "../utilities/system.h"
 #include "../utilities/filesystem.h"
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 string simulinkModelConstructor::simulinkModelScriptFilename() const
 {
@@ -1177,6 +1178,19 @@ void simulinkModelConstructor::generateRunModelScript(fs::path simulink_model_fi
     assert( is_absolute_path(script_filename) );
     assert( is_absolute_path(output_filename) );
 
+    {
+        string command;
+        command = "cd ../src/learnHA; pipenv run python ./generate_simulation_script.py";
+        command += " --script-file " + script_filename.string() + ".bypython";
+        command += " --simulink-model-file " + simulink_model_filename.string();
+        command += " --output-file " + output_filename.string();
+        command += " --time-horizon 10 --sampling-time 0.01 --fixed-interval-data False";
+        command += " --input-variables \"" + boost::algorithm::join(user->getListInputVariables(), ",") + "\"";
+        command += " --output-variables \"" + boost::algorithm::join(user->getListOutputVariables(), ",") + "\"";
+        cout << "simulation.py: " << command << endl;
+        system(command.c_str());
+    }
+    
 	/*
 	 * This file is called from the engine/module: simu and equi-test and now from learn-ha also
 	 * This function creates a Matlab script file for running the .slx model supplied by the user.
@@ -1380,6 +1394,19 @@ void simulinkModelConstructor::generateRunLearnedModelScript(fs::path simulink_m
     assert( is_absolute_path(script_filename) );
     assert( is_absolute_path(output_filename) );
 
+    {
+        string command;
+        command = "cd ../src/learnHA; pipenv run python ./generate_simulation_script.py";
+        command += " --script-file " + script_filename.string() + ".bypython";
+        command += " --simulink-model-file " + simulink_model_filename.string();
+        command += " --output-file " + output_filename.string();
+        command += " --time-horizon 10 --sampling-time 0.01 --fixed-interval-data False";
+        command += " --input-variables \"" + boost::algorithm::join(user->getListInputVariables(), ",") + "\"";
+        command += " --output-variables \"" + boost::algorithm::join(user->getListOutputVariables(), ",") + "\"";
+        cout << "simulation.py: " << command << endl;
+        system(command.c_str());
+    }
+    
 	/*
 	 * This file is called from the engine/module: simu and equi-test and now from learn-ha also
 	 * This function creates a Matlab script file for running the .slx model supplied by the user.
