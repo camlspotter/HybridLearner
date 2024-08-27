@@ -1400,7 +1400,9 @@ void simulinkModelConstructor::generateRunLearnedModelScript(fs::path simulink_m
         command += " --script-file " + script_filename.string() + ".bypython";
         command += " --simulink-model-file " + simulink_model_filename.string();
         command += " --output-file " + output_filename.string();
-        command += " --time-horizon 10 --sampling-time 0.01 --fixed-interval-data False";
+        command += " --time-horizon " + to_string(user->getTimeHorizon());
+        command += " --sampling-time " + to_string(user->getSampleTime());
+        command += " --fixed-interval-data " + std::string(user->getFixedIntervalData() == 1 ? "True" : "False");
         command += " --input-variables \"" + boost::algorithm::join(user->getListInputVariables(), ",") + "\"";
         command += " --output-variables \"" + boost::algorithm::join(user->getListOutputVariables(), ",") + "\"";
         cout << "simulation.py: " << command << endl;
