@@ -80,7 +80,7 @@ x0_in  = Stateflow.Data(ch);
 x0_in.Name = 'x0'; 
 x0_in.Scope = 'Input'; 
 x0_in.Port = 1; 
-x0_in.Props.Type.Method = 'Inherit'; 
+x0_in.Props.Type.Method = 'Inherited'; 
 x0_in.DataType = 'Inherit: Same as Simulink'; 
 x0_in.UpdateMethod = 'Discrete'; 
 
@@ -90,7 +90,7 @@ x1_out  = Stateflow.Data(ch);
 x1_out.Name = 'x1_out'; 
 x1_out.Scope = 'Output'; 
 x1_out.Port = 1; 
-x1_out.Props.Type.Method = 'Inherit'; 
+x1_out.Props.Type.Method = 'Inherited'; 
 x1_out.DataType = 'Inherit: Same as Simulink'; 
 x1_out.UpdateMethod = 'Discrete'; 
 
@@ -98,7 +98,7 @@ x2_out  = Stateflow.Data(ch);
 x2_out.Name = 'x2_out'; 
 x2_out.Scope = 'Output'; 
 x2_out.Port = 2; 
-x2_out.Props.Type.Method = 'Inherit'; 
+x2_out.Props.Type.Method = 'Inherited'; 
 x2_out.DataType = 'Inherit: Same as Simulink'; 
 x2_out.UpdateMethod = 'Discrete'; 
 
@@ -122,14 +122,14 @@ a1 = Stateflow.Data(ch);
 a1.Name = 'a1'; 
 a1.Scope = 'Parameter'; 
 a1.Tunable = true; 
-a1.Props.Type.Method = 'Inherit'; 
+a1.Props.Type.Method = 'Inherited'; 
 a1.DataType = 'Inherit: Same as Simulink'; 
 
 a2 = Stateflow.Data(ch); 
 a2.Name = 'a2'; 
 a2.Scope = 'Parameter'; 
 a2.Tunable = true; 
-a2.Props.Type.Method = 'Inherit'; 
+a2.Props.Type.Method = 'Inherited'; 
 a2.DataType = 'Inherit: Same as Simulink'; 
 
 

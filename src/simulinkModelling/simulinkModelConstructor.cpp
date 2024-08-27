@@ -684,7 +684,7 @@ void simulinkModelConstructor::inputVariableCreation(ofstream &outfile){
 			outfile << variableName << "_in.Name = '" << variableName << "'; \n";
 			outfile << variableName << "_in.Scope = 'Input'; \n";
 			outfile << variableName << "_in.Port = " << portNo <<"; \n";
-			outfile << variableName << "_in.Props.Type.Method = 'Inherit'; \n";
+			outfile << variableName << "_in.Props.Type.Method = 'Inherited'; \n";
 			outfile << variableName << "_in.DataType = 'Inherit: Same as Simulink'; \n";
 			outfile << variableName << "_in.UpdateMethod = 'Discrete'; \n";
 
@@ -711,7 +711,7 @@ void simulinkModelConstructor::outputVariableCreation(ofstream &outfile){
 			outfile << variableName << "_out.Name = '" << variableName << "_out'; \n";
 			outfile << variableName << "_out.Scope = 'Output'; \n";
 			outfile << variableName << "_out.Port = " << portNo <<"; \n";
-			outfile << variableName << "_out.Props.Type.Method = 'Inherit'; \n";
+			outfile << variableName << "_out.Props.Type.Method = 'Inherited'; \n";
 			outfile << variableName << "_out.DataType = 'Inherit: Same as Simulink'; \n";
 			outfile << variableName << "_out.UpdateMethod = 'Discrete'; \n";
 			outfile << "\n";
@@ -770,7 +770,7 @@ void simulinkModelConstructor::parameterVariableCreation(ofstream &outfile){
 			outfile << "a" << val << ".Name = 'a" << val << "'; \n";
 			outfile << "a" << val << ".Scope = 'Parameter'; \n";
 			outfile << "a" << val << ".Tunable = true; \n";
-			outfile << "a" << val << ".Props.Type.Method = 'Inherit'; \n";
+			outfile << "a" << val << ".Props.Type.Method = 'Inherited'; \n";
 			outfile << "a" << val << ".DataType = 'Inherit: Same as Simulink'; \n";
 
 			outfile << "\n";
@@ -786,7 +786,7 @@ void simulinkModelConstructor::parameterVariableCreation(ofstream &outfile){
 			outfile << "a" << index << ".Name = 'a" << index << "'; \n";
 			outfile << "a" << index << ".Scope = 'Parameter'; \n";
 			outfile << "a" << index << ".Tunable = true; \n";
-			outfile << "a" << index << ".Props.Type.Method = 'Inherit'; \n";
+			outfile << "a" << index << ".Props.Type.Method = 'Inherited'; \n";
 			outfile << "a" << index << ".DataType = 'Inherit: Same as Simulink'; \n";
 
 			outfile << "\n";

@@ -12,11 +12,11 @@ set_target_properties(HybridLearner PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY build
 )
 
-target_include_directories(HybridLearner PRIVATE /usr/local/MATLAB/R2021a/extern/include)
+target_include_directories(HybridLearner PRIVATE /usr/local/MATLAB/R2022b/extern/include)
 
 link_directories(
-  /usr/local/MATLAB/R2021a/bin/glnxa64
-  /usr/local/MATLAB/R2021a/extern/bin/glnxa64
+  /usr/local/MATLAB/R2022b/bin/glnxa64
+  /usr/local/MATLAB/R2022b/extern/bin/glnxa64
   )
 
 target_link_libraries(HybridLearner PRIVATE
@@ -26,23 +26,23 @@ target_link_libraries(HybridLearner PRIVATE
   boost_timer
   boost_chrono
   m
-  /usr/local/MATLAB/R2021a/bin/glnxa64/libmx.so
-  /usr/local/MATLAB/R2021a/bin/glnxa64/libmat.so
-  /usr/local/MATLAB/R2021a/bin/glnxa64/libMatlabDataArray.so
-  /usr/local/MATLAB/R2021a/bin/glnxa64/libeng.so
-  /usr/local/MATLAB/R2021a/extern/bin/glnxa64/libMatlabEngine.so
+  /usr/local/MATLAB/R2022b/bin/glnxa64/libmx.so
+  /usr/local/MATLAB/R2022b/bin/glnxa64/libmat.so
+  /usr/local/MATLAB/R2022b/bin/glnxa64/libMatlabDataArray.so
+  /usr/local/MATLAB/R2022b/bin/glnxa64/libeng.so
+  /usr/local/MATLAB/R2022b/extern/bin/glnxa64/libMatlabEngine.so
 )
 
 # g++
 # -Wl,--no-undefined
-# /usr/local/MATLAB/R2021a/sys/os/glnxa64/orig/libstdc++.so.6
+# /usr/local/MATLAB/R2022b/sys/os/glnxa64/orig/libstdc++.so.6
 # -Wl,--as-needed
 # -L/usr/local/lib
-# -L/usr/local/MATLAB/R2021a/extern/bin/glnxa64
-# -L/usr/local/MATLAB/R2021a/bin/glnxa64
-# -L/usr/local/MATLAB/R2021a/extern/lib/glnxa64
-# -Wl,-rpath-link,/usr/local/MATLAB/R2021a/extern/bin/glnxa64
-# -Wl,-rpath-link,/usr/local/MATLAB/R2021a/bin/glnxa64
+# -L/usr/local/MATLAB/R2022b/extern/bin/glnxa64
+# -L/usr/local/MATLAB/R2022b/bin/glnxa64
+# -L/usr/local/MATLAB/R2022b/extern/lib/glnxa64
+# -Wl,-rpath-link,/usr/local/MATLAB/R2022b/extern/bin/glnxa64
+# -Wl,-rpath-link,/usr/local/MATLAB/R2022b/bin/glnxa64
 # -pthread
 # -lboost_program_options
 # -lboost_system
