@@ -27,20 +27,20 @@ public:
 
 	parameters();
 	virtual ~parameters();
-	void setParameters(const user_inputs::ptr &userInputs ,const hybridAutomata::ptr &h);
-	void setParameters(const user_inputs::ptr &userInputs ,const hybridAutomata::ptr &h, const intermediateResult::ptr &intermediate);
-	void setParameters(const user_inputs::ptr &userInputs ,const hybridAutomata::ptr &h, const polytope::ptr &initPoly, const intermediateResult::ptr &intermediate);
+	void setParameters(const user_inputs::ptr userInputs ,const hybridAutomata::ptr h);
+	void setParameters(const user_inputs::ptr userInputs ,const hybridAutomata::ptr h, const intermediateResult::ptr intermediate);
+	void setParameters(const user_inputs::ptr userInputs ,const hybridAutomata::ptr h, const polytope::ptr initPoly, const intermediateResult::ptr intermediate);
 
-	const polytope::ptr& getInitPoly() const;
-	void setInitPoly(const polytope::ptr &initPoly);
-	const user_inputs::ptr& getUserInputs() const;
-	void setUserInputs(const user_inputs::ptr &userInputs);
-	const myRandomNumberGenerator::ptr& getRandomGenObj() const;
-	void setRandomGenObj(const myRandomNumberGenerator::ptr &randomGenObj);
-	const intermediateResult::ptr& getIntermediate() const;
-	void setIntermediate(const intermediateResult::ptr &intermediate);
-	const hybridAutomata::ptr& getH() const;
-	void setH(const hybridAutomata::ptr &h);
+	const polytope::ptr getInitPoly() const;
+	void setInitPoly(const polytope::ptr initPoly);
+	const user_inputs::ptr getUserInputs() const;
+	void setUserInputs(const user_inputs::ptr userInputs);
+	const myRandomNumberGenerator::ptr getRandomGenObj() const;
+	void setRandomGenObj(const myRandomNumberGenerator::ptr randomGenObj);
+	const intermediateResult::ptr getIntermediate() const;
+	void setIntermediate(const intermediateResult::ptr intermediate);
+	const hybridAutomata::ptr getH() const;
+	void setH(const hybridAutomata::ptr h);
 };
 
 #endif /* COMMANDLINEPARSER_PARAMETERS_H_ */
