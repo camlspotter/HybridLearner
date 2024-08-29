@@ -7,8 +7,8 @@
 
 #include "model_setup.h"
 
-model_setup::model_setup (std::string variable_category, std::string input_signal_type, std::string numberOf_control_points, std::string initial_set){
-
+model_setup::model_setup (std::string variable_category, std::string input_signal_type, std::string numberOf_control_points, std::string initial_set)
+{
 	this->original_variable_category = variable_category;
 	this->original_input_signal_type = input_signal_type;
 	this->original_numberOf_control_points = numberOf_control_points;
@@ -27,14 +27,11 @@ model_setup::model_setup(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
 	user_copy = userInputs;
 	this->userInputs_original_copy = user_copy;
 
-
-
 	//Original user's input backed-up
 	this->original_variable_category = userInputs->getVariableCategory();
 	this->original_input_signal_type = userInputs->getInputSignalType();
 	this->original_numberOf_control_points = userInputs->getNumberOfControlPoints();
 	this->original_initial_set = userInputs->getInitialSet_userInput();
-
 
 	// -------------- Creating variable-category for learned model -----------------------
 	unsigned int input_variable_size = userInputs->getListInputVariables().size();
@@ -63,6 +60,7 @@ model_setup::model_setup(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
 
 		index++;
 	}
+
 	std::list<std::string> outputVarList =  userInputs->getListOutputVariables();
 	index = input_variable_size;
 	unsigned int i_val=0;
@@ -94,7 +92,6 @@ model_setup::model_setup(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
 	string new_input_signal_type = "";	//this->original_input_signal_type;
 	string new_numberOfCPs = "";	 //syntax of input string="x0=2 & x1=3"
 
-
 	user_inputs_helper::ptr user_inputs_helper_object = user_inputs_helper::ptr(new user_inputs_helper());
 //	std::list<struct control_points> userData = userInputs->getUserInputSignal_parameter(userInputs);
 	std::list<struct control_points> userData = user_inputs_helper_object->getUserInputSignal_parameter(userInputs);
@@ -122,9 +119,9 @@ model_setup::model_setup(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
 		}
 	}
 	// ----------------Creating Done----------------------
-//	cout << "New learned newVariableCategory =" <<  newVariableCategory << endl;
-//	cout << "New learned new_input_signal_type =" <<  new_input_signal_type << endl;
-//	cout << "New learned new_numberOfCPs =" <<  new_numberOfCPs << endl;
+    //	cout << "New learned newVariableCategory =" <<  newVariableCategory << endl;
+    //	cout << "New learned new_input_signal_type =" <<  new_input_signal_type << endl;
+    //	cout << "New learned new_numberOfCPs =" <<  new_numberOfCPs << endl;
 
 	//Storing the new replacing strings of user's input for learned model
 	this->new_variable_category = newVariableCategory;
@@ -161,16 +158,9 @@ model_setup::model_setup(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
 	//cout << "New learned new_initial_set =" <<  new_initial_set << endl;
 
 	// ----------------Creating Done----------------------
-
-
 }
 
-
-
-
-
 void model_setup::setup_for_learned_model(hybridAutomata::ptr ha, user_inputs::ptr userInputs){
-
 
 	//ha->print_var_mapping();
 	ha->erase_all_mapping();	//delete the variable name mapping. This will automatically also affect the ha_original_copy being a static mapping
@@ -214,9 +204,6 @@ void model_setup::setup_for_learned_model(hybridAutomata::ptr ha, user_inputs::p
 */
 
 }
-
-
-
 
 // reverting back to original user's input
 void model_setup::setup_for_original_model(hybridAutomata::ptr ha, user_inputs::ptr userInputs){

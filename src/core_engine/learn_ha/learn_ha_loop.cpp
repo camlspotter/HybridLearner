@@ -52,28 +52,10 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
     intermediateResult::ptr intermediate = params->getIntermediate();
 	hybridAutomata::ptr H = params->getH();
 
-	/*
-	 * Step 3: Using the traces Learn an HA and create a model file M' (Abstract). This model at present we name as x0, x1, x2 and so on with the sequence input followed by output variables.
-	 * Step 4: Using M' create a Simulink Model M' (having input and output variables like M) as per the user's input specification BUT DIFFERENT VARIABLE NAMES
-	 * Step 5: Generate random input and perform simulation of M and M' and test for Equivalence
-	 * 		 : If M == M' for all random inputs then STOP we have generated the model M
-	 * 		 : Otherwise, use the counter trace to improve the learning algorithm by Looping from Step 3 - Step 5
-	 *
-	 * Note: path for original and learn model can be/is stored in the class intermediate.
-	 */
-
     // Step 2: Generate simulation traces based on user's inputs.
     // User will provide variable name present in the original model M and not in M'
     // 
 	// Traces generated from the Original model (after creating running-script)
-    //
-    // Following files are created:
-    //   run_script_simu_user_model.m
-    //   simu.txt
-    //   slprj/*
-    //   oscillator.slxc
-    //   (result_simu_data.txt)
-    //   (tmp_simu.txt)
 
     cout << "generating initial traces" << endl;
 
@@ -97,6 +79,7 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 	system_copy_file(userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES),
                      userInputs->getFilenameUnderOutputDirectory(ORIGINAL_MODEL_TRACES_FOR_LEARNING));
 
+
     // Loop stops when StopTime-limit exceeds Conclusion could not be drawn concretely
 	while (true) {
 
@@ -108,13 +91,10 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
 
         // Step 3: Using the traces Learn an HA and create a model file M' (Abstract).
         // This model at present we name as x0, x1, x2 and so on with the sequence input followed by output variables.
-        //
-        // learnHA generates the following files:
-        //   data_scale
-        //   learnHA_out.txt
-        //   svm_model_file
 		call_LearnHA(params, report);
 
+        // Step 4: Using M' create a Simulink Model M' (having input and output variables like M) as per the user's input specification BUT DIFFERENT VARIABLE NAMES
+           
 		boost::timer::cpu_timer timer;
 		timer.start();
 
@@ -148,6 +128,13 @@ void execute_learn_ha_loop(parameters::ptr params, summary::ptr &report, std::un
         // creating .slx and .m (running script) files, taking care of the variable-names for learned model in the presence of original model
         // It also generates learned_model_run[0..].m but does NOT execute it.
 		constructModel(tot_count, params, ep);	
+
+        /* Step 5: Generate random input and perform simulation of M and M' and test for Equivalence
+         *       : If M == M' for all random inputs then STOP we have generated the model M
+         *       : Otherwise, use the counter trace to improve the learning algorithm by Looping from Step 3 - Step 5
+         *
+         * Note: path for original and learn model can be/is stored in the class intermediate.
+         */
 
 		//Execute in loop the learned_model and then the original_model and test the equivalence-distance
 		bool for_paper = true;

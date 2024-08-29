@@ -17,12 +17,14 @@
  * formation rule of a hyberbox. Each dimension should have both the upper and lower bounds. Ax <= b where b is the bound.
  */
 
-std::list< std::vector<double> > getInternalPoints(polytope::ptr &poly, unsigned int n, myRandomNumberGenerator::ptr &randomGenObj);
+std::list< std::vector<double> > getInternalPoints(polytope::ptr &poly,
+                                                   unsigned int n,
+                                                   myRandomNumberGenerator::ptr &randomGenObj);
 
-std::list<std::list<struct control_points>> getInternalControlPoints(polytope::ptr &poly, unsigned int n_simulations, list<struct control_points> list_var_cps, myRandomNumberGenerator::ptr &randomGenObj);
-
-// std::list<std::list<struct control_points>> getInternalControlPoints_PureRandom(polytope::ptr &poly, unsigned int n_simulations, list<struct control_points> list_var_cps);
-// 
+std::list<std::list<struct control_points>> getInternalControlPoints(polytope::ptr &poly,
+                                                                     unsigned int n_simulations,
+                                                                     list<struct control_points> list_var_cps,
+                                                                     myRandomNumberGenerator::ptr &randomGenObj);
 
 void fixed_step_signal(double th, std::vector<double> cps, std::vector<double> &time_vector, std::vector<double> &data_vector);
  

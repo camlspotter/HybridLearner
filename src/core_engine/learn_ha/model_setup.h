@@ -42,7 +42,6 @@ class model_setup {
 	std::string original_numberOf_control_points; //syntax of input string="x0=2 & x1=3"
 	std::string original_initial_set;	// initial-value (bounded) for each variable from where the simulation starts
 
-
 	std::string new_variable_category;	//new learned setup
 	std::string new_input_signal_type;	//new learned setup
 	std::string new_numberOf_control_points;	//new learned setup
@@ -62,19 +61,14 @@ class model_setup {
 public:
 	typedef boost::shared_ptr<model_setup> ptr;
 
-	model_setup (){
-		;
-	}
+	model_setup () {}
 
 	model_setup (hybridAutomata::ptr ha, user_inputs::ptr userInputs);
 
 	model_setup (std::string variable_category, std::string input_signal_type, std::string numberOf_control_points, std::string initial_set );
 
-
 	// Destructor
-	virtual ~model_setup (){
-		;
-	}
+	virtual ~model_setup () {}
 
 	std::string getEquivalentLearnedVariableName(std::list<struct variable_mapping> &userInputOutputData, std::string orig_varName);
 
