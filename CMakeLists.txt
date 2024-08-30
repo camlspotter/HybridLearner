@@ -32,25 +32,3 @@ target_link_libraries(HybridLearner PRIVATE
   /usr/local/MATLAB/R2022b/bin/glnxa64/libeng.so
   /usr/local/MATLAB/R2022b/extern/bin/glnxa64/libMatlabEngine.so
 )
-
-# g++
-# -Wl,--no-undefined
-# /usr/local/MATLAB/R2022b/sys/os/glnxa64/orig/libstdc++.so.6
-# -Wl,--as-needed
-# -L/usr/local/lib
-# -L/usr/local/MATLAB/R2022b/extern/bin/glnxa64
-# -L/usr/local/MATLAB/R2022b/bin/glnxa64
-# -L/usr/local/MATLAB/R2022b/extern/lib/glnxa64
-# -Wl,-rpath-link,/usr/local/MATLAB/R2022b/extern/bin/glnxa64
-# -Wl,-rpath-link,/usr/local/MATLAB/R2022b/bin/glnxa64
-# -pthread
-# -lboost_program_options
-# -lboost_system
-# -lboost_timer
-# -lboost_chrono
-# -lmx
-# -lmat
-# -lm
-# -lMatlabDataArray
-# -leng
-# -lMatlabEngine
