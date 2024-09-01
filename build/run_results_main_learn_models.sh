@@ -5,8 +5,8 @@ set -e
 # Script file to reproduce the results presented in the paper "Learning nonlinear hybrid automata from input–output time-series data"
 # This file must be executed from the folder HybridLearner/build
 
-# SIMU_INIT_SIZE=64  # for the real execution
-SIMU_INIT_SIZE=4  # for faster tests
+SIMU_INIT_SIZE=64  # for the real execution
+# SIMU_INIT_SIZE=4  # for faster tests, but results are much less accurate
 
 # **** Switched Oscillator *****
 
