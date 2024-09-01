@@ -1183,7 +1183,6 @@ void simulinkModelConstructor::generateRunModelScript(fs::path simulink_model_fi
         command = "cd ../src/learnHA; pipenv run python ./generate_simulation_script.py";
         command += " --script-file " + script_filename.string() + ".bypython";
         command += " --simulink-model-file " + simulink_model_filename.string();
-        command += " --output-file " + output_filename.string();
         command += " --time-horizon 10 --sampling-time 0.01 --fixed-interval-data False";
         command += " --input-variables \"" + boost::algorithm::join(user->getListInputVariables(), ",") + "\"";
         command += " --output-variables \"" + boost::algorithm::join(user->getListOutputVariables(), ",") + "\"";
@@ -1399,7 +1398,6 @@ void simulinkModelConstructor::generateRunLearnedModelScript(fs::path simulink_m
         command = "cd ../src/learnHA; pipenv run python ./generate_simulation_script.py";
         command += " --script-file " + script_filename.string() + ".bypython";
         command += " --simulink-model-file " + simulink_model_filename.string();
-        command += " --output-file " + output_filename.string();
         command += " --time-horizon " + to_string(user->getTimeHorizon());
         command += " --sampling-time " + to_string(user->getSampleTime());
         command += " --fixed-interval-data " + std::string(user->getFixedIntervalData() == 1 ? "True" : "False");
