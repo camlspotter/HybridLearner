@@ -41,7 +41,10 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	("time-horizon,Z", po::value<double>(), "Set the global time horizon of computation.")
 	("sampling-time,s", po::value<double>(), "Sets the sampling time (time-step)")
 
+    // Only used at equivalence_test_utils.cpp
 	("precision-equivalence", po::value<double>()->default_value(0.001), "set precision for Equivalence Testing (default 0.001)")
+
+    // Only used at modelParser.cpp        
 	("precision-guard-range", po::value<double>()->default_value(0.0), "set precision for Equality Guard as range of +/- epsilon (default 0.0)")
 
 

@@ -93,13 +93,6 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append(" ");
 	cmd_str.append(std::to_string(user_Inputs->getDTW_SampleSize())); // internal simulation sample-size for DTW clustering algorithm*/
 
-
-	//******* Passing the total size of input and output variables in the simulation traces
-	cmd_str.append(" --size-input-variable ");
-	cmd_str.append(std::to_string(user_Inputs->getListInputVariables().size()));	// total size of input variables
-	cmd_str.append(" --size-output-variable ");
-	cmd_str.append(std::to_string(user_Inputs->getListOutputVariables().size())); // total size of output variables
-
 	cmd_str.append(" --input-variables ");
 	cmd_str.append(std::to_string(user_Inputs->getListInputVariables().size()));	// total size of input variables
 	cmd_str.append(" --output-variables ");
