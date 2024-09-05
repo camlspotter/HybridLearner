@@ -93,6 +93,7 @@ private:
 	unsigned int simu_init_size; //number (or size) of simulation points to start the simulations
 
 //  ********** Type annotation for Transition's Update**********
+	std::string annotations;
 	std::string variable_types;	//Human annotation for Jump-Rest variables. Eg., 'x0=t1,x1=t2'
 	std::string t2_values;		//Human annotation for Jump-Rest: Pool of values for type 't2' variables. Eg., 'x1={1,2,3,4}' for the above variable_types
 	std::string t3_values;		//Human annotation for Jump-Rest: Assignments for type 't3' variables. Eg., 'x1=0 & x2=' for the above variable_types
@@ -246,6 +247,10 @@ public:
 
 	const std::string& getT2Values() const;
 	void setT2Values(const std::string &t2Values);
+
+	const std::string& getAnnotations() const;
+	void setAnnotations(const std::string &annotations);
+
 	const std::string& getVariableTypes() const;
 	void setVariableTypes(const std::string &variableTypes);
 

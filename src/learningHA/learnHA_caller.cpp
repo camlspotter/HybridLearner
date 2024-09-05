@@ -97,6 +97,8 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	// **************
 
 	// Two more options for human-annotations are added-up. --variable-type and --pool-values for variable-type=t2
+	cmd_str.append(" --annotations '" + user_Inputs->getAnnotations() + "'");
+
 	cmd_str.append(" --variable-types '");
 	cmd_str.append(user_Inputs->getVariableTypes());
 	cmd_str.append("' --pool-values '");

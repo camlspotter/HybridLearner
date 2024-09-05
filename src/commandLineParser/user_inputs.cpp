@@ -524,6 +524,14 @@ void user_inputs::setT2Values(const std::string &t2Values) {
 	t2_values = t2Values;
 }
 
+const std::string& user_inputs::getAnnotations() const {
+	return annotations;
+}
+
+void user_inputs::setAnnotations(const std::string &a) {
+	annotations = a;
+}
+
 const std::string& user_inputs::getVariableTypes() const {
 	return variable_types;
 }

@@ -27,8 +27,7 @@ OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
 eval $CMD \
-     --variable-types 'x0=t1,x1=t1' \
-     > $OUTDIR/log.txt
+     "--variable-types 'x0=t1,x1=t1' --annotations '{x:continuous,y:continuous}'" > $OUTDIR/log.txt
 
 # **** Bouncing Ball *****
 
@@ -48,7 +47,7 @@ OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
 eval $CMD \
-     --variable-types 'x0=t1,x1=t3' --t3-values 'x1=0' \
+     "--variable-types 'x0=t1,x1=t3' --t3-values 'x1=0' --annotations '{u:continuous,x:constant(0)}'" \
      > $OUTDIR/log.txt
 
 # **** Two Tanks *****
@@ -69,7 +68,7 @@ OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
 eval $CMD \
-     --variable-types 'x0=t1,x1=t1,x2=t1' \
+     "--variable-types 'x0=t1,x1=t1,x2=t1' --annotations '{u:continuous,x1:continuous,x2:continuous}'"
      > $OUTDIR/log.txt
 
 # **** Cell Model *****
@@ -90,7 +89,7 @@ OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
 eval $CMD \
-     --variable-types 'x0=t1' \
+     "--variable-types 'x0=t1' --annotations '{x:continuous}'" 
      > $OUTDIR/log.txt
 
 # **** Engine Timing System *****. Here it first learns HA as a plain text-file from trajectories as input file, then transform txt to SLX model
@@ -117,7 +116,7 @@ OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
 eval $CMD \
-     --variable-types 'x2=t1' \
+     "--variable-types 'x2=t1' --annotations '{engineSpeed:continuous}'" \
      > $OUTDIR/log.txt
 
 eval $CMD2 \

@@ -72,6 +72,8 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 	("numberOf-control-points", po::value<std::string>(), "Number of control points for each variables.\n"
 			"syntax: 'x0=2 & x1=3'; Note: control-points are randomly generated, bounded by supplied initial-value\n")
 
+	("annotations", po::value<std::string>(), "Annotation for variable types, for jump-reset of variables.\n" )
+
 	("variable-types", po::value<std::string>(), "Annotation for variable types, for jump-reset of variables.\n"
 			"syntax: 'x0=t3,x1=t4,x2=t4,x3=t1,x4=t2';\n Note below the different type of variables:\n"
 			"t1: continuous and constant throughout\n"
@@ -263,6 +265,10 @@ void commandLineParser(int argc, char *argv[], user_inputs::ptr& userInputs) {
 
 	if (vm.count("fixed-interval-data")) { // extract simulation data using fixed timestep for passing the data to the Learning algorithm
 		userInputs->setFixedIntervalData(vm["fixed-interval-data"].as<int>());
+	}
+
+	if (vm.count("annotations")) { // Human annotation for Reset function
+		userInputs->setAnnotations(vm["annotations"].as<std::string>());
 	}
 
 	if (vm.count("variable-types")) { // Human annotation for Reset function
