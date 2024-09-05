@@ -45,18 +45,9 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append(std::to_string(user_Inputs->getModeSize()));
 
 	/* In the learning algorithm, we have
-	 * -c {1,2,3}, --clustering-method {1,2,3}
-                      Clustering Algorithm. Options are: 1: DTW 2: DBSCAN 3: piecelinear
+	 * --clustering-method {dtw, dbscan, piecelienar}
 	 */
-	//cout << "Clustering Method = " << user_Inputs->getClusterAlgorithm() << endl;
-	cmd_str.append(" --clustering-method ");
-	if (user_Inputs->getClusterAlgorithm()=="dtw") {
-		cmd_str.append("1");
-	} else if (user_Inputs->getClusterAlgorithm()=="dbscan") {
-		cmd_str.append("2");
-	}/* else if (user_Inputs->getClusterAlgorithm()=="piecelinear") {
-		cmd_str.append("3");
-	} */
+	cmd_str.append(" --clustering-method " + user_Inputs->getClusterAlgorithm());
 
 	cmd_str.append(" --ode-degree ");
 	cmd_str.append(std::to_string(user_Inputs->getPolyDegree()));
