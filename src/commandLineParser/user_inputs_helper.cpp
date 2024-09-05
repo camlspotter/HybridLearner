@@ -230,7 +230,7 @@ std::list<struct timeseries_all_var> user_inputs_helper::generate_input_signals(
             vector<double> time_vector;
             vector<double> var_vector;
 
-            cout << "Var " << it_var->var_name << " : " << it_var->var_type << endl;
+            // cout << "Var " << it_var->var_name << " : " << it_var->var_type << endl;
 
             // var_type is either fixed-step, var-step, linear, spline, or sine-wave
             if ((*it_var).var_type == "fixed-step" || (*it_var).var_type == "var-step") { //Todo: work on variable-STEP constant-piecewise signal
