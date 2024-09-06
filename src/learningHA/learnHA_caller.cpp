@@ -85,11 +85,6 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	cmd_str.append(std::to_string(user_Inputs->getDTW_SampleSize())); // internal simulation sample-size for DTW clustering algorithm*/
 
 	cmd_str.append(" --input-variables ");
-	cmd_str.append(std::to_string(user_Inputs->getListInputVariables().size()));	// total size of input variables
-	cmd_str.append(" --output-variables ");
-	cmd_str.append(std::to_string(user_Inputs->getListOutputVariables().size())); // total size of output variables
-
-	cmd_str.append(" --input-variables ");
 	cmd_str.append("\"" + boost::algorithm::join(user_Inputs->getListInputVariables(), ",") + "\"");
 	cmd_str.append(" --output-variables ");
 	cmd_str.append("\"" + boost::algorithm::join(user_Inputs->getListOutputVariables(), ",") + "\"");
@@ -99,14 +94,7 @@ void learnHA_caller(user_inputs::ptr user_Inputs, const fs::path& trace_filename
 	// Two more options for human-annotations are added-up. --variable-type and --pool-values for variable-type=t2
 	cmd_str.append(" --annotations '" + user_Inputs->getAnnotations() + "'");
 
-	cmd_str.append(" --variable-types '");
-	cmd_str.append(user_Inputs->getVariableTypes());
-	cmd_str.append("' --pool-values '");
-	cmd_str.append(user_Inputs->getT2Values());
-	cmd_str.append("' --constant-value '");
-	cmd_str.append(user_Inputs->getT3Values());
-
-	cmd_str.append("' --ode-speedup ");
+	cmd_str.append(" --ode-speedup ");
 	cmd_str.append(std::to_string(user_Inputs->getOdeSpeedup())); // a Maximum integer number/size after which segments are pruned for ODE computation
 	cmd_str.append(" --is-invariant ");
 	cmd_str.append(user_Inputs->getInvariant() != 2 ? "True" : "False"); // a integer number: 0 and 1 for computing Invariant or 2 for ignoring computation
