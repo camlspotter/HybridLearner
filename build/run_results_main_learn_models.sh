@@ -65,7 +65,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-eval $CMD "--annotations '{u:continuous,x1:continuous,x2:continuous}'"
+eval $CMD "--annotations '{u:continuous,x1:continuous,x2:continuous}'" \
      > $OUTDIR/log.txt
 
 # **** Cell Model *****
@@ -85,7 +85,7 @@ echo Executing $ID
 OUTDIR=_result/$ID
 mkdir -p $OUTDIR || true
 
-eval $CMD "--annotations '{x:continuous}'" 
+eval $CMD "--annotations '{x:continuous}'" \
      > $OUTDIR/log.txt
 
 # **** Engine Timing System *****. Here it first learns HA as a plain text-file from trajectories as input file, then transform txt to SLX model
